@@ -15,6 +15,9 @@ public class Production<Nonterminal, NodeType>
     final Method                            postCallback;
     final Production<Nonterminal,NodeType>  antecedent;
 
+    // TODO: @SafeVarargs would be a better annotation,
+    // but that would require Java 1.7 or above.
+    @SuppressWarnings({"unchecked"})
     public Production(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Production<Nonterminal,NodeType> antecedent, Nonterminal... childTypes)
     {
         this.target         = target;
@@ -25,11 +28,17 @@ public class Production<Nonterminal, NodeType>
         this.postCallback   = postCallback;
     }
 
+    // TODO: @SafeVarargs would be a better annotation,
+    // but that would require Java 1.7 or above.
+    @SuppressWarnings({"unchecked"})
     public Production(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
     {
         this(target, nodeType, cost, postCallback, null, childTypes);
     }
 
+    // TODO: @SafeVarargs would be a better annotation,
+    // but that would require Java 1.7 or above.
+    @SuppressWarnings({"unchecked"})
     public Production(Nonterminal target, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
     {
         this(target, nodeType, 1, postCallback, childTypes);

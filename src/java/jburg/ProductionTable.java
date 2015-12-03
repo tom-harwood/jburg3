@@ -17,6 +17,9 @@ public class ProductionTable<Nonterminal, NodeType>
         List<Production<Nonterminal, NodeType>>
     > productionsByNodeType = new TreeMap<NodeType, List<Production<Nonterminal, NodeType>>>();
 
+    // TODO: @SafeVarargs would be a better annotation,
+    // but that would require Java 1.7 or above.
+    @SuppressWarnings({"unchecked"})
     public Production addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
     {
         Production<Nonterminal,NodeType> result = new Production<Nonterminal,NodeType>(nt, nodeType, method, childTypes);
