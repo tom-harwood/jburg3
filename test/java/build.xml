@@ -64,6 +64,7 @@ test - run java tests
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
             </classpath>
+            <jvmarg value="-ea"/>
         </java>
     </target>
 

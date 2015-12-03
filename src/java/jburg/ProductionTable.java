@@ -69,25 +69,10 @@ public class ProductionTable<Nonterminal, NodeType>
             closureRecorded = false;
 
             for (Closure<Nonterminal> closure: this.closures) {
-
-                // TODO: Use policy to decide whether to let closures displace pattern rules?
-                // Can't allow cycles to form.
-                if (state.getCost(closure.target) == Integer.MAX_VALUE) {
-                    long closureCost = state.getCost(closure.source) + closure.ownCost;
-
-                    if (closureCost < Integer.MAX_VALUE) {
-                        System.out.printf("attempting to add closure %s=%s\n",closure.target, closure.source);
-                        if(state.addClosure(closure)) {
-                            System.out.printf("... added closure %s=%s\n",closure.target, closure.source);
-                            closureRecorded = true;
-                        }
-                    }
-                }
+                closureRecorded = state.addClosure(closure);
             }
 
         } while (closureRecorded);
-
-        state.finish();
     }
 
     private List<Production<Nonterminal,NodeType>> getProductions(NodeType op)
@@ -131,12 +116,16 @@ public class ProductionTable<Nonterminal, NodeType>
 
             RepresenterState<Nonterminal,NodeType> pState = project(op, i, state);
 
-            if (!op.reps.get(i).contains(pState)) {
-                System.out.printf("Added pState {%s} to {%s}\n", pState, op);
+            if (!pState.isEmpty() && !op.reps.get(i).contains(pState)) {
+                //System.out.printf("Added representer state {%s} to operator {%s}[%d]\n", pState, op, i);
                 op.reps.get(i).add(pState);
 
                 // Try all permutations of the operator's nonterminal children
                 // as operands to the rules applicable to the operator.
+                /*
+                for (List<RepresenterState<Nonterminal,NodeType>> repSet: generatePermutations(op, i, pState)) {
+                }
+                */
                 
                 List<RepresenterState<Nonterminal,NodeType>> prefix = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
                 permute(op, 0, i, pState, prefix, workList);
@@ -146,7 +135,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
-        RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
+        RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>();
 
         for (Nonterminal n: nonterminals) {
             for (Production<Nonterminal, NodeType> p: getProductions(op.nodeType)) {
@@ -201,31 +190,27 @@ public class ProductionTable<Nonterminal, NodeType>
                     cost += prefix.get(i).getCost(p.getNonterminal(i));
                 }
 
-
                 if (cost < result.getCost(p.target)) {
                     result.setProduction(p,cost);
                 }
             }
 
             if (!result.empty()) {
-                closure(result);
+                State<Nonterminal,NodeType> transition = addState(result);
+                op.addTransition(prefix, transition);
                 if (!states.contains(result)) {
-                    result = addState(result);
+                    closure(result);
                     workList.add(result);
                 }
             }
-
-            op.addTransition(prefix, result);
         }
         else if (dim == pDim) {
             prefix.add(pivot);
-            System.out.printf("added pivot %s at %d\n", pivot, dim);
             permute(op,dim+1,pDim,pivot,prefix,workList);
             prefix.remove(dim);
         } else {
             for (RepresenterState<Nonterminal,NodeType> s: op.reps.get(dim)) {
                 prefix.add(s);
-                System.out.printf("added rep %s at %d\n", pivot, dim);
                 permute(op, dim+1, pDim, pivot, prefix, workList);
                 prefix.remove(dim);
             }
@@ -273,15 +258,17 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        out.println("Operators:");
-        for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
+        out.println("ProductionTable:");
 
+        for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
             for (Operator<Nonterminal,NodeType> op: opList) {
-                out.println(op);
+
+                if (op != null) {
+                    out.println(op);
+                }
             }
         }
 
-        out.println("States:");
         for (State<Nonterminal, NodeType> s: states) {
             out.println(s);
         }

@@ -32,6 +32,9 @@ public class FirstTest
 
         Object  payload;
 
+        /*
+         * ** Nullary Operators **
+         */
         public Integer intLiteral()
         {
             return (Integer)payload;
@@ -42,16 +45,9 @@ public class FirstTest
             return intLiteral();
         }
 
-        public Integer add(Integer x, Integer y)
-        {
-            return x + y;
-        }
-
-        public Integer multiply(Integer x, Integer y)
-        {
-            return x * y;
-        }
-
+        /*
+         * ** Unary Operators **
+         */
         public Integer negate(Integer x)
         {
             return -x;
@@ -60,6 +56,29 @@ public class FirstTest
         public Integer identity(Integer x)
         {
             return x;
+        }
+
+        /*
+         * ** Binary Operators **
+         */
+        public Integer add(Integer x, Integer y)
+        {
+            return x + y;
+        }
+
+        public Integer subtract(Integer x, Integer y)
+        {
+            return x - y;
+        }
+
+        public Integer multiply(Integer x, Integer y)
+        {
+            return x * y;
+        }
+
+        public Integer divide(Integer x, Integer y)
+        {
+            return x / y;
         }
     }
 
@@ -71,9 +90,10 @@ public class FirstTest
         productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Node.class.getDeclaredMethod("intLiteral"));
 
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("add", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("identity", Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Node.class.getDeclaredMethod("multiply", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Node.class.getDeclaredMethod("negate", Integer.class), Nonterminal.Int);
+        //productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("identity", Integer.class), Nonterminal.Int, Nonterminal.Int);
+        //productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Node.class.getDeclaredMethod("multiply", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+        //productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Node.class.getDeclaredMethod("negate", Integer.class), Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Node.class.getDeclaredMethod("subtract", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
 
         productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Node.class.getDeclaredMethod("shortLiteral"));
         productions.addClosure(Nonterminal.Int, Nonterminal.Short);

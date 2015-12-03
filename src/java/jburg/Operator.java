@@ -34,53 +34,15 @@ class Operator<Nonterminal, NodeType>
 
     public String toString()
     {
-        StringBuilder builder = new StringBuilder("Operator ");
-        builder.append(nodeType);
-
-        if (transitionTable.size() > 0) {
-            boolean firstTime = true;
-
-            for (List<RepresenterState<Nonterminal,NodeType>> childStates: transitionTable.keySet()) {
-
-                if (firstTime) {
-                    firstTime = false;
-                } else {
-                    builder.append(",");
-                }
-
-                if (transitionTable.get(childStates) != null) {
-                    builder.append(String.format("%s=%d",childStates,transitionTable.get(childStates).number));
-                } else {
-                    builder.append(String.format("%s=?", childStates));
-                }
-            }
-
-        } else {
-            builder.append(" -empty-");
-        }
-
-        return builder.toString();
-    }
-
-    private String formatStateList(List<RepresenterState<Nonterminal,NodeType>> stateList)
-    {
-        StringBuilder builder = new StringBuilder("[");
-
-        for (int i = 0; i < stateList.size(); i++) {
-            if (i > 0) {
-                builder.append(",");
-            }
-
-            builder.append(String.valueOf(stateList.get(i).number));
-        }
-
-        builder.append("]");
-
-        return builder.toString();
+        return String.format("Operator %s%s", nodeType, transitionTable);
     }
 
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> s)
     {
-        transitionTable.put(childStates, s);
+        // Make a copy of the childStates key; the caller may mutate it.
+        List<RepresenterState<Nonterminal,NodeType>> key = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
+        key.addAll(childStates);
+        transitionTable.put(key, s);
+        //System.out.printf("Added transition %s=State %d to %s\n", childStates, s.number, this);
     }
 }

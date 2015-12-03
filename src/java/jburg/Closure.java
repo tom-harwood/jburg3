@@ -23,4 +23,10 @@ public class Closure<Nonterminal>
     {
         this(target, source, postCallback, 1);
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("Closure %s = %s:%d", target, source, ownCost);
+    }
 }

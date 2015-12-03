@@ -2,25 +2,24 @@ package jburg;
 
 import java.util.*;
 
-// FIXME: Need an abstract superclass, e.g., Item
-class RepresenterState<Nonterminal,NodeType> extends State<Nonterminal,NodeType>
+class RepresenterState<Nonterminal,NodeType>
 {
     Map<Nonterminal, Long> costMap = new HashMap<Nonterminal, Long>();
 
-    RepresenterState(NodeType type)
-    {
-        super(type);
-    }
-
     void setCost(Nonterminal nt, long cost)
     {
-        assert(getCost(nt) < cost);
+        assert(cost < getCost(nt));
         costMap.put(nt,cost);
     }
 
     long getCost(Nonterminal nt)
     {
         return costMap.containsKey(nt)? costMap.get(nt): Integer.MAX_VALUE;
+    }
+
+    boolean isEmpty()
+    {
+        return costMap.isEmpty();
     }
 
     @Override
