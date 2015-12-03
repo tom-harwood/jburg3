@@ -169,7 +169,7 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         // TODO: Also analyze variadic productions.
         if (dim == op.getArity()) {
-            System.out.printf("analyzing rules for %s arity %d against %s\n", op, dim, prefix);
+            //System.out.printf("analyzing rules for %s arity %d against %s\n", op, dim, prefix);
 
             State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
 

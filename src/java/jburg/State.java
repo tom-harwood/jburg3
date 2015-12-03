@@ -119,7 +119,7 @@ class State<Nonterminal, NodeType>
     @Override
     public int hashCode()
     {
-        return costMap.hashCode();
+        return nodeType.hashCode() * 31 + costMap.hashCode();
     }
 
     /**
@@ -129,10 +129,15 @@ class State<Nonterminal, NodeType>
      * false otherwise.
      */
     @Override
+    @SuppressWarnings({"unchecked"})
     public boolean equals(Object o)
     {
-        return o instanceof State?
-            this.costMap.equals(((State)o).costMap):
-            false;
+        if (o instanceof State) {
+            State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
+            return this.nodeType.equals(s.nodeType) && this.costMap.equals(s.costMap);
+
+        } else {
+            return false;
+        }
     }
 }
