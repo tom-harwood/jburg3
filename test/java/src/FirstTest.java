@@ -1,4 +1,4 @@
-package first;
+
 import jburg.ProductionTable;
 
 import java.util.ArrayList;
