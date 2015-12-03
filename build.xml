@@ -1,0 +1,88 @@
+<project name="JBurg3" default="cleanBuildAndTest" basedir=".">
+
+    <target name="init">
+        <!-- Load the properties from 
+           $HOME/ant.properties. 
+           Please do not change any properties here. 
+        -->
+        <property file="${user.home}/ant.properties" />
+        <property file="build.properties" />
+    
+        <property name="distro.version" value="Set in build.properties"/>
+
+        <!-- Intra-project directory configuration -->
+        <property name="src.dir" value="./src" />
+        <property name="gensrc.dir" value="./gensrc" />
+        <property name="classes.dir" value="./classes" />
+        <property name="lib.dir" value="./lib" />
+        <property name="jburg.version.dir" value="${gensrc.dir}/jburg/version" />
+        <property name="jburg.dir" value="${src.dir}/java" />
+        <property name="junit.log.dir" value="./log" />
+
+        <!-- Target settings -->
+        <property name="jar.file" value="jburg.jar" />
+        <property name="debug.symbols" value="yes"/>
+        
+        <!--  Third-party tools. -->
+        <property name="cpp.compiler" value="g++"/>
+    </target>
+
+    <target name="cleanBuildAndTest" depends="clean,jar,test"/>
+
+    <target name="clean" depends="init">
+        <!-- Remove VIM backup files.  -->
+        <delete>
+            <fileset dir="${basedir}" includes="**/*.*~" defaultexcludes="no"/>
+        </delete>
+            
+        <delete dir="${classes.dir}" />            
+        <delete dir="${jburg.version.dir}" /> 
+        <delete dir="extras/ErrorAnalyzer/classes" />
+    </target>
+
+    <target name="help">
+    <echo>
+cleanBuildAndTest - clean, build, and test
+test - call the test/MAT directory's build.xml
+    </echo>
+    </target>
+    
+    <target name="jar" depends="compile">
+        <mkdir dir="${lib.dir}" />        
+        <jar jarfile="${lib.dir}/${jar.file}">
+            <fileset dir="${classes.dir}"/>
+            <manifest>
+                <attribute name="Main-Class" value="jburg.burg.Main"/>
+                <attribute name="Implementation-Version" value="${distro.version}"/>
+            </manifest>
+            </jar>
+    </target>
+
+	<!-- Compile JBurg -->
+	<target name="compile" depends="init"
+                        description="Build and compile source files">
+		<mkdir dir="${jburg.version.dir}" />
+		<mkdir dir="${classes.dir}" />
+
+		<echo message="Setting JBurg version ${distro.version}."/>
+		<echo file="${jburg.version.dir}/JBurgVersion.java">
+		package jburg.version;
+		public interface JBurgVersion {
+		    public static final String version="${distro.version}";
+		}
+		</echo>
+
+		<javac 
+			debug="${debug.symbols}" 
+			destdir="${classes.dir}" includes="**/*.java"
+			>
+            <compilerarg value="-Xlint:unchecked"/>
+			<src path="${jburg.dir}"/>
+		</javac>
+	</target>
+
+    <target name="test">
+        <!-- ant dir="test/MAT" target="MAT"/ -->
+    </target>
+
+</project>

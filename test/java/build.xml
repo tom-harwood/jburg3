@@ -1,0 +1,70 @@
+<project name="JBurg3JavaTests" default="cleanBuildAndTest" basedir=".">
+
+    <target name="init">
+        <!-- Load the properties from 
+           $HOME/ant.properties. 
+           Please do not change any properties here. 
+        -->
+        <property file="${user.home}/ant.properties" />
+        <property file="../..build.properties" />
+
+        <property name="jburg.home" value="${user.home}/projects/jburg3"/>
+        <property name="lib.dir" value="${jburg.home}/lib" />
+        <property name="jburg.jar" value="${lib.dir}/jburg.jar"/>
+    
+        <property name="src.dir" value="./src" />
+        <property name="gensrc.dir" value="./gensrc" />
+        <property name="classes.dir" value="./classes" />
+        <property name="junit.log.dir" value="./log" />
+
+        <!--  Third-party tools. -->
+        <property name="cpp.compiler" value="g++"/>
+    </target>
+
+    <target name="cleanBuildAndTest" depends="clean,buildJar,compile,test"/>
+
+    <target name="clean" depends="init">
+        <!-- Remove VIM backup files.  -->
+        <delete>
+            <fileset dir="${basedir}" includes="**/*.*~" defaultexcludes="no"/>
+        </delete>
+            
+        <delete dir="${classes.dir}" />            
+    </target>
+
+    <target name="help">
+    <echo>
+cleanBuildAndTest - clean, build, and test
+test - run java tests
+    </echo>
+    </target>
+    
+    <target name="buildJar" depends="init">
+        <ant dir="${jburg.home}" target="jar"/>
+    </target>
+	<!-- Compile test articles. -->
+	<target name="compile" depends="init"
+                        description="Build and compile source files">
+		<mkdir dir="${classes.dir}" />
+
+		<javac 
+			debug="${debug.symbols}" 
+			destdir="${classes.dir}" includes="**/*.java"
+			>
+            <classpath>
+                <pathelement path="${jburg.jar}"/>
+            </classpath>
+			<src path="${src.dir}"/>
+		</javac>
+	</target>
+
+    <target name="test">
+        <java classname="first.FirstTest" fork="true" failonerror="true">
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+            </classpath>
+        </java>
+    </target>
+
+</project>
