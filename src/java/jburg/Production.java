@@ -72,6 +72,12 @@ public class Production<Nonterminal, NodeType>
         return childTypes.size();
     }
 
+    public boolean acceptsDimension(int dim)
+    {
+        // TODO: Variadics.
+        return size() == dim;
+    }
+
     @Override
     public String toString()
     {

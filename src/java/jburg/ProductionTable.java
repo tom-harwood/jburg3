@@ -198,15 +198,16 @@ public class ProductionTable<Nonterminal, NodeType>
                 //    if (result not in states)
                 //        result = addState(result);
                 //        worklist.add(result);
-                assert(p.size() == dim);
-                long cost = 0;
-                for (int i = 0; i < dim && cost < Integer.MAX_VALUE; i++) {
-                    cost += prefix.get(i).getCost(p.getNonterminal(i));
-                }
+                if (p.acceptsDimension(dim)) {
+			long cost = 0;
+			for (int i = 0; i < dim && cost < Integer.MAX_VALUE; i++) {
+			    cost += prefix.get(i).getCost(p.getNonterminal(i));
+			}
 
-                if (cost < result.getCost(p.target)) {
-                    result.setProduction(p,cost);
-                }
+			if (cost < result.getCost(p.target)) {
+			    result.setProduction(p,cost);
+			}
+		}
             }
 
             if (!result.empty()) {
