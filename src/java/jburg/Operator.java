@@ -8,6 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * An Operator represents an opcode(operand, operand) tuple.
+ * The pattern-matching and closure productions for all inputs
+ * with this opcode/arity are encoded into the operator's
+ * transition table.
+ */
 class Operator<Nonterminal, NodeType>
 {
     final NodeType nodeType;
@@ -39,6 +45,7 @@ class Operator<Nonterminal, NodeType>
 
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> s)
     {
+        // TODO: This should be in the ProductionTable.
         // Make a copy of the childStates key; the caller may mutate it.
         List<RepresenterState<Nonterminal,NodeType>> key = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
         key.addAll(childStates);

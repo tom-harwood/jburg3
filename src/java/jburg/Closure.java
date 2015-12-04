@@ -4,6 +4,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A Closure represents a nonterminal-nonterminal transformation.
+ * Like a pattern-matching Production, it can have pre and post callbacks.
+ */
 public class Closure<Nonterminal>
 {
     final Nonterminal   target;

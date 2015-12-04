@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A Production encodes a opcode(operand, operand) pattern match.
+ */
 public class Production<Nonterminal, NodeType>
 {
     final Nonterminal                       target;

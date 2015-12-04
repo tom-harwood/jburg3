@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * A State represents a node in the transition table.
+ */
 class State<Nonterminal, NodeType>
 {
     int number = -1;

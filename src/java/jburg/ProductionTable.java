@@ -3,6 +3,11 @@ package jburg;
 import java.lang.reflect.*;
 import java.util.*;
 
+/**
+ * A ProductionTable hosts the data structures that
+ * describe the client's BURS system, and the logic
+ * that translates them into a transition table.
+ */
 public class ProductionTable<Nonterminal, NodeType>
 {
     private List<Production<Nonterminal, NodeType>>             allProductions  = new ArrayList<Production<Nonterminal, NodeType>>();;

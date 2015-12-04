@@ -2,6 +2,13 @@ package jburg;
 
 import java.util.*;
 
+/**
+ * A RepresenterState is a "skeleton" representation
+ * of a State; many states may map to the same RepresenterState.
+ * The transition tables are keyed by tuples of RepresenterState
+ * objects, which effects a very significant compaction of the
+ * resulting transition table.
+ */
 class RepresenterState<Nonterminal,NodeType>
 {
     Map<Nonterminal, Long> costMap = new HashMap<Nonterminal, Long>();
