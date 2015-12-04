@@ -6,10 +6,23 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A State represents a node in the transition table.
+ * A State represents a vertex in the transition table.
+ * Vertices represent an equivalence class of input nodes,
+ * each of which has the same opcode/arity; an input node
+ * must match one of the pattern-matching productions in
+ * the state. The state may also be able to produce other
+ * nonterminals via nonterminal-to-nonterminal closures.
+ *
+ * The State class is Comparable so that it can be
+ * sorted on its state number.
  */
 class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeType>>
 {
+    /**
+     * The state's number. This number is set
+     * by the production table when it places
+     * a state in its table of unique states.
+     */
     int number = -1;
 
     /** "Typedef" a map of costs by nonterminal. */
@@ -144,9 +157,16 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         }
     }
 
+    /**
+     * States are comparable on their state number;
+     * this is a convenience so that the state table,
+     * which is stored in hashed order, can be emitted
+     * in state number order.
+     */
     @Override
     public int compareTo(State<Nonterminal,NodeType> other)
     {
+        assert this.number != -1 && other.number != -1;
         return this.number - other.number;
     }
 }
