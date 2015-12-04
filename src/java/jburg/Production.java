@@ -76,10 +76,18 @@ public class Production<Nonterminal, NodeType>
     public String toString()
     {
         if (antecedent == null) {
-            return String.format("Production %s=%s%s: %s %s", target, nodeType, childTypes, ownCost, postCallback);
+            return String.format("Production %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
         } else {
-            return String.format("Production (antecedent %s) %s=%s%s: %s %s", antecedent.target, target, nodeType, childTypes, ownCost, postCallback);
+            return String.format("Production (antecedent %s) %s=%s%s cost:%s %s", antecedent.target, target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
         }
     }
 
+    private String getCallbackName(String prefix, Method callback)
+    {
+        if (callback != null) {
+            return String.format("%sCallback:%s", prefix, callback.getName());
+        } else {
+            return "";
+        }
+    }
 }
