@@ -40,12 +40,33 @@ class Operator<Nonterminal, NodeType>
 
     public String toString()
     {
-        return String.format("Operator %s%s", nodeType, transitionTable);
+        StringBuilder builder = new StringBuilder("Operator ");
+        builder.append(nodeType);
+
+        if (!transitionTable.isEmpty()) {
+            builder.append("[");
+
+            boolean firstTime = true;
+
+            for (List<RepresenterState<Nonterminal,NodeType>> keyList: transitionTable.keySet()) {
+
+                if (firstTime) {
+                    firstTime = false;
+                } else {
+                    builder.append(", ");
+                }
+
+                builder.append(keyList);
+                builder.append(String.format("=State#%d", transitionTable.get(keyList).number));
+            }
+            builder.append("]");
+        }
+
+        return builder.toString();
     }
 
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> s)
     {
-        // TODO: This should be in the ProductionTable.
         // Make a copy of the childStates key; the caller may mutate it.
         List<RepresenterState<Nonterminal,NodeType>> key = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
         key.addAll(childStates);
