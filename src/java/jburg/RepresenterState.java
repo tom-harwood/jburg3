@@ -11,7 +11,13 @@ import java.util.*;
  */
 class RepresenterState<Nonterminal,NodeType>
 {
-    Map<Nonterminal, Long> costMap = new HashMap<Nonterminal, Long>();
+    NodeType                nodeType;
+    Map<Nonterminal, Long>  costMap = new HashMap<Nonterminal, Long>();
+
+    RepresenterState(NodeType nodeType)
+    {
+        this.nodeType = nodeType;
+    }
 
     void setCost(Nonterminal nt, long cost)
     {
@@ -32,13 +38,19 @@ class RepresenterState<Nonterminal,NodeType>
     @Override
     public int hashCode()
     {
-        return costMap.hashCode();
+        return nodeType.hashCode() * 31 + costMap.hashCode();
     }
 
     @Override
+    @SuppressWarnings({"unchecked"})
     public boolean equals(Object x)
     {
-        return costMap.equals(x);
+        if (x instanceof RepresenterState) {
+            RepresenterState<Nonterminal,NodeType> rs = (RepresenterState<Nonterminal,NodeType>)x;
+            return this.nodeType.equals(rs.nodeType) && this.costMap.equals(rs.costMap);
+        } else {
+            return false;
+        }
     }
 
     @Override

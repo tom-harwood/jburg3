@@ -17,6 +17,15 @@ public class ProductionTable<Nonterminal, NodeType>
     private Set<State<Nonterminal, NodeType>>                   states          = new HashSet<State<Nonterminal, NodeType>>();
     private Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators       = new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
+    /**
+     * RepresenterStates, keyed by themselves
+     * so they can be efficaciously retrieved.
+     */
+    private Map<
+        RepresenterState<Nonterminal,NodeType>,
+        RepresenterState<Nonterminal,NodeType>
+    > repStates = new HashMap<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>>();
+
     private Map<
         NodeType,
         List<Production<Nonterminal, NodeType>>
@@ -140,7 +149,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
-        RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>();
+        RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
 
         for (Nonterminal n: nonterminals) {
             for (Production<Nonterminal, NodeType> p: getProductions(op.nodeType)) {
@@ -150,7 +159,7 @@ public class ProductionTable<Nonterminal, NodeType>
             }
         }
 
-        return result;
+        return addRepresenterState(result);
     }
 
     /**
@@ -259,6 +268,14 @@ public class ProductionTable<Nonterminal, NodeType>
         throw new IllegalStateException(String.format("State %s not added and not present",state));
     }
 
+    private RepresenterState<Nonterminal,NodeType> addRepresenterState(RepresenterState<Nonterminal,NodeType> rs)
+    {
+        if (!repStates.containsKey(rs)) {
+            repStates.put(rs, rs);
+        }
+
+        return repStates.get(rs);
+    }
 
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
