@@ -8,7 +8,7 @@ import java.util.TreeMap;
 /**
  * A State represents a node in the transition table.
  */
-class State<Nonterminal, NodeType>
+class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeType>>
 {
     int number = -1;
 
@@ -142,5 +142,11 @@ class State<Nonterminal, NodeType>
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int compareTo(State<Nonterminal,NodeType> other)
+    {
+        return this.number - other.number;
     }
 }

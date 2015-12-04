@@ -280,8 +280,6 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        out.println("ProductionTable:");
-
         for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
             for (Operator<Nonterminal,NodeType> op: opList) {
 
@@ -291,7 +289,10 @@ public class ProductionTable<Nonterminal, NodeType>
             }
         }
 
-        for (State<Nonterminal, NodeType> s: states) {
+        List<State<Nonterminal,NodeType>> sortedStates = Collections.list(Collections.enumeration(states));
+        Collections.sort(sortedStates);
+
+        for (State<Nonterminal, NodeType> s: sortedStates) {
             out.println(s);
         }
 
