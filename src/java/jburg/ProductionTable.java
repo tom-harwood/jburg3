@@ -210,13 +210,17 @@ public class ProductionTable<Nonterminal, NodeType>
 		}
             }
 
-            if (!result.empty()) {
-                State<Nonterminal,NodeType> transition = addState(result);
-                op.addTransition(prefix, transition);
+            if (!result.isEmpty()) {
+
                 if (!states.contains(result)) {
                     closure(result);
                     workList.add(result);
                 }
+
+		// Cache the canonical state in the operator;
+		// it may be this new state, or it may
+		// be a equivalent previous instance.
+                op.addTransition(prefix, addState(result));
             }
         }
         else if (dim == pDim) {

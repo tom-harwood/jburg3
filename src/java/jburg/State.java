@@ -56,7 +56,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         return productions.size();
     }
 
-    boolean empty()
+    boolean isEmpty()
     {
         assert(productions.isEmpty() == costMap.isEmpty());
         return productions.isEmpty();
@@ -103,9 +103,11 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
         buffer.append("State ");
         buffer.append(String.valueOf(number));
+        buffer.append(" ");
+        buffer.append(this.nodeType);
 
         if (productions.size() > 0) {
-            buffer.append("( patterns(");
+            buffer.append("(patterns(");
 
             boolean didFirst = false;
             for (Nonterminal nt: productions.keySet()) {
@@ -129,17 +131,25 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     }
 
     /**
-     * Define a state's hash code in terms of its cost map's hash code.
-     * @return this state's cost map's hashCode()
+     * Define a state's hash code in terms of its
+     * node type's hash code and its production map's
+     * hash code. Note that using the cost map's
+     * hash code will not work, since subsequent
+     * iterations may produce states that are identical
+     * except that they cost more due to closures, so
+     * that computation can run away.
+     * @return this state's node type's hashCode(),
+     * concatenated with the production map's hashCode().
      */
     @Override
     public int hashCode()
     {
-        return nodeType.hashCode() * 31 + costMap.hashCode();
+        return nodeType.hashCode() * 31 + productions.hashCode();
     }
 
     /**
-     * Two states are equal if their cost maps are equal.
+     * Two states are equal if their node types
+     * and production maps are equal.
      * @param o the object to compare against.
      * @return unclosed.costMap(o.costMap) if o is a State,
      * false otherwise.
@@ -150,7 +160,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     {
         if (o instanceof State) {
             State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
-            return this.nodeType.equals(s.nodeType) && this.costMap.equals(s.costMap);
+            return this.nodeType.equals(s.nodeType) && this.productions.equals(s.productions);
 
         } else {
             return false;
