@@ -27,14 +27,23 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
     /** "Typedef" a map of costs by nonterminal. */
     class CostMap extends HashMap<Nonterminal,Long> {}
-    /** "Typedef" a map of Productions by Nonterminal. */
-    class ProductionMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
+    /** "Typedef" a map of PatternMatchers keyed by Nonterminal. */
+    class PatternMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
     /** "Typedef" a map of Closures by Nonterminal. */
     class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
-    private CostMap         costMap = new CostMap();
-    private ProductionMap   productions = new ProductionMap();
-    private ClosureMap      closures = new ClosureMap();
+    /**
+     * This state's pattern matching productions.
+     */
+    private PatternMap  patternMatchers = new PatternMap();
+    /**
+     * Cost of each pattern match.
+     */
+    private CostMap     costMap = new CostMap();
+    /**
+     * This state's closures, i.e., nonterminal-to-nonterminal productions.
+     */
+    private ClosureMap  closures = new ClosureMap();
 
     private final NodeType  nodeType;
 
@@ -47,19 +56,19 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     {
         assert(cost < getCost(p.target));
         costMap.put(p.target, cost);
-        productions.put(p.target, p);
+        patternMatchers.put(p.target, p);
     }
 
     int size()
     {
-        assert(productions.size() == costMap.size());
-        return productions.size();
+        assert(patternMatchers.size() == costMap.size());
+        return patternMatchers.size();
     }
 
     boolean isEmpty()
     {
-        assert(productions.isEmpty() == costMap.isEmpty());
-        return productions.isEmpty();
+        assert(patternMatchers.isEmpty() == costMap.isEmpty());
+        return patternMatchers.isEmpty();
     }
 
     long getCost(Nonterminal nt)
@@ -106,12 +115,12 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         buffer.append(" ");
         buffer.append(this.nodeType);
 
-        if (productions.size() > 0) {
+        if (patternMatchers.size() > 0) {
             buffer.append("(patterns(");
 
             boolean didFirst = false;
-            for (Nonterminal nt: productions.keySet()) {
-                PatternMatcher p = productions.get(nt);
+            for (Nonterminal nt: patternMatchers.keySet()) {
+                PatternMatcher p = patternMatchers.get(nt);
 
                 if (didFirst) {
                     buffer.append(",");
@@ -144,7 +153,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     @Override
     public int hashCode()
     {
-        return nodeType.hashCode() * 31 + productions.hashCode();
+        return nodeType.hashCode() * 31 + patternMatchers.hashCode();
     }
 
     /**
@@ -160,7 +169,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     {
         if (o instanceof State) {
             State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
-            return this.nodeType.equals(s.nodeType) && this.productions.equals(s.productions);
+            return this.nodeType.equals(s.nodeType) && this.patternMatchers.equals(s.patternMatchers);
 
         } else {
             return false;
