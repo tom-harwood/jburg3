@@ -24,40 +24,17 @@ public class PatternMatcher<Nonterminal, NodeType>
     final List<Nonterminal>                 childTypes;
     final int                               ownCost;
     final Method                            postCallback;
-    final PatternMatcher<Nonterminal,NodeType>  antecedent;
-
-    // TODO: @SafeVarargs would be a better annotation,
-    // but that would require Java 1.7 or above.
-    @SuppressWarnings({"unchecked"})
-    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, PatternMatcher<Nonterminal,NodeType> antecedent, Nonterminal... childTypes)
-    {
-        this.target         = target;
-        this.nodeType       = nodeType;
-        this.childTypes     = Arrays.asList(childTypes);
-        this.ownCost        = cost;
-        this.antecedent     = antecedent;
-        this.postCallback   = postCallback;
-    }
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
     public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
     {
-        this(target, nodeType, cost, postCallback, null, childTypes);
-    }
-
-    // TODO: @SafeVarargs would be a better annotation,
-    // but that would require Java 1.7 or above.
-    @SuppressWarnings({"unchecked"})
-    public PatternMatcher(Nonterminal target, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
-    {
-        this(target, nodeType, 1, postCallback, childTypes);
-    }
-
-    public boolean hasPatternMatcher(Nonterminal nt)
-    {
-        return target == nt;
+        this.target         = target;
+        this.nodeType       = nodeType;
+        this.childTypes     = Arrays.asList(childTypes);
+        this.ownCost        = cost;
+        this.postCallback   = postCallback;
     }
 
     public Nonterminal getNonterminal(int index)
@@ -89,11 +66,7 @@ public class PatternMatcher<Nonterminal, NodeType>
     @Override
     public String toString()
     {
-        if (antecedent == null) {
-            return String.format("PatternMatcher %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
-        } else {
-            return String.format("PatternMatcher (antecedent %s) %s=%s%s cost:%s %s", antecedent.target, target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
-        }
+        return String.format("PatternMatcher %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
     }
 
     private String getCallbackName(String prefix, Method callback)

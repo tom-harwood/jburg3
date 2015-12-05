@@ -36,7 +36,7 @@ public class ProductionTable<Nonterminal, NodeType>
     @SuppressWarnings({"unchecked"})
     public PatternMatcher addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
     {
-        PatternMatcher<Nonterminal,NodeType> result = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, method, childTypes);
+        PatternMatcher<Nonterminal,NodeType> result = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, 1, method, childTypes);
         nonterminals.add(nt);
         addPatternMatcher(result);
         return result;
