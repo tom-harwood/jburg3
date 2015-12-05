@@ -8,8 +8,8 @@ import java.util.List;
 
 public class FirstTest
 {
-    public enum Nonterminal { Int, Short };
-    public enum NodeType { ShortLiteral, IntLiteral, Add, Subtract, Multiply };
+    public enum Nonterminal { Int, Short, String };
+    public enum NodeType { ShortLiteral, IntLiteral, StringLiteral, Add, Subtract, Multiply };
 
     public static class Node
     {
@@ -80,6 +80,16 @@ public class FirstTest
         {
             return x / y;
         }
+
+        public String stringLiteral()
+        {
+            return payload.toString();
+        }
+
+        public String concat(String lhs, String rhs)
+        {
+            return lhs + rhs;
+        }
     }
 
     public static void main(String[] args)
@@ -91,12 +101,17 @@ public class FirstTest
 
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("add", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("identity", Integer.class), Nonterminal.Int);
+
         productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Node.class.getDeclaredMethod("multiply", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+
         productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Node.class.getDeclaredMethod("negate", Integer.class), Nonterminal.Int);
         productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Node.class.getDeclaredMethod("subtract", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
 
         productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Node.class.getDeclaredMethod("shortLiteral"));
         productions.addClosure(Nonterminal.Int, Nonterminal.Short);
+
+        productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Node.class.getDeclaredMethod("stringLiteral"));
+        productions.addPatternMatch(Nonterminal.String, NodeType.Add, Node.class.getDeclaredMethod("concat", String.class, String.class), Nonterminal.String, Nonterminal.String);
 
         productions.generateStates();
         productions.dump(new java.io.PrintWriter(System.out));
