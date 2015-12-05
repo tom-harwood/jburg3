@@ -21,15 +21,21 @@ public class ProductionTable<Nonterminal, NodeType>
      * RepresenterStates, keyed by themselves
      * so they can be efficaciously retrieved.
      */
-    private Map<
-        RepresenterState<Nonterminal,NodeType>,
-        RepresenterState<Nonterminal,NodeType>
-    > repStates = new HashMap<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>>();
+    private Map<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>> repStates =
+        new HashMap<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>>();
 
-    private Map<
-        NodeType,
-        List<PatternMatcher<Nonterminal, NodeType>>
-    > patternMatchersByNodeType = new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
+    /**
+     * States mapped to a particular RepresenterState.
+     */
+    private Map<RepresenterState<Nonterminal,NodeType>, List<State<Nonterminal,NodeType>>> representedStates =
+        new HashMap<RepresenterState<Nonterminal, NodeType>, List<State<Nonterminal, NodeType>>>();
+
+    /**
+     * Pattern matchers by node type.
+     */
+    private Map<NodeType, List<PatternMatcher<Nonterminal,NodeType>>> patternMatchersByNodeType =
+        new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
+
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
