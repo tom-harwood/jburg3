@@ -7,29 +7,29 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Production encodes a opcode(operand, operand) pattern match.
- * Note that Production uses identity semantics for its hashCode()
+ * A PatternMatcher encodes a opcode(operand, operand) pattern match.
+ * Note that PatternMatcher uses identity semantics for its hashCode()
  * and equals() methods (i.e., it doesn't override Object), which
  * is used by the State objects that contain aggregations of
- * Production and Closure productions, which can create an unbounded
+ * PatternMatcher and Closure productions, which can create an unbounded
  * number of candidate States that only differ in that their costs
  * are increasing due to closures; these states don't contribute any
  * novel information and so the State defines its hashCode and equals
- * methods in terms of the Production map's hashCode() and equals().
+ * methods in terms of the PatternMatcher map's hashCode() and equals().
  */
-public class Production<Nonterminal, NodeType>
+public class PatternMatcher<Nonterminal, NodeType>
 {
     final Nonterminal                       target;
     final NodeType                          nodeType;
     final List<Nonterminal>                 childTypes;
     final int                               ownCost;
     final Method                            postCallback;
-    final Production<Nonterminal,NodeType>  antecedent;
+    final PatternMatcher<Nonterminal,NodeType>  antecedent;
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public Production(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Production<Nonterminal,NodeType> antecedent, Nonterminal... childTypes)
+    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, PatternMatcher<Nonterminal,NodeType> antecedent, Nonterminal... childTypes)
     {
         this.target         = target;
         this.nodeType       = nodeType;
@@ -42,7 +42,7 @@ public class Production<Nonterminal, NodeType>
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public Production(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
+    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
     {
         this(target, nodeType, cost, postCallback, null, childTypes);
     }
@@ -50,12 +50,12 @@ public class Production<Nonterminal, NodeType>
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public Production(Nonterminal target, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    public PatternMatcher(Nonterminal target, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
     {
         this(target, nodeType, 1, postCallback, childTypes);
     }
 
-    public boolean hasProduction(Nonterminal nt)
+    public boolean hasPatternMatcher(Nonterminal nt)
     {
         return target == nt;
     }
@@ -90,9 +90,9 @@ public class Production<Nonterminal, NodeType>
     public String toString()
     {
         if (antecedent == null) {
-            return String.format("Production %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
+            return String.format("PatternMatcher %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
         } else {
-            return String.format("Production (antecedent %s) %s=%s%s cost:%s %s", antecedent.target, target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
+            return String.format("PatternMatcher (antecedent %s) %s=%s%s cost:%s %s", antecedent.target, target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
         }
     }
 

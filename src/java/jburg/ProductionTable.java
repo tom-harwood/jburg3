@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class ProductionTable<Nonterminal, NodeType>
 {
-    private List<Production<Nonterminal, NodeType>>             allProductions  = new ArrayList<Production<Nonterminal, NodeType>>();;
+    private List<PatternMatcher<Nonterminal, NodeType>>         patternMatchers = new ArrayList<PatternMatcher<Nonterminal, NodeType>>();;
     private List<Closure<Nonterminal>>                          closures        = new ArrayList<Closure<Nonterminal>>();
     private Set<Nonterminal>                                    nonterminals    = new TreeSet<Nonterminal>();
     private Set<NodeType>                                       nodeTypes       = new TreeSet<NodeType>();
@@ -28,17 +28,17 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private Map<
         NodeType,
-        List<Production<Nonterminal, NodeType>>
-    > productionsByNodeType = new TreeMap<NodeType, List<Production<Nonterminal, NodeType>>>();
+        List<PatternMatcher<Nonterminal, NodeType>>
+    > productionsByNodeType = new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public Production addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
+    public PatternMatcher addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
     {
-        Production<Nonterminal,NodeType> result = new Production<Nonterminal,NodeType>(nt, nodeType, method, childTypes);
+        PatternMatcher<Nonterminal,NodeType> result = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, method, childTypes);
         nonterminals.add(nt);
-        addProduction(result);
+        addPatternMatcher(result);
         return result;
     }
 
@@ -89,10 +89,10 @@ public class ProductionTable<Nonterminal, NodeType>
         } while (closureRecorded);
     }
 
-    private List<Production<Nonterminal,NodeType>> getProductions(NodeType op)
+    private List<PatternMatcher<Nonterminal,NodeType>> getPatternsForNodeType(NodeType op)
     {
         if (!productionsByNodeType.containsKey(op)) {
-            productionsByNodeType.put(op, new ArrayList<Production<Nonterminal,NodeType>>());
+            productionsByNodeType.put(op, new ArrayList<PatternMatcher<Nonterminal,NodeType>>());
         }
 
         return productionsByNodeType.get(op);
@@ -107,9 +107,9 @@ public class ProductionTable<Nonterminal, NodeType>
         for (NodeType nodeType: operators.keySet()) {
             State<Nonterminal, NodeType> state = new State<Nonterminal, NodeType>(nodeType);
 
-            for (Production<Nonterminal, NodeType> p: allProductions) {
+            for (PatternMatcher<Nonterminal, NodeType> p: patternMatchers) {
                 if (p.nodeType == nodeType && p.isLeaf() && p.ownCost < state.getCost(p.target)) {
-                    state.setProduction(p, p.ownCost);
+                    state.setPatternMatcher(p, p.ownCost);
                 }
             }
 
@@ -152,7 +152,7 @@ public class ProductionTable<Nonterminal, NodeType>
         RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
 
         for (Nonterminal n: nonterminals) {
-            for (Production<Nonterminal, NodeType> p: getProductions(op.nodeType)) {
+            for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
                 if (p.usesNonterminalAt(n, i) && state.getCost(n) < result.getCost(n)) {
                     result.setCost(n, state.getCost(n));
                 }
@@ -187,7 +187,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
             State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
 
-            for (Production<Nonterminal, NodeType> p: getProductions(op.nodeType)) {
+            for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
                 // for each state in the prefix:
                 //   for each nonterminal in the state:
                 //      cost = p.cost + sum of costs in prefix for the current nonterminals;
@@ -205,7 +205,7 @@ public class ProductionTable<Nonterminal, NodeType>
 			}
 
 			if (cost < result.getCost(p.target)) {
-			    result.setProduction(p,cost);
+			    result.setPatternMatcher(p,cost);
 			}
 		}
             }
@@ -236,12 +236,12 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
-    private void addProduction(Production<Nonterminal,NodeType> production)
+    private void addPatternMatcher(PatternMatcher<Nonterminal,NodeType> production)
     {
         NodeType nodeType = production.nodeType;
 
-        allProductions.add(production);
-        getProductions(nodeType).add(production);
+        patternMatchers.add(production);
+        getPatternsForNodeType(nodeType).add(production);
         
         if (!operators.containsKey(nodeType)) {
             operators.put(nodeType, new ArrayList<Operator<Nonterminal,NodeType>>());

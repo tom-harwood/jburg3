@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * A Closure represents a nonterminal-nonterminal transformation.
- * Like a pattern-matching Production, it can have pre and post callbacks.
+ * Like a PatternMatcher, it can have pre and post callbacks.
  */
 public class Closure<Nonterminal>
 {

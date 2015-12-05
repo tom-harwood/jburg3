@@ -28,7 +28,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     /** "Typedef" a map of costs by nonterminal. */
     class CostMap extends HashMap<Nonterminal,Long> {}
     /** "Typedef" a map of Productions by Nonterminal. */
-    class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal,NodeType>> {}
+    class ProductionMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
     /** "Typedef" a map of Closures by Nonterminal. */
     class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
@@ -43,7 +43,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         this.nodeType = nodeType;
     }
 
-    void setProduction(Production<Nonterminal,NodeType> p, long cost)
+    void setPatternMatcher(PatternMatcher<Nonterminal,NodeType> p, long cost)
     {
         assert(cost < getCost(p.target));
         costMap.put(p.target, cost);
@@ -111,7 +111,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
             boolean didFirst = false;
             for (Nonterminal nt: productions.keySet()) {
-                Production p = productions.get(nt);
+                PatternMatcher p = productions.get(nt);
 
                 if (didFirst) {
                     buffer.append(",");
