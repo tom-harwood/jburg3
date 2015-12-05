@@ -33,11 +33,12 @@ class Operator<Nonterminal, NodeType>
         }
     }
 
-    int getArity()
+    int size()
     {
         return reps.size();
     }
 
+    @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder("Operator ");

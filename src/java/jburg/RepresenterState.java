@@ -11,8 +11,9 @@ import java.util.*;
  */
 class RepresenterState<Nonterminal,NodeType>
 {
-    NodeType                nodeType;
-    Map<Nonterminal, Long>  costMap = new HashMap<Nonterminal, Long>();
+    Map<Nonterminal, Long>              costMap = new HashMap<Nonterminal, Long>();
+    Set<State<Nonterminal, NodeType>>   representedStates = new HashSet<State<Nonterminal, NodeType>>();
+    private final NodeType              nodeType;
 
     RepresenterState(NodeType nodeType)
     {

@@ -132,7 +132,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, List<State<Nonterminal, NodeType>> workList)
     {
-        for (int i = 0; i < op.getArity(); i++) {
+        for (int i = 0; i < op.size(); i++) {
 
             RepresenterState<Nonterminal,NodeType> pState = project(op, i, state);
 
@@ -155,17 +155,19 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
-        RepresenterState<Nonterminal,NodeType> result = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
+        RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
 
         for (Nonterminal n: nonterminals) {
             for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                if (p.usesNonterminalAt(n, i) && state.getCost(n) < result.getCost(n)) {
-                    result.setCost(n, state.getCost(n));
+                if (p.usesNonterminalAt(n, i) && state.getCost(n) < candidate.getCost(n)) {
+                    candidate.setCost(n, state.getCost(n));
                 }
             }
         }
 
-        return addRepresenterState(result);
+        RepresenterState<Nonterminal, NodeType> result = addRepresenterState(candidate);
+        result.representedStates.add(state);
+        return result;
     }
 
     /**
@@ -188,7 +190,7 @@ public class ProductionTable<Nonterminal, NodeType>
         List<State<Nonterminal, NodeType>> workList)
     {
         // TODO: Also analyze variadic productions.
-        if (dim == op.getArity()) {
+        if (dim == op.size()) {
             //System.out.printf("analyzing rules for %s arity %d against %s\n", op, dim, prefix);
 
             State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
@@ -226,7 +228,8 @@ public class ProductionTable<Nonterminal, NodeType>
                 // Cache the canonical state in the operator;
                 // it may be this new state, or it may
                 // be a equivalent previous instance.
-                op.addTransition(prefix, addState(result));
+                State<Nonterminal, NodeType> canonicalState = addState(result);
+                op.addTransition(prefix, canonicalState);
             }
         }
         else if (dim == pDim) {
@@ -291,20 +294,35 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
-            for (Operator<Nonterminal,NodeType> op: opList) {
-
-                if (op != null) {
-                    out.println(op);
-                }
-            }
-        }
-
         List<State<Nonterminal,NodeType>> sortedStates = Collections.list(Collections.enumeration(states));
         Collections.sort(sortedStates);
 
         for (State<Nonterminal, NodeType> s: sortedStates) {
             out.println(s);
+        }
+
+        out.println();
+
+
+        for (NodeType nodeType: operators.keySet()) {
+
+            for (Operator<Nonterminal,NodeType> op: operators.get(nodeType)) {
+
+                if (op != null) {
+                    out.printf("%s(%d)\n", op.nodeType, op.size());
+
+                    for (int i = 0; i < op.size(); i++) {
+                        out.printf("\tdimension %d\n", i);
+                        Set<RepresenterState<Nonterminal, NodeType>> repSet = op.reps.get(i);
+
+                        for (RepresenterState<Nonterminal, NodeType> rep: repSet) {
+                            for (State<Nonterminal, NodeType> s: rep.representedStates) {
+                                out.printf("\t\tstate %d\n", s.number);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         out.flush();
