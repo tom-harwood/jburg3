@@ -63,10 +63,10 @@ public class ProductionTable<Nonterminal, NodeType>
             State<Nonterminal,NodeType> state = worklist.pop();
 
             for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
-                // TODO: This should look at the state's arity and the operator's
-                // arity and decide if they're a match.
+
                 for (int i = 1; i < opList.size(); i++) {
                     Operator<Nonterminal,NodeType> op = opList.get(i);
+
                     if (op != null) {
                         computeTransitions(op, state, worklist);
                     }
