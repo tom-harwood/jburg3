@@ -8,24 +8,19 @@ import java.util.List;
  * A Closure represents a nonterminal-nonterminal transformation.
  * Like a PatternMatcher, it can have pre and post callbacks.
  */
-public class Closure<Nonterminal>
+public class Closure<Nonterminal> extends Production<Nonterminal>
 {
-    final Nonterminal   target;
     final Nonterminal   source;
-    final long          ownCost;
-    Method              postCallback;
 
-    public Closure(Nonterminal target, Nonterminal source, Method postCallback, long ownCost)
+    public Closure(Nonterminal target, Nonterminal source, int ownCost, Method postCallback)
     {
-        this.target         = target;
-        this.source         = source;
-        this.ownCost        = ownCost;
-        this.postCallback   = postCallback;
+        super(target, ownCost, null, postCallback);
+        this.source = source;
     }
 
     public Closure(Nonterminal target, Nonterminal source, Method postCallback)
     {
-        this(target, source, postCallback, 1);
+        this(target, source, 1, postCallback);
     }
 
     @Override

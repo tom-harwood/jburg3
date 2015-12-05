@@ -17,33 +17,31 @@ import java.util.Map;
  * novel information and so the State defines its hashCode and equals
  * methods in terms of the PatternMatcher map's hashCode() and equals().
  */
-public class PatternMatcher<Nonterminal, NodeType>
+public class PatternMatcher<Nonterminal, NodeType> extends Production<Nonterminal>
 {
-    final Nonterminal                       target;
     final NodeType                          nodeType;
     final List<Nonterminal>                 childTypes;
-    final int                               ownCost;
-    final Method                            postCallback;
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
     public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
     {
-        this.target         = target;
+        super(target, cost, null, postCallback);
+
         this.nodeType       = nodeType;
         this.childTypes     = Arrays.asList(childTypes);
-        this.ownCost        = cost;
-        this.postCallback   = postCallback;
     }
 
     public Nonterminal getNonterminal(int index)
     {
+        // TODO: Variadics
         return childTypes.get(index);
     }
 
     public boolean usesNonterminalAt(Nonterminal n, int index)
     {
+        // TODO: Variadics
         return index < childTypes.size() && getNonterminal(index) == n;
     }
 
@@ -59,22 +57,13 @@ public class PatternMatcher<Nonterminal, NodeType>
 
     public boolean acceptsDimension(int dim)
     {
-        // TODO: Variadics.
+        // TODO: Variadics
         return size() == dim;
     }
 
     @Override
     public String toString()
     {
-        return String.format("PatternMatcher %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName("post", postCallback));
-    }
-
-    private String getCallbackName(String prefix, Method callback)
-    {
-        if (callback != null) {
-            return String.format("%sCallback:%s", prefix, callback.getName());
-        } else {
-            return "";
-        }
+        return String.format("PatternMatcher %s=%s%s cost:%s %s)", target, nodeType, childTypes, ownCost, getCallbackName(postCallback));
     }
 }
