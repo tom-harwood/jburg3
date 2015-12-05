@@ -205,15 +205,15 @@ public class ProductionTable<Nonterminal, NodeType>
                 //        result = addState(result);
                 //        worklist.add(result);
                 if (p.acceptsDimension(dim)) {
-			long cost = 0;
-			for (int i = 0; i < dim && cost < Integer.MAX_VALUE; i++) {
-			    cost += prefix.get(i).getCost(p.getNonterminal(i));
-			}
+                    long cost = 0;
+                    for (int i = 0; i < dim && cost < Integer.MAX_VALUE; i++) {
+                        cost += prefix.get(i).getCost(p.getNonterminal(i));
+                    }
 
-			if (cost < result.getCost(p.target)) {
-			    result.setPatternMatcher(p,cost);
-			}
-		}
+                    if (cost < result.getCost(p.target)) {
+                        result.setPatternMatcher(p,cost);
+                    }
+                }
             }
 
             if (!result.isEmpty()) {
@@ -223,9 +223,9 @@ public class ProductionTable<Nonterminal, NodeType>
                     workList.add(result);
                 }
 
-		// Cache the canonical state in the operator;
-		// it may be this new state, or it may
-		// be a equivalent previous instance.
+                // Cache the canonical state in the operator;
+                // it may be this new state, or it may
+                // be a equivalent previous instance.
                 op.addTransition(prefix, addState(result));
             }
         }
