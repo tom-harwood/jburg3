@@ -29,7 +29,7 @@ public class ProductionTable<Nonterminal, NodeType>
     private Map<
         NodeType,
         List<PatternMatcher<Nonterminal, NodeType>>
-    > productionsByNodeType = new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
+    > patternMatchersByNodeType = new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
@@ -91,11 +91,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private List<PatternMatcher<Nonterminal,NodeType>> getPatternsForNodeType(NodeType op)
     {
-        if (!productionsByNodeType.containsKey(op)) {
-            productionsByNodeType.put(op, new ArrayList<PatternMatcher<Nonterminal,NodeType>>());
+        if (!patternMatchersByNodeType.containsKey(op)) {
+            patternMatchersByNodeType.put(op, new ArrayList<PatternMatcher<Nonterminal,NodeType>>());
         }
 
-        return productionsByNodeType.get(op);
+        return patternMatchersByNodeType.get(op);
     }
 
     private final List<RepresenterState<Nonterminal, NodeType>> noChildStates = new ArrayList<RepresenterState<Nonterminal, NodeType>>();
@@ -236,12 +236,12 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
-    private void addPatternMatcher(PatternMatcher<Nonterminal,NodeType> production)
+    private void addPatternMatcher(PatternMatcher<Nonterminal,NodeType> patternMatcher)
     {
-        NodeType nodeType = production.nodeType;
+        NodeType nodeType = patternMatcher.nodeType;
 
-        patternMatchers.add(production);
-        getPatternsForNodeType(nodeType).add(production);
+        patternMatchers.add(patternMatcher);
+        getPatternsForNodeType(nodeType).add(patternMatcher);
         
         if (!operators.containsKey(nodeType)) {
             operators.put(nodeType, new ArrayList<Operator<Nonterminal,NodeType>>());
@@ -249,11 +249,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
         List<Operator<Nonterminal,NodeType>> ops = operators.get(nodeType);
 
-        if (ops.size() < production.size() + 1) {
-            ops.addAll(Collections.nCopies((production.size() + 1) - ops.size(), (Operator<Nonterminal,NodeType>)null));
+        if (ops.size() < patternMatcher.size() + 1) {
+            ops.addAll(Collections.nCopies((patternMatcher.size() + 1) - ops.size(), (Operator<Nonterminal,NodeType>)null));
         }
 
-        ops.set(production.size(), new Operator<Nonterminal,NodeType>(nodeType, production.size()));
+        ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
     }
 
     private State<Nonterminal, NodeType> addState(State<Nonterminal, NodeType> state)
