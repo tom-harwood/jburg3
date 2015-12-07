@@ -292,15 +292,30 @@ public class ProductionTable<Nonterminal, NodeType>
         return repStates.get(rs);
     }
 
+    public State<Nonterminal, NodeType> getState(int stateNumber) {
+        if (stateNumber < 0) {
+            throw new IllegalArgumentException("Unlabled node");
+        } else {
+            return getStateTable().get(stateNumber-1);
+        }
+    }
+
+    private synchronized List<State<Nonterminal, NodeType>> getStateTable()
+    {
+        if (this.stateTable == null) {
+            this.stateTable = Collections.list(Collections.enumeration(states));
+            Collections.sort(stateTable);
+        }
+
+        return stateTable;
+    }
+
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        this.stateTable = Collections.list(Collections.enumeration(states));
-        Collections.sort(stateTable);
-
         out.println("<transitionTable>");
 
-        for (State<Nonterminal, NodeType> s: stateTable) {
+        for (State<Nonterminal, NodeType> s: getStateTable()) {
             out.println(s.xml());
         }
 

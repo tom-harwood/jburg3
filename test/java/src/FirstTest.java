@@ -140,9 +140,12 @@ public class FirstTest
         productions.addPatternMatch(Nonterminal.String, NodeType.Add, Node.class.getDeclaredMethod("concat", String.class, String.class), Nonterminal.String, Nonterminal.String);
 
         productions.generateStates();
+        productions.dump(new java.io.PrintWriter(System.out));
 
         Node lhs  = new Node(NodeType.IntLiteral);
+        lhs.payload = Integer.valueOf(1);
         Node rhs  = new Node(NodeType.IntLiteral);
+        rhs.payload = Integer.valueOf(2);
         Node root = new Node(NodeType.Add, lhs, rhs);
 
         Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(productions);

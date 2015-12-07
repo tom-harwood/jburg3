@@ -1,5 +1,7 @@
 package jburg;
 
+import java.util.*;
+
 public class Reducer<Nonterminal, NodeType>
 {
 
@@ -43,19 +45,54 @@ public class Reducer<Nonterminal, NodeType>
     }
 
     public Object reduce(BurgInput<NodeType> node, Nonterminal goal)
+    throws Exception
     {
-        throw new IllegalStateException("unimplemented");
+        // TODO: Run the entire algorithm iteratively, using the stack.
+        Stack<Production<Nonterminal>> productions = new Stack<Production<Nonterminal>>();
+        return reduce(node, goal, new Stack<Production<Nonterminal>>());
+    }
 
-        // Conceptually, this is simple:
-        // 1. Run pre-callbacks on any closures to get to the pattern matcher
-        // 1a. Run the pattern matcher's pre-callback
-        // 2. Reduce children and collect results
-        // 3. Run the pattern matcher's post callback
-        // 4. Return whatever the post callback returned
+    private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
+    throws Exception
+    {
+        State<Nonterminal,NodeType> state = productionTable.getState(node.getStateNumber());
 
-        // Getting the arguments properly marshaled is going to be amusing.
-        // It's worth suffering some pain here to make the callback API
-        // easier to work with; that will require making inferences about
-        // the arguments by inspecting the callbacks' method signatures.
+        // Run pre-callbacks on any closures to get to the pattern matcher.
+        Production<Nonterminal> current = state.getProduction(goal);
+
+        while(current instanceof Closure) {
+            // TODO: pre-callbacks.
+            pendingProductions.push(current);
+            current = state.getProduction(((Closure<Nonterminal>)current).source);
+        }
+
+        // TODO: Run the pattern matcher's pre-callback
+
+        Object result = null;
+
+        // Reduce children and collect results
+        if (current.postCallback != null) {
+
+            @SuppressWarnings("unchecked")
+			PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
+
+            switch(node.getSubtreeCount()) {
+                case 0:
+                    result = current.postCallback.invoke(node);
+                    break;
+                case 1:
+                    result = current.postCallback.invoke(node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
+                    break;
+                case 2:
+                    result = current.postCallback.invoke(node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)), reduce(node.getSubtree(1), patternMatcher.getNonterminal(1)));
+                    break;
+                default:
+                    throw new IllegalStateException(String.format("Unimplemented: child arity %d", node.getSubtreeCount()));
+            }
+        }
+
+        // TODO: Run closures' post callbacks
+
+        return result;
     }
 }

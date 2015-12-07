@@ -84,6 +84,17 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         }
     }
 
+    Production<Nonterminal> getProduction(Nonterminal goal)
+    {
+        if (patternMatchers.containsKey(goal)) {
+            return patternMatchers.get(goal);
+        } else if (closures.containsKey(goal)) {
+            return closures.get(goal);
+        } else {
+            throw new IllegalArgumentException(String.format("State %d cannot produce %s", number, goal));
+        }
+    }
+
     /**
      * Add a closure to the closure map if it's the best alternative seen so far.
      * @return true if the closure is added to the map.
