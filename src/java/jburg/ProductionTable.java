@@ -15,6 +15,7 @@ public class ProductionTable<Nonterminal, NodeType>
     private Set<Nonterminal>                                    nonterminals    = new TreeSet<Nonterminal>();
     private Set<NodeType>                                       nodeTypes       = new TreeSet<NodeType>();
     private Set<State<Nonterminal, NodeType>>                   states          = new HashSet<State<Nonterminal, NodeType>>();
+    public  List<State<Nonterminal,NodeType>>                   stateTable      = null;
     private Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators       = new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
     /**
@@ -294,37 +295,42 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        List<State<Nonterminal,NodeType>> sortedStates = Collections.list(Collections.enumeration(states));
-        Collections.sort(sortedStates);
+        this.stateTable = Collections.list(Collections.enumeration(states));
+        Collections.sort(stateTable);
 
-        for (State<Nonterminal, NodeType> s: sortedStates) {
-            out.println(s);
+        out.println("<transitionTable>");
+
+        for (State<Nonterminal, NodeType> s: stateTable) {
+            out.println(s.xml());
         }
 
         out.println();
-
 
         for (NodeType nodeType: operators.keySet()) {
 
             for (Operator<Nonterminal,NodeType> op: operators.get(nodeType)) {
 
                 if (op != null) {
-                    out.printf("%s(%d)\n", op.nodeType, op.size());
-
-                    for (int i = 0; i < op.size(); i++) {
-                        out.printf("\tdimension %d\n", i);
-                        Set<RepresenterState<Nonterminal, NodeType>> repSet = op.reps.get(i);
-
-                        for (RepresenterState<Nonterminal, NodeType> rep: repSet) {
-                            for (State<Nonterminal, NodeType> s: rep.representedStates) {
-                                out.printf("\t\tstate %d\n", s.number);
-                            }
-                        }
-                    }
+                    out.printf("<operator nodeType=\"%s\" arity=\"%d\">\n", nodeType, op.size());
+                    op.transitionTable.dump(out);
+                    out.println("</operator>");
                 }
             }
         }
 
+        out.println("</transitionTable>");
+
         out.flush();
+    }
+
+    public Operator<Nonterminal, NodeType> getOperator(NodeType nodeType, int arity)
+    {
+        List<Operator<Nonterminal, NodeType>> opsForNodeType = operators.get(nodeType);
+
+        if (opsForNodeType != null && opsForNodeType.size() > arity) {
+            return opsForNodeType.get(arity);
+        }
+
+        return null;
     }
 }

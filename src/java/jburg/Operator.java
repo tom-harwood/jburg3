@@ -16,20 +16,43 @@ import java.util.Set;
  */
 class Operator<Nonterminal, NodeType>
 {
+    /**
+     * The operator's node type, denormalized for debugging.
+     */
     final NodeType nodeType;
 
+    /**
+     * The root hyperplane of the transition table.
+     */
+    HyperPlane<Nonterminal, NodeType> transitionTable;
+
+    /**
+     * Representer states known by each dimension; a representer
+     * state only needs to be tried once in each dimension, so
+     * remembering rep states speeds up the transition computations.
+     */
     final List<Set<RepresenterState<Nonterminal,NodeType>>> reps;
 
-    final Map<List<RepresenterState<Nonterminal,NodeType>>, State<Nonterminal,NodeType>> transitionTable;
+    /**
+     * Lookup table of RepresenterStates by state number;
+     * there is a sub-table for each dimension.
+     */
+    final List<Map<Integer, RepresenterState<Nonterminal, NodeType>>> indexMap;
 
     Operator(NodeType nodeType, int arity)
     {
         this.nodeType = nodeType;
+        this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
         this.reps = new ArrayList<Set<RepresenterState<Nonterminal,NodeType>>>();
-        this.transitionTable = new HashMap<List<RepresenterState<Nonterminal,NodeType>>, State<Nonterminal,NodeType>>();
 
         for (int i = 0; i < arity; i++) {
             reps.add(new HashSet<RepresenterState<Nonterminal,NodeType>>());
+        }
+
+        this.indexMap = new ArrayList<Map<Integer, RepresenterState<Nonterminal, NodeType>>>();
+
+        for (int i = 0; i < arity; i++) {
+            indexMap.add(new HashMap<Integer, RepresenterState<Nonterminal, NodeType>>());
         }
     }
 
@@ -38,40 +61,41 @@ class Operator<Nonterminal, NodeType>
         return reps.size();
     }
 
+    State<Nonterminal, NodeType> getLeafState()
+    {
+        assert transitionTable.leafState != null;
+        return transitionTable.leafState;
+    }
+
+    RepresenterState<Nonterminal, NodeType> getRepresenterState(Integer key, int dim)
+    {
+        RepresenterState<Nonterminal, NodeType> result = indexMap.get(dim).get(key);
+
+        if (result == null) {
+            throw new IllegalArgumentException(String.format("State %d has no representer in dimension %d", key, dim));
+        }
+
+        return result;
+    }
+
+    void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> resultantState)
+    {
+        transitionTable.addHyperPlane(childStates, 0, resultantState);
+
+        for (int dim = 0; dim < size(); dim++) {
+            Map<Integer, RepresenterState<Nonterminal, NodeType>> indexForDim = indexMap.get(dim);
+            RepresenterState<Nonterminal, NodeType> rs = childStates.get(dim);
+
+            for (State s: rs.representedStates) {
+                // TODO: Collisions?
+                indexForDim.put(s.number, rs);
+            }
+        }
+    }
+
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder("Operator ");
-        builder.append(nodeType);
-
-        if (!transitionTable.isEmpty()) {
-            builder.append("[");
-
-            boolean firstTime = true;
-
-            for (List<RepresenterState<Nonterminal,NodeType>> keyList: transitionTable.keySet()) {
-
-                if (firstTime) {
-                    firstTime = false;
-                } else {
-                    builder.append(", ");
-                }
-
-                builder.append(keyList);
-                builder.append(String.format("=State#%d", transitionTable.get(keyList).number));
-            }
-            builder.append("]");
-        }
-
-        return builder.toString();
-    }
-
-    void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> s)
-    {
-        // Make a copy of the childStates key; the caller may mutate it.
-        List<RepresenterState<Nonterminal,NodeType>> key = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
-        key.addAll(childStates);
-        transitionTable.put(key, s);
-        //System.out.printf("Added transition %s=State %d to %s\n", childStates, s.number, this);
+        return String.format("Operator %s %s", nodeType, transitionTable);
     }
 }

@@ -18,39 +18,70 @@ import java.util.*;
  */
 class HyperPlane<Nonterminal, NodeType>
 {
-    Map<HyperKey<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>> nextDimension;
-    Map<HyperKey<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
+    Map<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>> nextDimension;
+    Map<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
+
+    State<Nonterminal, NodeType>    leafState;
 
     HyperPlane()
     {
-        nextDimension   = new HashMap<HyperKey<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>>();
-        finalDimension  = new HashMap<HyperKey<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
+        nextDimension   = new HashMap<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>>();
+        finalDimension  = new HashMap<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
+        leafState       = null;
     }
 
-    void addHyperPlane(Nonterminal needle, List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
+    void addHyperPlane(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
     {
-        RepresenterState<Nonterminal, NodeType> currentRs = currentDim < childStates.size()?
-            childStates.get(currentDim): null;
+        if (childStates.size() > 0) {
+            RepresenterState<Nonterminal, NodeType> key = childStates.get(currentDim);
 
-        HyperKey<Nonterminal, NodeType> key = new HyperKey<Nonterminal, NodeType>(needle, currentRs);
+            if (currentDim < childStates.size() - 1) {
 
-        if (currentDim < childStates.size() - 1) {
+                if (!nextDimension.containsKey(key)) {
+                    nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
+                }
+                nextDimension.get(key).addHyperPlane(childStates, currentDim+1, resultantState);
 
-            if (!nextDimension.containsKey(key)) {
-                nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
+            } else {
+                finalDimension.put(key, resultantState);
             }
-            nextDimension.get(key).addHyperPlane(needle, childStates, currentDim+1, resultantState);
-
         } else {
-            finalDimension.put(key, resultantState);
+            assert leafState == null;
+            leafState = resultantState;
         }
+    }
+
+    HyperPlane<Nonterminal, NodeType> getNextDimension(RepresenterState<Nonterminal, NodeType> rs)
+    {
+        HyperPlane<Nonterminal, NodeType> result = nextDimension.get(rs);
+
+        if (result == null) {
+            throw new IllegalStateException(String.format("No hyperplane mapping for %s", rs));
+        }
+
+        return result;
+    }
+
+    State<Nonterminal, NodeType> getResultState(RepresenterState<Nonterminal, NodeType> rs)
+    {
+        State<Nonterminal, NodeType> result = finalDimension.get(rs);
+
+        if (result == null) {
+            throw new IllegalStateException(String.format("No hyperplane mapping for %s", rs));
+        }
+
+        return result;
     }
 
     @Override
     public String toString()
     {
-        if (nextDimension.isEmpty()) {
+        if (leafState != null) {
+            return leafState.toString();
+
+        } else if (nextDimension.isEmpty()) {
             return finalDimension.toString();
+
         } else {
             return String.format("HyperPlane{%s %s}", nextDimension, finalDimension);
         }
@@ -59,73 +90,28 @@ class HyperPlane<Nonterminal, NodeType>
     void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        if (nextDimension.isEmpty()) {
-            // We're at a leaf.
-            for (HyperKey<Nonterminal, NodeType> key: finalDimension.keySet()) {
+        if (leafState != null) {
+            out.printf("<leaf state=\"%d\"/>\n", leafState.number);
+
+        } else if (nextDimension.isEmpty()) {
+
+            for (RepresenterState<Nonterminal, NodeType> key: finalDimension.keySet()) {
                 State<Nonterminal, NodeType> goalState = finalDimension.get(key);
 
-                if (key.rs == null) {
-                    out.printf("<leaf state=\"%d\"/>\n", goalState.number);
-                } else {
-                    for (State<Nonterminal, NodeType> s: key.rs.representedStates) {
-                        out.printf("<plane state=\"%d\"><leaf state=\"%d\"/></plane>\n", s.number, goalState.number);
-                    }
+                for (State<Nonterminal, NodeType> s: key.representedStates) {
+                    out.printf("<plane state=\"%d\"><leaf state=\"%d\"/></plane>\n", s.number, goalState.number);
                 }
             }
         } else {
                 
-            for (HyperKey<Nonterminal, NodeType> key: nextDimension.keySet()) {
-                assert key.rs != null;
+            for (RepresenterState<Nonterminal, NodeType> key: nextDimension.keySet()) {
 
-                for (State s: key.rs.representedStates) {
+                for (State s: key.representedStates) {
                     out.printf("<plane state=\"%d\">", s.number);
                     nextDimension.get(key).dump(out);
                     out.println("</plane>");
                 }
             }
-        }
-    }
-
-    class HyperKey<Nonterminal, NodeType>
-    {
-        final Nonterminal nt;
-        final RepresenterState<Nonterminal, NodeType>   rs;
-
-        HyperKey(Nonterminal nt, RepresenterState<Nonterminal, NodeType> rs)
-        {
-            this.nt = nt;
-            this.rs = rs;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return rs != null? nt.hashCode() * 31 + rs.hashCode(): nt.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object x)
-        {
-            if (x instanceof HyperKey) {
-                HyperKey k = (HyperKey) x;
-
-                if (this.nt.equals(k.nt)) {
-
-                    if (this.rs != null && k.rs != null) {
-                        return this.rs.equals(k.rs);
-                    } else {
-                        return this.rs == k.rs;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        @Override
-        public String toString()
-        {
-            return rs != null? String.format("HyperKey{%s,%s}", nt, rs): nt.toString();
         }
     }
 }

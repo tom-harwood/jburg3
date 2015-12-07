@@ -1,9 +1,6 @@
 package jburg;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * A State represents a vertex in the transition table.
@@ -105,6 +102,31 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         }
     }
 
+    /**
+     * Marshal nonterminals produced by both
+     * pattern matchers and closures.
+     */
+    Set<Nonterminal> getNonterminals()
+    {
+        Set<Nonterminal> result = new HashSet<Nonterminal>();
+
+        for (Nonterminal patternNonterminal: patternMatchers.keySet()) {
+            result.add(patternNonterminal);
+        }
+
+        for (Nonterminal closureNonterminal: closures.keySet()) {
+            assert !result.contains(closureNonterminal);
+            result.add(closureNonterminal);
+        }
+
+        return result;
+    }
+
+    int getStateNumber()
+    {
+        return number;
+    }
+
     @Override
     public String toString()
     {
@@ -135,6 +157,37 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
             }
             buffer.append(")");
         }
+
+        return buffer.toString();
+    }
+
+    /**
+     * @return an XML rendering of this state.
+     */
+    String xml()
+    {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(String.format("<state number=\"%d\" nodeType=\"%s\">", number, nodeType));
+
+        if (patternMatchers.size() > 0) {
+            buffer.append("<patterns>");
+
+            for (Nonterminal nt: patternMatchers.keySet()) {
+                PatternMatcher<Nonterminal, NodeType> p = patternMatchers.get(nt);
+                buffer.append(String.format("<pattern nt=\"%s\" pattern=\"%s\"/>", nt, p));
+            }
+            buffer.append("</patterns>");
+        }
+
+        if (closures.size() > 0) {
+            buffer.append("<closures>");
+            for (Closure<Nonterminal> closure: closures.values()) {
+                buffer.append(String.format("<closure nt=\"%s\" source=\"%s\"/>", closure.target, closure.source));
+            }
+            buffer.append("</closures>");
+        }
+
+        buffer.append("</state>");
 
         return buffer.toString();
     }
