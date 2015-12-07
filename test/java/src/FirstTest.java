@@ -1,5 +1,6 @@
 
 import jburg.ProductionTable;
+import jburg.Reducer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,26 +12,51 @@ public class FirstTest
     public enum Nonterminal { Int, Short, String };
     public enum NodeType { ShortLiteral, IntLiteral, StringLiteral, Add, Subtract, Multiply };
 
-    public static class Node
+    public static class Node implements jburg.BurgInput<NodeType>
     {
-        NodeType    type;
+        NodeType    nodeType;
         List<Node>  children;
 
         Node(NodeType type)
         {
-            this.type = type;
+            this.nodeType = type;
             this.children = Collections.emptyList();
         }
 
         Node(NodeType type, Node... children)
         {
-            this.type = type;
+            this.nodeType = type;
             this.children = Arrays.asList(children);
         }
 
-        int     stateNumber = -1;
+        public NodeType getNodeType()
+        {
+            return this.nodeType;
+        }
 
-        Object  payload;
+        public int getSubtreeCount()
+        {
+            return children.size();
+        }
+
+        public Node getSubtree(int idx)
+        {
+            return children.get(idx);
+        }
+
+        public void setStateNumber(int stateNumber)
+        {
+            this.stateNumber = stateNumber;
+        }
+
+        public int getStateNumber()
+        {
+            return this.stateNumber;
+        }
+
+        private int stateNumber = -1;
+
+        Object payload;
 
         /*
          * ** Nullary Operators **
@@ -114,7 +140,21 @@ public class FirstTest
         productions.addPatternMatch(Nonterminal.String, NodeType.Add, Node.class.getDeclaredMethod("concat", String.class, String.class), Nonterminal.String, Nonterminal.String);
 
         productions.generateStates();
-        productions.dump(new java.io.PrintWriter(System.out));
+
+        Node lhs  = new Node(NodeType.IntLiteral);
+        Node rhs  = new Node(NodeType.IntLiteral);
+        Node root = new Node(NodeType.Add, lhs, rhs);
+
+        Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(productions);
+        reducer.label(root);
+        Integer result = (Integer)reducer.reduce(root, Nonterminal.Int);
+
+        if (result == 3) {
+            System.out.printf("Succeeded: %s == 3\n", result);
+        } else {
+            System.out.printf("FAILED: %s != 3\n", result);
+            System.exit(1);
+        }
     }
 
 }
