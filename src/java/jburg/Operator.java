@@ -1,7 +1,6 @@
 package jburg;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -72,7 +71,7 @@ class Operator<Nonterminal, NodeType>
         RepresenterState<Nonterminal, NodeType> result = indexMap.get(dim).get(key);
 
         if (result == null) {
-            throw new IllegalArgumentException(String.format("State %d has no representer in dimension %d", key, dim));
+            throw new IllegalArgumentException(String.format("State %d has no representer in dimension %d of %s", key, dim, this));
         }
 
         return result;
@@ -80,14 +79,21 @@ class Operator<Nonterminal, NodeType>
 
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> resultantState)
     {
-        transitionTable.addHyperPlane(childStates, 0, resultantState);
+        assert childStates.size() == this.size();
+        transitionTable.add(childStates, 0, resultantState);
 
         for (int dim = 0; dim < size(); dim++) {
             Map<Integer, RepresenterState<Nonterminal, NodeType>> indexForDim = indexMap.get(dim);
             RepresenterState<Nonterminal, NodeType> rs = childStates.get(dim);
 
-            for (State s: rs.representedStates) {
-                // TODO: Collisions?
+            // Add the state to the operator's state->representer state
+            // lookup table. It may already be present, because we create
+            // a canonical state to represent all equivalent states, and
+            // that state may have already interacted with this operator;
+            // but in that case we must be adding the same representer state.
+            for (State<Nonterminal, NodeType> s: rs.representedStates) {
+
+                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs);
                 indexForDim.put(s.number, rs);
             }
         }
@@ -96,6 +102,6 @@ class Operator<Nonterminal, NodeType>
     @Override
     public String toString()
     {
-        return String.format("Operator %s %s", nodeType, transitionTable);
+        return String.format("Operator %s[%d]", nodeType, size());
     }
 }

@@ -1,8 +1,6 @@
 package jburg;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A Closure represents a nonterminal-nonterminal transformation.

@@ -23,11 +23,14 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     int number = -1;
 
     /** "Typedef" a map of costs by nonterminal. */
-    class CostMap extends HashMap<Nonterminal,Long> {}
+    @SuppressWarnings("serial")
+	class CostMap extends HashMap<Nonterminal,Long> {}
     /** "Typedef" a map of PatternMatchers keyed by Nonterminal. */
-    class PatternMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
+    @SuppressWarnings("serial")
+	class PatternMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
     /** "Typedef" a map of Closures by Nonterminal. */
-    class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
+    @SuppressWarnings("serial")
+	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
     /**
      * This state's pattern matching productions.
@@ -153,7 +156,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
             boolean didFirst = false;
             for (Nonterminal nt: patternMatchers.keySet()) {
-                PatternMatcher p = patternMatchers.get(nt);
+                PatternMatcher<Nonterminal, NodeType> p = patternMatchers.get(nt);
 
                 if (didFirst) {
                     buffer.append(",");

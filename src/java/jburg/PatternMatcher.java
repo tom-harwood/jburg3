@@ -2,9 +2,7 @@ package jburg;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A PatternMatcher encodes a opcode(operand, operand) pattern match.

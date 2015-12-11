@@ -4,7 +4,6 @@ import java.util.*;
 
 public class Reducer<Nonterminal, NodeType>
 {
-
     final ProductionTable<Nonterminal, NodeType> productionTable;
 
     public Reducer(ProductionTable<Nonterminal, NodeType> productionTable)
@@ -49,7 +48,7 @@ public class Reducer<Nonterminal, NodeType>
     {
         // TODO: Run the entire algorithm iteratively, using the stack.
         Stack<Production<Nonterminal>> productions = new Stack<Production<Nonterminal>>();
-        return reduce(node, goal, new Stack<Production<Nonterminal>>());
+        return reduce(node, goal, productions);
     }
 
     private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
@@ -91,7 +90,12 @@ public class Reducer<Nonterminal, NodeType>
             }
         }
 
-        // TODO: Run closures' post callbacks
+        while (!pendingProductions.isEmpty()) {
+            Production<Nonterminal> closure = pendingProductions.pop();
+            if (closure.postCallback != null) {
+                result = closure.postCallback.invoke(node, result);
+            }
+        }
 
         return result;
     }

@@ -13,7 +13,6 @@ public class ProductionTable<Nonterminal, NodeType>
     private List<PatternMatcher<Nonterminal, NodeType>>         patternMatchers = new ArrayList<PatternMatcher<Nonterminal, NodeType>>();;
     private List<Closure<Nonterminal>>                          closures        = new ArrayList<Closure<Nonterminal>>();
     private Set<Nonterminal>                                    nonterminals    = new TreeSet<Nonterminal>();
-    private Set<NodeType>                                       nodeTypes       = new TreeSet<NodeType>();
     private Set<State<Nonterminal, NodeType>>                   states          = new HashSet<State<Nonterminal, NodeType>>();
     public  List<State<Nonterminal,NodeType>>                   stateTable      = null;
     private Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators       = new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
@@ -26,12 +25,6 @@ public class ProductionTable<Nonterminal, NodeType>
         new HashMap<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>>();
 
     /**
-     * States mapped to a particular RepresenterState.
-     */
-    private Map<RepresenterState<Nonterminal,NodeType>, List<State<Nonterminal,NodeType>>> representedStates =
-        new HashMap<RepresenterState<Nonterminal, NodeType>, List<State<Nonterminal, NodeType>>>();
-
-    /**
      * Pattern matchers by node type.
      */
     private Map<NodeType, List<PatternMatcher<Nonterminal,NodeType>>> patternMatchersByNodeType =
@@ -41,7 +34,7 @@ public class ProductionTable<Nonterminal, NodeType>
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public PatternMatcher addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
+    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, Method method, Nonterminal... childTypes)
     {
         PatternMatcher<Nonterminal,NodeType> result = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, 1, method, childTypes);
         nonterminals.add(nt);
@@ -49,7 +42,7 @@ public class ProductionTable<Nonterminal, NodeType>
         return result;
     }
 
-    public Closure addClosure(Nonterminal targetNt, Nonterminal sourceNt, Method method)
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, Method method)
     {
         Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, method);
         closures.add(closure);
@@ -63,11 +56,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
     public void generateStates()
     {
-        Stack<State<Nonterminal, NodeType>> worklist = generateLeafStates();
+        Queue<State<Nonterminal, NodeType>> worklist = generateLeafStates();
 
-        while (!worklist.empty()) {
+        while (worklist.peek() != null) {
             
-            State<Nonterminal,NodeType> state = worklist.pop();
+            State<Nonterminal,NodeType> state = worklist.remove();
 
             for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
@@ -107,9 +100,9 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private final List<RepresenterState<Nonterminal, NodeType>> noChildStates = new ArrayList<RepresenterState<Nonterminal, NodeType>>();
 
-    private Stack<State<Nonterminal, NodeType>> generateLeafStates()
+    private Queue<State<Nonterminal, NodeType>> generateLeafStates()
     {
-        Stack<State<Nonterminal, NodeType>> result = new Stack<State<Nonterminal, NodeType>>();
+        Queue<State<Nonterminal, NodeType>> result = new ArrayDeque<State<Nonterminal, NodeType>>();
 
         for (NodeType nodeType: operators.keySet()) {
             State<Nonterminal, NodeType> state = new State<Nonterminal, NodeType>(nodeType);
@@ -122,7 +115,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
             if (state.size() > 0) {
                 closure(state);
-                result.push(addState(state));
+                result.add(addState(state));
                 operators.get(nodeType).get(0).addTransition(noChildStates, state);
             }
 
@@ -131,14 +124,13 @@ public class ProductionTable<Nonterminal, NodeType>
         return result;
     }
 
-    private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, List<State<Nonterminal, NodeType>> workList)
+    private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, Queue<State<Nonterminal, NodeType>> workList)
     {
         for (int i = 0; i < op.size(); i++) {
 
             RepresenterState<Nonterminal,NodeType> pState = project(op, i, state);
 
             if (!pState.isEmpty() && !op.reps.get(i).contains(pState)) {
-                //System.out.printf("Added representer state {%s} to operator {%s}[%d]\n", pState, op, i);
                 op.reps.get(i).add(pState);
 
                 // Try all permutations of the operator's nonterminal children
@@ -188,11 +180,10 @@ public class ProductionTable<Nonterminal, NodeType>
         int pDim,
         RepresenterState<Nonterminal,NodeType> pivot,
         List<RepresenterState<Nonterminal, NodeType>> prefix,
-        List<State<Nonterminal, NodeType>> workList)
+        Queue<State<Nonterminal, NodeType>> workList)
     {
         // TODO: Also analyze variadic productions.
         if (dim == op.size()) {
-            //System.out.printf("analyzing rules for %s arity %d against %s\n", op, dim, prefix);
 
             State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
 

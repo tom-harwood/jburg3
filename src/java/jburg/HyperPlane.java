@@ -30,7 +30,7 @@ class HyperPlane<Nonterminal, NodeType>
         leafState       = null;
     }
 
-    void addHyperPlane(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
+    void add(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
     {
         if (childStates.size() > 0) {
             RepresenterState<Nonterminal, NodeType> key = childStates.get(currentDim);
@@ -40,7 +40,7 @@ class HyperPlane<Nonterminal, NodeType>
                 if (!nextDimension.containsKey(key)) {
                     nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
                 }
-                nextDimension.get(key).addHyperPlane(childStates, currentDim+1, resultantState);
+                nextDimension.get(key).add(childStates, currentDim+1, resultantState);
 
             } else {
                 finalDimension.put(key, resultantState);
@@ -99,14 +99,14 @@ class HyperPlane<Nonterminal, NodeType>
                 State<Nonterminal, NodeType> goalState = finalDimension.get(key);
 
                 for (State<Nonterminal, NodeType> s: key.representedStates) {
-                    out.printf("<plane state=\"%d\"><leaf state=\"%d\"/></plane>\n", s.number, goalState.number);
+                    out.printf("<leaf state=\"%d\"/>\n", s.number, goalState.number);
                 }
             }
         } else {
                 
             for (RepresenterState<Nonterminal, NodeType> key: nextDimension.keySet()) {
 
-                for (State s: key.representedStates) {
+                for (State<Nonterminal, NodeType> s: key.representedStates) {
                     out.printf("<plane state=\"%d\">", s.number);
                     nextDimension.get(key).dump(out);
                     out.println("</plane>");
