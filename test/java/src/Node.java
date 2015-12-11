@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Node implements jburg.BurgInput<NodeType>
@@ -13,7 +11,7 @@ public class Node implements jburg.BurgInput<NodeType>
     Node(NodeType type)
     {
         this.nodeType = type;
-        this.children = new ArrayList();
+        this.children = new ArrayList<Node>();
     }
 
     Node(NodeType type, String content)
