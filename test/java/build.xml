@@ -65,6 +65,7 @@ test - run java tests
                 <pathelement path="${jburg.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
+            <arg value="src/FirstTest.xml"/>
         </java>
     </target>
 

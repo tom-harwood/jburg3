@@ -1,0 +1,40 @@
+<Test>
+
+    <Testcase name="1+2" type="Int" expected="3">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="concat" type="String" expected="abc">
+        <Node op="Add">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="bc"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="+3 + (1 + 1)" type="Int" expected="5">
+        <Node op="Add">
+            <Node op="Add">
+                <Node op="IntLiteral" content="3"/>
+            </Node>
+            <Node op="Add">
+                <Node op="ShortLiteral" content="1"/>
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+    <Testcase name="+3 - (1 + 1)" type="Int" expected="1">
+        <Node op="Subtract">
+            <Node op="Add">
+                <Node op="IntLiteral" content="3"/>
+            </Node>
+            <Node op="Add">
+                <Node op="ShortLiteral" content="1"/>
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+</Test>
