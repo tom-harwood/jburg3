@@ -118,9 +118,9 @@ public class Node implements jburg.BurgInput<NodeType>
     public String toString()
     {
         if (content == null) {
-            return String.format("%s%s", nodeType, children);
+            return String.format("%s{%d}%s", nodeType, stateNumber, children);
         } else {
-            return String.format("%s(%s)%s", nodeType, content, children);
+            return String.format("%s{%d}(%s)%s", nodeType, stateNumber, content, children);
         }
     }
 }
