@@ -83,14 +83,40 @@ public class Reducer<Nonterminal, NodeType>
                 case 0:
                     result = current.postCallback.invoke(node);
                     break;
+
                 case 1:
                     result = current.postCallback.invoke(node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
                     break;
+
                 case 2:
-                    result = current.postCallback.invoke(node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)), reduce(node.getSubtree(1), patternMatcher.getNonterminal(1)));
+                    result = current.postCallback.invoke(
+                        node,
+                        reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)),
+                        reduce(node.getSubtree(1), patternMatcher.getNonterminal(1))
+                        );
                     break;
-                default:
-                    throw new IllegalStateException(String.format("Unimplemented: child arity %d", node.getSubtreeCount()));
+
+                default: {
+
+                    int formalCount = current.postCallback.getParameterCount();
+                    int actualCount = node.getSubtreeCount();
+
+                    Object[] actuals = new Object[formalCount];
+
+                    if (formalCount == actualCount) {
+                        for (int i = 0; i < node.getSubtreeCount(); i++) {
+                            actuals[i] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                        }
+
+                    } else if (formalCount < actualCount) {
+                        throw new IllegalStateException("variadic callbacks not supported yet.");
+
+                    } else {
+                        throw new IllegalStateException(String.format("Expected %d actuals, received %d",formalCount, actualCount));
+                    }
+
+                    result = current.postCallback.invoke(node, actuals);
+                }
             }
         }
 

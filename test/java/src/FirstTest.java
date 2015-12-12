@@ -20,6 +20,7 @@ public class FirstTest
         productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Node.class.getDeclaredMethod("intLiteral"));
 
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("add", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("addTernary", Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Node.class.getDeclaredMethod("identity", Integer.class), Nonterminal.Int);
 
         productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Node.class.getDeclaredMethod("multiply", Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);

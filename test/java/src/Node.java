@@ -109,9 +109,32 @@ public class Node implements jburg.BurgInput<NodeType>
         return lhs + rhs;
     }
 
+    /**
+     * ** Ternary operators, for testing **
+     */
+    public Integer addTernary(Integer x, Integer y, Integer z)
+    {
+        return x + y + z;
+    }
+
+    /*
+     * ** Conversion operators **
+     */
     public Integer widenShortToInt(Short operand)
     {
         return operand.intValue();
+    }
+
+    /*
+     * ** N-ary operators
+     */
+    public Integer addNary(Integer... args)
+    {
+        int result = 0;
+        for (Integer i: args) {
+            result += i;
+        }
+        return result;
     }
 
     @Override

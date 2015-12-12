@@ -74,4 +74,12 @@
         </Node>
     </Testcase>
 
+    <Testcase name="1+2+3" type="Int" expected="6">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+            <Node op="IntLiteral" content="3"/>
+        </Node>
+    </Testcase>
+
 </Test>

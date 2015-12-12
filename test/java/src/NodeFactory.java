@@ -95,5 +95,4 @@ class NodeFactory extends DefaultHandler
             nodeStack.pop();
         }
     }
-
 }
