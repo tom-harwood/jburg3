@@ -64,6 +64,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
             for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
+                // Skip the leaf nodes; they're already done.
                 for (int i = 1; i < opList.size(); i++) {
                     Operator<Nonterminal,NodeType> op = opList.get(i);
 
@@ -148,7 +149,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
-        RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(op.nodeType);
+        RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(state.nodeType);
 
         for (Nonterminal n: nonterminals) {
             for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
@@ -214,6 +215,10 @@ public class ProductionTable<Nonterminal, NodeType>
 
                 if (!states.contains(result)) {
                     closure(result);
+                    // We know that we will be using this state as the canonical
+                    // state, since no equivalent state is already stored. So it's
+                    // safe to add it to the worklist now; it will get its state
+                    // number via the call to addState(), below.
                     workList.add(result);
                 }
 
