@@ -33,12 +33,12 @@ public class Reducer<Nonterminal, NodeType>
                     if (dim < subtreeCount-1) {
                         current = current.getNextDimension(rs);
                     } else {
-                        node.setStateNumber(current.getResultState(rs).getStateNumber());
+                        node.setStateNumber(current.getResultState(rs).number);
                     }
                 }
 
             } else {
-                node.setStateNumber(op.getLeafState().getStateNumber());
+                node.setStateNumber(op.getLeafState().number);
             }
         }
     }
@@ -54,6 +54,10 @@ public class Reducer<Nonterminal, NodeType>
     private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
+        if (node.getStateNumber() < 0) {
+            throw new IllegalStateException(String.format("Unlabeled node %s",node));
+        }
+
         State<Nonterminal,NodeType> state = productionTable.getState(node.getStateNumber());
 
         // Run pre-callbacks on any closures to get to the pattern matcher.
