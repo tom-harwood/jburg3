@@ -1,12 +1,20 @@
-
 import jburg.ProductionTable;
 import jburg.Reducer;
 
+/**
+ * Create a table of arithmetic operations and try some arithmetic.
+ */
 public class FirstTest
 {
     public static void main(String[] args)
     throws Exception
     {
+        // The only command line parameter to this routine
+        // is the filename of the XML file with testcases;
+        // it's called from build.xml so it may be presumed
+        // to be a valid file path.
+        NodeFactory nf = new NodeFactory(args[0]);
+
         ProductionTable<Nonterminal, NodeType> productions = new ProductionTable<Nonterminal, NodeType>();
 
         productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Node.class.getDeclaredMethod("intLiteral"));
@@ -28,7 +36,6 @@ public class FirstTest
         productions.generateStates();
         productions.dump(new java.io.PrintWriter("/Users/tharwood/tmp/burmdump.xml"));
 
-        NodeFactory nf = new NodeFactory(args[0]);
         Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(productions);
 
         for (Testcase tc: nf.testcases) {
