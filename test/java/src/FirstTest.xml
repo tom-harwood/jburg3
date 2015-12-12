@@ -26,9 +26,9 @@
         </Node>
     </Testcase>
 
-    <Testcase name="+3 - (1 + 1)" type="Int" expected="1">
-        <Node op="Subtract">
-            <Node op="Add">
+    <Testcase name="-3 + (1 + 1)" type="Int" expected="-1">
+        <Node op="Add">
+            <Node op="Subtract">
                 <Node op="IntLiteral" content="3"/>
             </Node>
             <Node op="Add">
@@ -37,4 +37,41 @@
             </Node>
         </Node>
     </Testcase>
+
+    <Testcase name="2 * (1+2) - (1 + 1)" type="Int" expected="4">
+        <Node op="Subtract">
+            <Node op="Multiply">
+                <Node op="IntLiteral" content="2"/>
+                <Node op="Add">
+                    <Node op="IntLiteral" content="1"/>
+                    <Node op="IntLiteral" content="2"/>
+                </Node>
+            </Node>
+            <Node op="Add">
+                <Node op="ShortLiteral" content="1"/>
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+    <Testcase name="2 + -1" type="Int" expected="1">
+        <Node op="Add">
+            <Node op="IntLiteral" content="2"/>
+            <Node op="Subtract">
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+    <Testcase name="+2 + -1" type="Int" expected="1">
+        <Node op="Add">
+            <Node op="Add">
+                <Node op="IntLiteral" content="2"/>
+            </Node>
+            <Node op="Subtract">
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
 </Test>
