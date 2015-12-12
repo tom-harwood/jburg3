@@ -99,8 +99,6 @@ public class ProductionTable<Nonterminal, NodeType>
         return patternMatchersByNodeType.get(op);
     }
 
-    private final List<RepresenterState<Nonterminal, NodeType>> noChildStates = new ArrayList<RepresenterState<Nonterminal, NodeType>>();
-
     private Queue<State<Nonterminal, NodeType>> generateLeafStates()
     {
         Queue<State<Nonterminal, NodeType>> result = new ArrayDeque<State<Nonterminal, NodeType>>();
@@ -117,7 +115,7 @@ public class ProductionTable<Nonterminal, NodeType>
             if (state.size() > 0) {
                 closure(state);
                 result.add(addState(state));
-                operators.get(nodeType).get(0).addTransition(noChildStates, state);
+                operators.get(nodeType).get(0).setLeafState(state);
             }
 
         }
@@ -309,27 +307,30 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        out.println("<transitionTable>");
 
+        out.printf("<burmDump date=\"%s\">\n", new Date());
+
+        out.println("<stateTable>");
         for (State<Nonterminal, NodeType> s: getStateTable()) {
-            out.println(s.xml());
+            s.dump(out);
         }
+        out.println("</stateTable>");
 
         out.println();
 
+        out.println("<transitionTable>");
         for (NodeType nodeType: operators.keySet()) {
 
             for (Operator<Nonterminal,NodeType> op: operators.get(nodeType)) {
 
                 if (op != null) {
-                    out.printf("<operator nodeType=\"%s\" arity=\"%d\">\n", nodeType, op.size());
-                    op.transitionTable.dump(out);
-                    out.println("</operator>");
+                    op.dump(out);
                 }
             }
         }
-
         out.println("</transitionTable>");
+
+        out.println("</burmDump>");
 
         out.flush();
     }

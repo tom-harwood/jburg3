@@ -18,36 +18,40 @@ import java.util.*;
  */
 class HyperPlane<Nonterminal, NodeType>
 {
-    Map<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>> nextDimension;
-    Map<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
-
-    State<Nonterminal, NodeType>    leafState;
+    /**
+     * The next dimension of the map, if this is not the final dimension.
+     * TODO: Make HyperPlane abstract and provide final-dimension
+     * and non-final dimension specializations.
+     */
+    final Map<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>> nextDimension;
+    /**
+     * The states in this dimension, if this is the final dimension.
+     * TODO: Make HyperPlane abstract and provide final-dimension
+     * and non-final dimension specializations.
+     */
+    final Map<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
 
     HyperPlane()
     {
         nextDimension   = new HashMap<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>>();
         finalDimension  = new HashMap<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
-        leafState       = null;
     }
 
     void add(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
     {
-        if (childStates.size() > 0) {
-            RepresenterState<Nonterminal, NodeType> key = childStates.get(currentDim);
+        assert childStates.size() > 0;
 
-            if (currentDim < childStates.size() - 1) {
+        RepresenterState<Nonterminal, NodeType> key = childStates.get(currentDim);
 
-                if (!nextDimension.containsKey(key)) {
-                    nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
-                }
-                nextDimension.get(key).add(childStates, currentDim+1, resultantState);
+        if (currentDim < childStates.size() - 1) {
 
-            } else {
-                finalDimension.put(key, resultantState);
+            if (!nextDimension.containsKey(key)) {
+                nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
             }
+            nextDimension.get(key).add(childStates, currentDim+1, resultantState);
+
         } else {
-            assert leafState == null;
-            leafState = resultantState;
+            finalDimension.put(key, resultantState);
         }
     }
 
@@ -76,10 +80,7 @@ class HyperPlane<Nonterminal, NodeType>
     @Override
     public String toString()
     {
-        if (leafState != null) {
-            return leafState.toString();
-
-        } else if (nextDimension.isEmpty()) {
+        if (nextDimension.isEmpty()) {
             return finalDimension.toString();
 
         } else {
@@ -90,16 +91,13 @@ class HyperPlane<Nonterminal, NodeType>
     void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        if (leafState != null) {
-            out.printf("<leaf state=\"%d\"/>\n", leafState.number);
-
-        } else if (nextDimension.isEmpty()) {
+        if (nextDimension.isEmpty()) {
 
             for (RepresenterState<Nonterminal, NodeType> key: finalDimension.keySet()) {
                 State<Nonterminal, NodeType> goalState = finalDimension.get(key);
 
                 for (State<Nonterminal, NodeType> s: key.representedStates) {
-                    out.printf("<leaf state=\"%d\"/>\n", s.number, goalState.number);
+                    s.miniDump(out);
                 }
             }
         } else {

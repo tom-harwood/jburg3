@@ -205,34 +205,43 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     }
 
     /**
-     * @return an XML rendering of this state.
+     * Dump an XML rendering of this state.
+     * @param out   the output sink.
      */
-    String xml()
+    void dump(java.io.PrintWriter out)
+    throws java.io.IOException
     {
-        StringBuilder buffer = new StringBuilder();
-        buffer.append(String.format("<state number=\"%d\" nodeType=\"%s\">", number, nodeType));
+        out.printf("<state number=\"%d\" nodeType=\"%s\">", number, nodeType);
 
         if (patternMatchers.size() > 0) {
-            buffer.append("<patterns>");
+            out.println("<patterns>");
 
             for (Nonterminal nt: patternMatchers.keySet()) {
                 PatternMatcher<Nonterminal, NodeType> p = patternMatchers.get(nt);
-                buffer.append(String.format("<pattern nt=\"%s\" pattern=\"%s\"/>", nt, p));
+                out.printf("<pattern nt=\"%s\" pattern=\"%s\"/>\n", nt, p);
             }
-            buffer.append("</patterns>");
+            out.printf("</patterns>");
         }
 
         if (closures.size() > 0) {
-            buffer.append("<closures>");
+            out.println("<closures>");
             for (Closure<Nonterminal> closure: closures.values()) {
-                buffer.append(String.format("<closure nt=\"%s\" source=\"%s\"/>", closure.target, closure.source));
+                out.printf(String.format("<closure nt=\"%s\" source=\"%s\"/>", closure.target, closure.source));
             }
-            buffer.append("</closures>");
+            out.println("</closures>");
         }
 
-        buffer.append("</state>");
+        out.println("</state>");
+    }
 
-        return buffer.toString();
+    /**
+     * Dump an abbreviated rendering of this state.
+     * @param out   the output sink.
+     */
+    void miniDump(java.io.PrintWriter out)
+    throws java.io.IOException
+    {
+        out.printf("<leaf state=\"%d\"/>\n", number);
     }
 
     /**

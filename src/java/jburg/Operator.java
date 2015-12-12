@@ -39,6 +39,14 @@ class Operator<Nonterminal, NodeType>
     final List<Map<Integer, RepresenterState<Nonterminal, NodeType>>> indexMap;
 
     /**
+     * If this State is a leaf state, there is either only one state
+     * (if the productions had no semantic guards), or a state that
+     * represents the "high" node in a lattice-like structure of states
+     * that correspond to the results of the semantic guards.
+     */
+    State<Nonterminal, NodeType> leafState = null;
+
+    /**
      * @param nodeType  the Operator's node type.
      * @param arity     the Operator's arity.
      * @todo variadic operators.
@@ -46,17 +54,23 @@ class Operator<Nonterminal, NodeType>
     Operator(NodeType nodeType, int arity)
     {
         this.nodeType = nodeType;
-        this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
-        this.reps = new ArrayList<Set<RepresenterState<Nonterminal,NodeType>>>();
 
-        for (int i = 0; i < arity; i++) {
-            reps.add(new HashSet<RepresenterState<Nonterminal,NodeType>>());
-        }
+        if (arity > 0) {
+            this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
+            this.reps = new ArrayList<Set<RepresenterState<Nonterminal,NodeType>>>();
 
-        this.indexMap = new ArrayList<Map<Integer, RepresenterState<Nonterminal, NodeType>>>();
+            for (int i = 0; i < arity; i++) {
+                reps.add(new HashSet<RepresenterState<Nonterminal,NodeType>>());
+            }
 
-        for (int i = 0; i < arity; i++) {
-            indexMap.add(new HashMap<Integer, RepresenterState<Nonterminal, NodeType>>());
+            this.indexMap = new ArrayList<Map<Integer, RepresenterState<Nonterminal, NodeType>>>();
+
+            for (int i = 0; i < arity; i++) {
+                indexMap.add(new HashMap<Integer, RepresenterState<Nonterminal, NodeType>>());
+            }
+        } else {
+            reps = null;
+            indexMap = null;
         }
     }
 
@@ -66,7 +80,7 @@ class Operator<Nonterminal, NodeType>
      */
     int size()
     {
-        return reps.size();
+        return reps != null? reps.size(): 0;
     }
 
     /**
@@ -76,8 +90,19 @@ class Operator<Nonterminal, NodeType>
      */
     State<Nonterminal, NodeType> getLeafState()
     {
-        assert transitionTable.leafState != null;
-        return transitionTable.leafState;
+        assert leafState != null;
+        return leafState;
+    }
+
+    /**
+     * Set the leaf state.
+     * @pre the Operator must be of arity zero.
+     */
+    void setLeafState(State<Nonterminal, NodeType> leafState)
+    {
+        assert reps == null;
+        assert this.leafState == null;
+        this.leafState = leafState;
     }
 
     /**
@@ -125,6 +150,22 @@ class Operator<Nonterminal, NodeType>
                 indexForDim.put(s.number, rs);
             }
         }
+    }
+
+    /**
+     * Dump this operator as XML.
+     * @param out   the output sink.
+     */
+    void dump(java.io.PrintWriter out)
+    throws java.io.IOException
+    {
+        out.printf("<operator nodeType=\"%s\" arity=\"%d\">\n", nodeType, size());
+        if (transitionTable != null) {
+            transitionTable.dump(out);
+        } else if (leafState != null) {
+            leafState.miniDump(out);
+        }
+        out.println("</operator>");
     }
 
     @Override
