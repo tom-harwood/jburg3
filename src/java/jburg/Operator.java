@@ -16,7 +16,7 @@ import java.util.Set;
 class Operator<Nonterminal, NodeType>
 {
     /**
-     * The operator's node type, denormalized for debugging.
+     * The operator's node type, denormalized for debugging
      */
     final NodeType nodeType;
 
@@ -38,6 +38,11 @@ class Operator<Nonterminal, NodeType>
      */
     final List<Map<Integer, RepresenterState<Nonterminal, NodeType>>> indexMap;
 
+    /**
+     * @param nodeType  the Operator's node type.
+     * @param arity     the Operator's arity.
+     * @todo variadic operators.
+     */
     Operator(NodeType nodeType, int arity)
     {
         this.nodeType = nodeType;
@@ -55,17 +60,34 @@ class Operator<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Get this Operator's size, i.e., its arity.
+     * @return the operator's fixed arity.
+     */
     int size()
     {
         return reps.size();
     }
 
+    /**
+     * Get a leaf Operator's single state.
+     * @todo leaf operators with semantic guards
+     * will have multiple states.
+     */
     State<Nonterminal, NodeType> getLeafState()
     {
         assert transitionTable.leafState != null;
         return transitionTable.leafState;
     }
 
+    /**
+     * Map a state to its corresponding representer state in the given dimension.
+     * @param state the state to be mapped.
+     * @param dim   the dimension to search.
+     * @return      the RepresenterState that represents the state in that dimension.
+     * @throws      IllegalArgumentException if the state has no mapping to a
+     * representer state in the specified dimension.
+     */
     RepresenterState<Nonterminal, NodeType> getRepresenterState(Integer key, int dim)
     {
         RepresenterState<Nonterminal, NodeType> result = indexMap.get(dim).get(key);
@@ -77,6 +99,12 @@ class Operator<Nonterminal, NodeType>
         return result;
     }
 
+    /**
+     * Add an entry to this operator's transition table.
+     * @param childStates       the list of representer states that produced
+     * the transition; these representer states are its compound key.
+     * @param resultantState    the state produced by this transition.
+     */
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> resultantState)
     {
         assert childStates.size() == this.size();
