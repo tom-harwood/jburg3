@@ -39,13 +39,18 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     /**
      * Cost of each pattern match.
      */
-    private CostMap     costMap = new CostMap();
+    private CostMap     patternCosts = new CostMap();
     /**
      * This state's closures, i.e., nonterminal-to-nonterminal productions.
      */
     private ClosureMap  closures = new ClosureMap();
 
-    private final NodeType  nodeType;
+    /**
+     * The node type of this state; used while projecting
+     * representer states, which are unique for a particular
+     * tuple of (NodeType, nt=cost*).
+     */
+    final NodeType  nodeType;
 
     State(NodeType nodeType)
     {
@@ -55,28 +60,44 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     void setPatternMatcher(PatternMatcher<Nonterminal,NodeType> p, long cost)
     {
         assert(cost < getCost(p.target));
-        costMap.put(p.target, cost);
+        patternCosts.put(p.target, cost);
         patternMatchers.put(p.target, p);
     }
 
+    /**
+     * @return the number of pattern matching productions in this state.
+     */
     int size()
     {
-        assert(patternMatchers.size() == costMap.size());
+        assert(patternMatchers.size() == patternCosts.size());
         return patternMatchers.size();
     }
 
+    /**
+     * @return true if this state has no pattern matching productions.
+     */
     boolean isEmpty()
     {
-        assert(patternMatchers.isEmpty() == costMap.isEmpty());
-        return patternMatchers.isEmpty();
+        return size() == 0;
     }
 
+    /**
+     * Get the cost of a nonterminal; this may require
+     * navigation of a chain of closure productions back
+     * to the pattern-matching production.
+     * @return the aggregated cost of productions that
+     * produce the given nonterminal, or Integer.MAX_VALUE
+     * if there is no production for this nonterminal.
+     * Costs are returned as longs (and computed as longs)
+     * so that they don't overflow.
+     */
     long getCost(Nonterminal nt)
     {
-        if (costMap.containsKey(nt)) {
-            return costMap.get(nt);
+        if (patternCosts.containsKey(nt)) {
+            return patternCosts.get(nt);
 
         } else if (closures.containsKey(nt)) {
+            // Traverse the chain of closures.
             Closure<Nonterminal> closure = closures.get(nt);
             long closedCost = closure.ownCost + getCost(closure.source);
             assert closedCost < Integer.MAX_VALUE;
@@ -87,6 +108,14 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         }
     }
 
+    /**
+     * Get the Production for a nonterminal.
+     * @param goal  the Nonterminal to be produced.
+     * @return the corresponding Production, which
+     * may be a pattern matcher or a closure.
+     * @throws IllegalArgumentException if this state
+     * has no production for the specified nonterminal.
+     */
     Production<Nonterminal> getProduction(Nonterminal goal)
     {
         if (patternMatchers.containsKey(goal)) {
@@ -119,9 +148,13 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     /**
      * Marshal nonterminals produced by both
      * pattern matchers and closures.
+     * @return the set of nonterminals produced.
      */
     Set<Nonterminal> getNonterminals()
     {
+        // We could use a cheaper data structure, e.g.,
+        // List<Nonterminal>, but returning a set makes
+        // the semantics of this operation clear.
         Set<Nonterminal> result = new HashSet<Nonterminal>();
 
         for (Nonterminal patternNonterminal: patternMatchers.keySet()) {
@@ -129,16 +162,12 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
         }
 
         for (Nonterminal closureNonterminal: closures.keySet()) {
+            // A closure should never occlude a pattern match.
             assert !result.contains(closureNonterminal);
             result.add(closureNonterminal);
         }
 
         return result;
-    }
-
-    int getStateNumber()
-    {
-        return number;
     }
 
     @Override
@@ -208,14 +237,20 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
     /**
      * Define a state's hash code in terms of its
-     * node type's hash code and its production map's
-     * hash code. Note that using the cost map's
-     * hash code will not work, since subsequent
-     * iterations may produce states that are identical
-     * except that they cost more due to closures, so
-     * that computation can run away.
+     * node type's hash code and its pattern map's
+     * hash code.
+     *
+     * <p> <strong> Using the cost map's hash code is invalid,</strong>
+     * since subsequent iterations may produce states that
+     * are identical except that they cost more due to closures,
+     * so computations based on the cost map diverge.
+     *
+     * <p>However, two states with the same pattern map
+     * will also have the same cost map after closure,
+     * so the pattern map is a valid choice for hashing.
+     *
      * @return this state's node type's hashCode(),
-     * concatenated with the production map's hashCode().
+     * concatenated with the pattern map's hashCode().
      */
     @Override
     public int hashCode()
@@ -225,10 +260,11 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
 
     /**
      * Two states are equal if their node types
-     * and production maps are equal.
+     * and pattern maps are equal.
      * @param o the object to compare against.
-     * @return unclosed.costMap(o.costMap) if o is a State,
-     * false otherwise.
+     * @return true if o is a State and its node
+     * type and pattern map are equal to this
+     * state's corresponding members; false otherwise.
      */
     @Override
     @SuppressWarnings({"unchecked"})
@@ -248,6 +284,10 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
      * this is a convenience so that the state table,
      * which is stored in hashed order, can be emitted
      * in state number order.
+     * <p><strong>This ordering should not be used to
+     * store State objects in an associative container.</strong>
+     * Use hash-based associative containers to get
+     * correct semantics.
      */
     @Override
     public int compareTo(State<Nonterminal,NodeType> other)
