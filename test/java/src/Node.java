@@ -1,11 +1,15 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Node is a simple, dumb tree node.
+ */
 public class Node implements jburg.BurgInput<NodeType>
 {
     NodeType    nodeType;
     List<Node>  children;
     String      content;
+
     private int stateNumber = -1;
 
     Node(NodeType type)
@@ -48,93 +52,6 @@ public class Node implements jburg.BurgInput<NodeType>
     public int getStateNumber()
     {
         return this.stateNumber;
-    }
-
-    /*
-     * ** Nullary Operators **
-     */
-    public Integer intLiteral()
-    {
-        return Integer.valueOf(content);
-    }
-
-    public Short shortLiteral()
-    {
-        return Short.valueOf(content);
-    }
-
-    /*
-     * ** Unary Operators **
-     */
-    public Integer negate(Integer x)
-    {
-        return -x;
-    }
-
-    public Integer identity(Integer x)
-    {
-        return x;
-    }
-
-    /*
-     * ** Binary Operators **
-     */
-    public Integer add(Integer x, Integer y)
-    {
-        return x + y;
-    }
-
-    public Integer subtract(Integer x, Integer y)
-    {
-        return x - y;
-    }
-
-    public Integer multiply(Integer x, Integer y)
-    {
-        return x * y;
-    }
-
-    public Integer divide(Integer x, Integer y)
-    {
-        return x / y;
-    }
-
-    public String stringLiteral()
-    {
-        return content;
-    }
-
-    public String concat(String lhs, String rhs)
-    {
-        return lhs + rhs;
-    }
-
-    /**
-     * ** Ternary operators, for testing **
-     */
-    public Integer addTernary(Integer x, Integer y, Integer z)
-    {
-        return x + y + z;
-    }
-
-    /*
-     * ** Conversion operators **
-     */
-    public Integer widenShortToInt(Short operand)
-    {
-        return operand.intValue();
-    }
-
-    /*
-     * ** N-ary operators
-     */
-    public Integer addNary(Integer... args)
-    {
-        int result = 0;
-        for (Integer i: args) {
-            result += i;
-        }
-        return result;
     }
 
     @Override

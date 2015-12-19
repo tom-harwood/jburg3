@@ -14,10 +14,12 @@ import java.util.*;
  */
 public class Reducer<Nonterminal, NodeType>
 {
+    final Object visitor;
     final ProductionTable<Nonterminal, NodeType> productionTable;
 
-    public Reducer(ProductionTable<Nonterminal, NodeType> productionTable)
+    public Reducer(Object visitor, ProductionTable<Nonterminal, NodeType> productionTable)
     {
+        this.visitor = visitor;
         this.productionTable = productionTable;
     }
 
@@ -99,14 +101,14 @@ public class Reducer<Nonterminal, NodeType>
 
         while(current instanceof Closure) {
             if (current.preCallback != null) {
-                current.preCallback.invoke(node, goal);
+                current.preCallback.invoke(visitor, node, goal);
             }
             pendingProductions.push(current);
             current = state.getProduction(((Closure<Nonterminal>)current).source);
         }
 
         if (current.preCallback != null) {
-            current.preCallback.invoke(node,goal);
+            current.preCallback.invoke(visitor, node,goal);
         }
 
         Object result = null;
@@ -120,15 +122,16 @@ public class Reducer<Nonterminal, NodeType>
 
             switch(node.getSubtreeCount()) {
                 case 0:
-                    result = current.postCallback.invoke(node);
+                    result = current.postCallback.invoke(visitor, node);
                     break;
 
                 case 1:
-                    result = current.postCallback.invoke(node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
+                    result = current.postCallback.invoke(visitor, node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
                     break;
 
                 case 2:
                     result = current.postCallback.invoke(
+                        visitor,
                         node,
                         reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)),
                         reduce(node.getSubtree(1), patternMatcher.getNonterminal(1))
@@ -138,23 +141,26 @@ public class Reducer<Nonterminal, NodeType>
                 default: {
 
                     int formalCount = current.postCallback.getParameterCount();
-                    int actualCount = node.getSubtreeCount();
+                    // The actual parameters are the root of the subtree itself,
+                    // plus the result of reducing each of the root's children.
+                    int actualCount = node.getSubtreeCount() + 1;
 
                     Object[] actuals = new Object[formalCount];
+                    actuals[0] = node;
 
                     if (formalCount == actualCount) {
                         for (int i = 0; i < node.getSubtreeCount(); i++) {
-                            actuals[i] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                            actuals[i+1] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
                         }
 
                     } else if (formalCount < actualCount) {
                         throw new IllegalStateException("variadic callbacks not supported yet.");
 
                     } else {
-                        throw new IllegalStateException(String.format("Expected %d actuals, received %d",formalCount, actualCount));
+                        throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
                     }
 
-                    result = current.postCallback.invoke(node, actuals);
+                    result = current.postCallback.invoke(visitor, actuals);
                 }
             }
         }
@@ -162,7 +168,7 @@ public class Reducer<Nonterminal, NodeType>
         while (!pendingProductions.isEmpty()) {
             Production<Nonterminal> closure = pendingProductions.pop();
             if (closure.postCallback != null) {
-                result = closure.postCallback.invoke(node, result);
+                result = closure.postCallback.invoke(visitor, node, result);
             }
         }
 
