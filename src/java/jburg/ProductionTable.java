@@ -263,24 +263,79 @@ public class ProductionTable<Nonterminal, NodeType>
         return result;
     }
 
+    /**
+     * Try all permuations of an operator against a new state.
+     * For each dimension of the operator, project a representer
+     * state, from the new state, and permute the operator's sets
+     * of representer states with the projected state to form
+     * candidate states; add all applicable productions to the
+     * candidate states, and then match candidates with any viable
+     * productions against the master list of states to see if we've
+     * found a new state. If so, append it to the worklist.
+     * @param op        the operator
+     * @param state     the new state.
+     * @param workList  [out] the work list of states to process;
+     * any novel states discovered while permuting the input state
+     * against the operator are appended to workList for subsequent
+     * iterations of the driver loop.
+     */
     private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, Queue<State<Nonterminal, NodeType>> workList)
     {
-        for (int i = 0; i < op.size(); i++) {
+        int arity = op.size();
 
-            RepresenterState<Nonterminal,NodeType> pState = project(op, i, state);
+        for (int dim = 0; dim < arity; dim++) {
 
-            if (!pState.isEmpty() && !op.reps.get(i).contains(pState)) {
-                op.reps.get(i).add(pState);
+            RepresenterState<Nonterminal,NodeType> pState = project(op, dim, state);
+
+            if (!pState.isEmpty() && !op.reps.get(dim).contains(pState)) {
+                op.reps.get(dim).add(pState);
 
                 // Try all permutations of the operator's nonterminal children
-                // as operands to the rules applicable to the operator.
-                /*
-                for (List<RepresenterState<Nonterminal,NodeType>> repSet: generatePermutations(op, i, pState)) {
-                }
-                */
+                // as operands to the pattern matching productions applicable
+                // to the operator.
+                for (List<RepresenterState<Nonterminal,NodeType>> repSet: op.generatePermutations(pState, dim)) {
+                    State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
 
-                List<RepresenterState<Nonterminal,NodeType>> prefix = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
-                permute(op, 0, i, pState, prefix, workList);
+                    // Each permutation generates a candidate state (called "result"
+                    // in Proebsting's algorithm) with a cost matrix determined by
+                    // the production's cost, plus the cost of the current permuatation
+                    // of representer states; if this aggregate cost is less than the "unfeasible" cost
+                    // Integer.MAX_VALUE and also less than the candidate's current best cost for
+                    // the production's nonterminal, then add the production to the candidate.
+                    for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
+
+                        if (p.acceptsDimension(arity)) {
+                            long cost = p.ownCost;
+                            for (int i = 0; i < arity && cost < Integer.MAX_VALUE; i++) {
+                                cost += repSet.get(i).getCost(p.getNonterminal(i));
+                            }
+
+                            if (cost < result.getCost(p.target)) {
+                                result.setNonClosureProduction(p,cost);
+                            }
+                        }
+                    }
+
+                    if (!result.isEmpty()) {
+
+                        if (!states.contains(result)) {
+                            // We know that we will be using this state as the canonical
+                            // state, since no equivalent state is already stored. So it's
+                            // safe to add it to the worklist now; it will get its state
+                            // number via the call to addState().
+                            op.addTransition(repSet, addState(result));
+                            closure(result);
+                            workList.add(result);
+                        } else {
+                            // Get the canonical representation of the result state
+                            // from the state table; the canonical representation
+                            // is equivalent to the result state, but has a unique
+                            // state number.
+                            State<Nonterminal, NodeType> canonicalState = addState(result);
+                            op.addTransition(repSet, canonicalState);
+                        }
+                    }
+                }
             }
         }
     }
@@ -300,84 +355,6 @@ public class ProductionTable<Nonterminal, NodeType>
         RepresenterState<Nonterminal, NodeType> result = addRepresenterState(candidate);
         result.representedStates.add(state);
         return result;
-    }
-
-    /**
-     * Permute the operator's set of representer states
-     * around a possibly novel, 'pivot' representer state,
-     * and add any new states discovered to the worklist.
-     * @param op        the current operator.
-     * @param dim       the next dimension
-     * @param pDim      the pivot dimension.
-     * @param pivot     the projected state being pivoted.
-     * @param prefix    known states so far.
-     * @param workList  the worklist for new states.
-     */
-    private void permute(
-        Operator<Nonterminal,NodeType> op,
-        int dim,
-        int pDim,
-        RepresenterState<Nonterminal,NodeType> pivot,
-        List<RepresenterState<Nonterminal, NodeType>> prefix,
-        Queue<State<Nonterminal, NodeType>> workList)
-    {
-        // TODO: Also analyze variadic productions.
-        if (dim == op.size()) {
-
-            State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
-
-            for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                // for each state in the prefix:
-                //   for each nonterminal in the state:
-                //      cost = p.cost + sum of costs in prefix for the current nonterminals;
-                //      if (cost < result.getCost(n))
-                //          result.addRule(n, cost, p);
-                // if result isn't empty:
-                //    closure(result);
-                //    if (result not in states)
-                //        result = addState(result);
-                //        worklist.add(result);
-                if (p.acceptsDimension(dim)) {
-                    long cost = 0;
-                    for (int i = 0; i < dim && cost < Integer.MAX_VALUE; i++) {
-                        cost += prefix.get(i).getCost(p.getNonterminal(i));
-                    }
-
-                    if (cost < result.getCost(p.target)) {
-                        result.setNonClosureProduction(p,cost);
-                    }
-                }
-            }
-
-            if (!result.isEmpty()) {
-
-                if (!states.contains(result)) {
-                    closure(result);
-                    // We know that we will be using this state as the canonical
-                    // state, since no equivalent state is already stored. So it's
-                    // safe to add it to the worklist now; it will get its state
-                    // number via the call to addState(), below.
-                    workList.add(result);
-                }
-
-                // Cache the canonical state in the operator;
-                // it may be this new state, or it may
-                // be a equivalent previous instance.
-                State<Nonterminal, NodeType> canonicalState = addState(result);
-                op.addTransition(prefix, canonicalState);
-            }
-        }
-        else if (dim == pDim) {
-            prefix.add(pivot);
-            permute(op,dim+1,pDim,pivot,prefix,workList);
-            prefix.remove(dim);
-        } else {
-            for (RepresenterState<Nonterminal,NodeType> s: op.reps.get(dim)) {
-                prefix.add(s);
-                permute(op, dim+1, pDim, pivot, prefix, workList);
-                prefix.remove(dim);
-            }
-        }
     }
 
     private State<Nonterminal, NodeType> addState(State<Nonterminal, NodeType> state)

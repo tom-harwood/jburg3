@@ -3,6 +3,7 @@ package jburg;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -146,7 +147,7 @@ class Operator<Nonterminal, NodeType>
             // but in that case we must be adding the same representer state.
             for (State<Nonterminal, NodeType> s: rs.representedStates) {
 
-                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs);
+                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs): String.format("Operator %s expected rs %s, got %s", this, indexForDim.get(s.number), rs);
                 indexForDim.put(s.number, rs);
             }
         }
@@ -168,9 +169,118 @@ class Operator<Nonterminal, NodeType>
         out.println("</operator>");
     }
 
+    /**
+     * Create an iterator over permutations of this operator's representer states,
+     * with a novel representer state in one dimension.
+     * @param pState    the novel representer state.
+     * @param pStateDim the dimension of the novel state.
+     * @return an iterator over permutations of this operator's rep states
+     * and the novel state.
+     */
+    Iterable<List<RepresenterState<Nonterminal,NodeType>>> generatePermutations(RepresenterState<Nonterminal, NodeType> pState, int pStateDim)
+    {
+        return new RepresenterStatePermuationGenerator(pState, pStateDim);
+    }
+
     @Override
     public String toString()
     {
         return String.format("Operator %s[%d]", nodeType, size());
+    }
+
+    /**
+     * A RepresenterStatePermuationGenerator generates permutations of the parent
+     * Operator's representer states, with a novel state provided by the caller
+     * in one dimension.
+     */
+    class RepresenterStatePermuationGenerator implements Iterable<List<RepresenterState<Nonterminal,NodeType>>>
+    {
+        /**
+         * Representer states to permuate. Except for the dimension where the
+         * novel state is substituted, these are the states from the parent
+         * operator's representer states for each dimension.
+         */
+        List<List<RepresenterState<Nonterminal,NodeType>>>  rsTable;
+
+        /**
+         * Current index in the representer state table for each dimension.
+         * The index for dimensions 1..n ranges from 0..rsTable[dim].size()-1,
+         * at which point it resets to 0 and "carries" to the next lowest
+         * dimension. The index of dimension 0 ranges from 0..rsTable[0].size();
+         * when dimension 0's index reaches rsTable[0].size() the set of permutations
+         * has been exhausted.
+         */
+        int[]   rsIndex;
+
+        /**
+         * If this operator doesn't have rep sets for all dimensions yet,
+         * don't try to generate permuations.
+         */
+        boolean hasRepSetsForEachDimension;
+
+        RepresenterStatePermuationGenerator(RepresenterState<Nonterminal, NodeType> pState, int pStateDim)
+        {
+            int arity = Operator.this.size();
+
+            rsTable = new ArrayList<List<RepresenterState<Nonterminal,NodeType>>>();
+            rsIndex = new int[arity];
+
+            // Assume we have representer states
+            // for each dimension; we'll test that
+            // hypothesis as we populate the lists.
+            hasRepSetsForEachDimension = true;
+
+            for (int i = 0; hasRepSetsForEachDimension && i < arity; i++) {
+                rsIndex[i] = 0;
+                rsTable.add(new ArrayList<RepresenterState<Nonterminal,NodeType>>());
+
+                if (i == pStateDim) {
+                    rsTable.get(i).add(pState);
+                } else {
+                    rsTable.get(i).addAll(reps.get(i));
+                    hasRepSetsForEachDimension &= rsTable.get(i).size() > 0;
+                }
+            }
+        }
+
+        @Override
+        public Iterator<List<RepresenterState<Nonterminal,NodeType>>> iterator()
+        {
+
+            return new Iterator<List<RepresenterState<Nonterminal,NodeType>>>()
+            {
+                @Override
+                public boolean hasNext()
+                {
+                    assert rsIndex.length > 0: "Cannot permute a leaf operator";
+                    return hasRepSetsForEachDimension && rsIndex[0] < rsTable.get(0).size();
+                }
+
+                @Override
+                public List<RepresenterState<Nonterminal,NodeType>> next()
+                {
+                    List<RepresenterState<Nonterminal,NodeType>> result = new ArrayList<RepresenterState<Nonterminal,NodeType>>();
+
+                    for (int i = 0; i < rsIndex.length; i++) {
+                        result.add(rsTable.get(i).get(rsIndex[i]));
+                    }
+
+                    // Starting with the last dimension, increment indexes;
+                    // this process continues until a dimension has more
+                    // rep states to examine, or until we reach the first
+                    // dimension, where we stop and the iterator is at end.
+                    int idx = rsIndex.length - 1;
+                    rsIndex[idx]++;
+
+                    while (idx > 0 && rsIndex[idx] >= rsTable.get(idx).size()) {
+                        rsIndex[idx] = 0;
+                        rsIndex[idx-1]++;
+                        idx--;
+                    }
+
+                    return result;
+                }
+            };
+        }
     }
 }
