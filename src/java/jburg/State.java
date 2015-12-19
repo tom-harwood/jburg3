@@ -10,10 +10,11 @@ import java.util.*;
  * the state. The state may also be able to produce other
  * nonterminals via nonterminal-to-nonterminal closures.
  *
- * The State class is Comparable so that it can be
- * sorted on its state number.
+ * <p>Store State objects in hashed associative containers;
+ * State objects' hash and equality semantics are set up
+ * to weed out duplicate states.
  */
-class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeType>>
+class State<Nonterminal, NodeType>
 {
     /**
      * The state's number. This number is set
@@ -52,11 +53,29 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
      */
     final NodeType  nodeType;
 
+    /**
+     * Construct a state that characterizes non-null nodes.
+     * @param nodeType the node type of the nodes.
+     */
     State(NodeType nodeType)
     {
         this.nodeType = nodeType;
     }
 
+    /**
+     * Construct a state that characterizes null pointers.
+     */
+    State()
+    {
+        this.nodeType = null;
+    }
+
+    /**
+     * Add a pattern match to this state.
+     * @param p     the pattern matching production.
+     * @param cost  the cost of this production. The
+     * cost must be the best cost known so far.
+     */
     void setPatternMatcher(PatternMatcher<Nonterminal,NodeType> p, long cost)
     {
         assert(cost < getCost(p.target));
@@ -249,7 +268,7 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
      * node type's hash code and its pattern map's
      * hash code.
      *
-     * <p> <strong> Using the cost map's hash code is invalid,</strong>
+     * <p> <strong>Using the cost map's hash code is invalid,</strong>
      * since subsequent iterations may produce states that
      * are identical except that they cost more due to closures,
      * so computations based on the cost map diverge.
@@ -264,7 +283,8 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     @Override
     public int hashCode()
     {
-        return nodeType.hashCode() * 31 + patternMatchers.hashCode();
+        int nodeHash = nodeType != null? nodeType.hashCode(): 0;
+        return nodeHash * 31 + patternMatchers.hashCode();
     }
 
     /**
@@ -281,27 +301,15 @@ class State<Nonterminal, NodeType> implements Comparable<State<Nonterminal,NodeT
     {
         if (o instanceof State) {
             State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
-            return this.nodeType.equals(s.nodeType) && this.patternMatchers.equals(s.patternMatchers);
 
-        } else {
-            return false;
+            if (this.nodeType == s.nodeType) {
+                return true;
+            } else if (this.nodeType != null && s.nodeType != null) {
+                return this.nodeType.equals(s.nodeType) && this.patternMatchers.equals(s.patternMatchers);
+            }
+
         }
-    }
 
-    /**
-     * States are comparable on their state number;
-     * this is a convenience so that the state table,
-     * which is stored in hashed order, can be emitted
-     * in state number order.
-     * <p><strong>This ordering should not be used to
-     * store State objects in an associative container.</strong>
-     * Use hash-based associative containers to get
-     * correct semantics.
-     */
-    @Override
-    public int compareTo(State<Nonterminal,NodeType> other)
-    {
-        assert this.number != -1 && other.number != -1;
-        return this.number - other.number;
+        return false;
     }
 }
