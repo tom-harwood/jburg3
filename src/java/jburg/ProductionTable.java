@@ -198,7 +198,7 @@ public class ProductionTable<Nonterminal, NodeType>
             nullState = new State<Nonterminal, NodeType>();
             for (PatternMatcher<Nonterminal, NodeType> p: nullProductions) {
                 if (p.ownCost < nullState.getCost(p.target)) {
-                    nullState.setPatternMatcher(p, p.ownCost);
+                    nullState.setNonClosureProduction(p, p.ownCost);
                 }
             }
 
@@ -245,7 +245,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
                 for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(nodeType)) {
                     if (p.isLeaf() && p.ownCost < state.getCost(p.target)) {
-                        state.setPatternMatcher(p, p.ownCost);
+                        state.setNonClosureProduction(p, p.ownCost);
                     }
                 }
 
@@ -344,7 +344,7 @@ public class ProductionTable<Nonterminal, NodeType>
                     }
 
                     if (cost < result.getCost(p.target)) {
-                        result.setPatternMatcher(p,cost);
+                        result.setNonClosureProduction(p,cost);
                     }
                 }
             }

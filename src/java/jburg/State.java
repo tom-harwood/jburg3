@@ -34,9 +34,9 @@ class State<Nonterminal, NodeType>
 	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
     /**
-     * This state's pattern matching productions.
+     * This state's non-closure productions.
      */
-    private ProductionMap  patternMatchers = new ProductionMap();
+    private ProductionMap  nonClosureProductions = new ProductionMap();
     /**
      * Cost of each pattern match.
      */
@@ -71,17 +71,19 @@ class State<Nonterminal, NodeType>
     }
 
     /**
-     * Add a pattern match to this state.
-     * @param p     the pattern matching production.
+     * Add a non-closure production to this state.
+     * This production may displace a previously
+     * added production.
+     * @param p     the production.
      * @param cost  the cost of this production. The
      * cost must be the best cost known so far.
      */
-    void setPatternMatcher(Production<Nonterminal> p, long cost)
+    void setNonClosureProduction(Production<Nonterminal> p, long cost)
     {
         assert cost < getCost(p.target);
         assert !(p instanceof Closure): "use addClosure to add closures";
         patternCosts.put(p.target, cost);
-        patternMatchers.put(p.target, p);
+        nonClosureProductions.put(p.target, p);
     }
 
     /**
@@ -89,8 +91,8 @@ class State<Nonterminal, NodeType>
      */
     int size()
     {
-        assert(patternMatchers.size() == patternCosts.size());
-        return patternMatchers.size();
+        assert(nonClosureProductions.size() == patternCosts.size());
+        return nonClosureProductions.size();
     }
 
     /**
@@ -138,8 +140,8 @@ class State<Nonterminal, NodeType>
      */
     Production<Nonterminal> getProduction(Nonterminal goal)
     {
-        if (patternMatchers.containsKey(goal)) {
-            return patternMatchers.get(goal);
+        if (nonClosureProductions.containsKey(goal)) {
+            return nonClosureProductions.get(goal);
         } else if (closures.containsKey(goal)) {
             return closures.get(goal);
         } else {
@@ -177,7 +179,7 @@ class State<Nonterminal, NodeType>
         // the semantics of this operation clear.
         Set<Nonterminal> result = new HashSet<Nonterminal>();
 
-        for (Nonterminal patternNonterminal: patternMatchers.keySet()) {
+        for (Nonterminal patternNonterminal: nonClosureProductions.keySet()) {
             result.add(patternNonterminal);
         }
 
@@ -200,12 +202,12 @@ class State<Nonterminal, NodeType>
         buffer.append(" ");
         buffer.append(this.nodeType);
 
-        if (patternMatchers.size() > 0) {
+        if (nonClosureProductions.size() > 0) {
             buffer.append("(patterns(");
 
             boolean didFirst = false;
-            for (Nonterminal nt: patternMatchers.keySet()) {
-                Production<Nonterminal> p = patternMatchers.get(nt);
+            for (Nonterminal nt: nonClosureProductions.keySet()) {
+                Production<Nonterminal> p = nonClosureProductions.get(nt);
 
                 if (didFirst) {
                     buffer.append(",");
@@ -233,11 +235,11 @@ class State<Nonterminal, NodeType>
     {
         out.printf("<state number=\"%d\" nodeType=\"%s\">", number, nodeType);
 
-        if (patternMatchers.size() > 0) {
+        if (nonClosureProductions.size() > 0) {
             out.println("<patterns>");
 
-            for (Nonterminal nt: patternMatchers.keySet()) {
-                Production<Nonterminal> p = patternMatchers.get(nt);
+            for (Nonterminal nt: nonClosureProductions.keySet()) {
+                Production<Nonterminal> p = nonClosureProductions.get(nt);
                 out.printf("<pattern nt=\"%s\" pattern=\"%s\"/>\n", nt, p);
             }
             out.printf("</patterns>");
@@ -285,7 +287,7 @@ class State<Nonterminal, NodeType>
     public int hashCode()
     {
         int nodeHash = nodeType != null? nodeType.hashCode(): 0;
-        return nodeHash * 31 + patternMatchers.hashCode();
+        return nodeHash * 31 + nonClosureProductions.hashCode();
     }
 
     /**
@@ -306,7 +308,7 @@ class State<Nonterminal, NodeType>
             if (this.nodeType == s.nodeType) {
                 return true;
             } else if (this.nodeType != null && s.nodeType != null) {
-                return this.nodeType.equals(s.nodeType) && this.patternMatchers.equals(s.patternMatchers);
+                return this.nodeType.equals(s.nodeType) && this.nonClosureProductions.equals(s.nonClosureProductions);
             }
 
         }
