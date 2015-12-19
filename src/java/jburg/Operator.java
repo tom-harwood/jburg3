@@ -16,7 +16,7 @@ import java.util.Set;
 class Operator<Nonterminal, NodeType>
 {
     /**
-     * The operator's node type, denormalized for debugging
+     * The operator's node type, denormalized for debugging.
      */
     final NodeType nodeType;
 
