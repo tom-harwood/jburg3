@@ -4,7 +4,7 @@ import jburg.Reducer;
 /**
  * Create a table of arithmetic operations and try some arithmetic.
  */
-public class FirstTest
+public class Calculator
 {
     public static void main(String[] args)
     throws Exception
@@ -18,30 +18,30 @@ public class FirstTest
         ProductionTable<Nonterminal, NodeType> productions = new ProductionTable<Nonterminal, NodeType>();
 
         // Leaf operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, FirstTest.class.getDeclaredMethod("intLiteral", Node.class));
-        productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, FirstTest.class.getDeclaredMethod("stringLiteral", Node.class));
-        productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, FirstTest.class.getDeclaredMethod("shortLiteral", Node.class));
+        productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Calculator.class.getDeclaredMethod("intLiteral", Node.class));
+        productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
+        productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
 
         // Unary operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, FirstTest.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, FirstTest.class.getDeclaredMethod("negate", Node.class, Integer.class), Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("negate", Node.class, Integer.class), Nonterminal.Int);
 
         // Binary operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, FirstTest.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, FirstTest.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, FirstTest.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.String, NodeType.Add, FirstTest.class.getDeclaredMethod("concat", Node.class, String.class, String.class), Nonterminal.String, Nonterminal.String);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Calculator.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, String.class, String.class), Nonterminal.String, Nonterminal.String);
 
         // Ternary operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, FirstTest.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
+        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
 
         // Conversion operators
-        productions.addClosure(Nonterminal.Int, Nonterminal.Short, FirstTest.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
+        productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
 
         productions.generateStates();
         productions.dump(new java.io.PrintWriter("/Users/tharwood/tmp/burmdump.xml"));
 
-        Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new FirstTest(), productions);
+        Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
 
         for (Testcase tc: nf.testcases) {
             reducer.label(tc.root);

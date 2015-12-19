@@ -59,7 +59,7 @@ test - run java tests
 	</target>
 
     <target name="test">
-        <java classname="FirstTest" fork="true" failonerror="true">
+        <java classname="Calculator" fork="true" failonerror="true">
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
