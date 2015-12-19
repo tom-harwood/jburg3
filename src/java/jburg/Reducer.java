@@ -2,6 +2,16 @@ package jburg;
 
 import java.util.*;
 
+/**
+ * A Reducer is the actual tree parsing automaton.
+ * The reducer works in two passes:
+ * <li> label(node) traverses the input tree and
+ * assigns each node a state number.
+ * <li> reduce(node) traverses the tree a second
+ * time, running the productions specified by each
+ * node's state number to rewrite the tree as
+ * specified by the productions.
+ */
 public class Reducer<Nonterminal, NodeType>
 {
     final ProductionTable<Nonterminal, NodeType> productionTable;
@@ -11,6 +21,10 @@ public class Reducer<Nonterminal, NodeType>
         this.productionTable = productionTable;
     }
 
+    /**
+     * First pass: label a tree.
+     * @param node the root of the tree to label.
+     */
     public void label(BurgInput<NodeType> node)
     {
         Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
@@ -43,6 +57,14 @@ public class Reducer<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Second pass: reduce the tree to the desired goal.
+     * @param node the root of the tree.
+     * @param goal the nonterminal corresponding to the
+     * desired result object.
+     * @return the result of deriving the tree using the
+     * productions specified by each node's state.
+     */
     public Object reduce(BurgInput<NodeType> node, Nonterminal goal)
     throws Exception
     {
@@ -51,6 +73,18 @@ public class Reducer<Nonterminal, NodeType>
         return reduce(node, goal, productions);
     }
 
+    /**
+     * Recursively reduce subtrees.
+     * @param node the root of a subtree.
+     * @param goal the subtree's state.
+     * @param pendingProductions    a stack of productions whose
+     * antecedent production has yet to be completed; passed here
+     * to avoid extra object creation, and eventually to be used
+     * to run the algorithm iteratively.
+     * @return the result of deriving the subtree.
+     * @throws exceptions from the production's semantic action routines,
+     * and a few diagnostics for unlabeled trees or mismatched parameters.
+     */
     private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
@@ -64,12 +98,16 @@ public class Reducer<Nonterminal, NodeType>
         Production<Nonterminal> current = state.getProduction(goal);
 
         while(current instanceof Closure) {
-            // TODO: pre-callbacks.
+            if (current.preCallback != null) {
+                current.preCallback.invoke(node, goal);
+            }
             pendingProductions.push(current);
             current = state.getProduction(((Closure<Nonterminal>)current).source);
         }
 
-        // TODO: Run the pattern matcher's pre-callback
+        if (current.preCallback != null) {
+            current.preCallback.invoke(node,goal);
+        }
 
         Object result = null;
 
