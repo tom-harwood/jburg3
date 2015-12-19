@@ -114,6 +114,7 @@ public class Reducer<Nonterminal, NodeType>
         // Reduce children and collect results
         if (current.postCallback != null) {
 
+            assert current instanceof PatternMatcher;
             @SuppressWarnings("unchecked")
 			PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
 
