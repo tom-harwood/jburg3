@@ -26,9 +26,9 @@ class State<Nonterminal, NodeType>
     /** "Typedef" a map of costs by nonterminal. */
     @SuppressWarnings("serial")
 	class CostMap extends HashMap<Nonterminal,Long> {}
-    /** "Typedef" a map of PatternMatchers keyed by Nonterminal. */
+    /** "Typedef" a map of Productions keyed by Nonterminal. */
     @SuppressWarnings("serial")
-	class PatternMap extends HashMap<Nonterminal, PatternMatcher<Nonterminal,NodeType>> {}
+	class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
     /** "Typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
 	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
@@ -36,7 +36,7 @@ class State<Nonterminal, NodeType>
     /**
      * This state's pattern matching productions.
      */
-    private PatternMap  patternMatchers = new PatternMap();
+    private ProductionMap  patternMatchers = new ProductionMap();
     /**
      * Cost of each pattern match.
      */
@@ -76,9 +76,10 @@ class State<Nonterminal, NodeType>
      * @param cost  the cost of this production. The
      * cost must be the best cost known so far.
      */
-    void setPatternMatcher(PatternMatcher<Nonterminal,NodeType> p, long cost)
+    void setPatternMatcher(Production<Nonterminal> p, long cost)
     {
-        assert(cost < getCost(p.target));
+        assert cost < getCost(p.target);
+        assert !(p instanceof Closure): "use addClosure to add closures";
         patternCosts.put(p.target, cost);
         patternMatchers.put(p.target, p);
     }
@@ -204,7 +205,7 @@ class State<Nonterminal, NodeType>
 
             boolean didFirst = false;
             for (Nonterminal nt: patternMatchers.keySet()) {
-                PatternMatcher<Nonterminal, NodeType> p = patternMatchers.get(nt);
+                Production<Nonterminal> p = patternMatchers.get(nt);
 
                 if (didFirst) {
                     buffer.append(",");
@@ -236,7 +237,7 @@ class State<Nonterminal, NodeType>
             out.println("<patterns>");
 
             for (Nonterminal nt: patternMatchers.keySet()) {
-                PatternMatcher<Nonterminal, NodeType> p = patternMatchers.get(nt);
+                Production<Nonterminal> p = patternMatchers.get(nt);
                 out.printf("<pattern nt=\"%s\" pattern=\"%s\"/>\n", nt, p);
             }
             out.printf("</patterns>");
