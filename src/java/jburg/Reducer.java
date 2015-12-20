@@ -1,5 +1,6 @@
 package jburg;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -120,48 +121,73 @@ public class Reducer<Nonterminal, NodeType>
             @SuppressWarnings("unchecked")
 			PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
 
-            switch(node.getSubtreeCount()) {
-                case 0:
-                    result = current.postCallback.invoke(visitor, node);
-                    break;
+            int formalCount = current.postCallback.getParameterCount();
+            // The actual parameters are the root of the subtree itself,
+            // plus the result of reducing each of the root's children.
+            int actualCount = node.getSubtreeCount() + 1;
 
-                case 1:
-                    result = current.postCallback.invoke(visitor, node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
-                    break;
+            if (!current.postCallback.isVarArgs()) {
 
-                case 2:
-                    result = current.postCallback.invoke(
-                        visitor,
-                        node,
-                        reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)),
-                        reduce(node.getSubtree(1), patternMatcher.getNonterminal(1))
-                        );
-                    break;
+                switch(node.getSubtreeCount()) {
+                    case 0:
+                        result = current.postCallback.invoke(visitor, node);
+                        break;
 
-                default: {
+                    case 1:
+                        result = current.postCallback.invoke(visitor, node, reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)));
+                        break;
 
-                    int formalCount = current.postCallback.getParameterCount();
-                    // The actual parameters are the root of the subtree itself,
-                    // plus the result of reducing each of the root's children.
-                    int actualCount = node.getSubtreeCount() + 1;
+                    case 2:
+                        result = current.postCallback.invoke(
+                            visitor,
+                            node,
+                            reduce(node.getSubtree(0), patternMatcher.getNonterminal(0)),
+                            reduce(node.getSubtree(1), patternMatcher.getNonterminal(1))
+                            );
+                        break;
 
-                    Object[] actuals = new Object[formalCount];
-                    actuals[0] = node;
+                    default: {
 
-                    if (formalCount == actualCount) {
-                        for (int i = 0; i < node.getSubtreeCount(); i++) {
-                            actuals[i+1] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                        Object[] actuals = new Object[formalCount];
+                        actuals[0] = node;
+
+                        if (formalCount == actualCount) {
+
+                            for (int i = 0; i < node.getSubtreeCount(); i++) {
+                                actuals[i+1] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                            }
+
+                        } else {
+                            throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
                         }
 
-                    } else if (formalCount < actualCount) {
-                        throw new IllegalStateException("variadic callbacks not supported yet.");
-
-                    } else {
-                        throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
+                        result = current.postCallback.invoke(visitor, actuals);
                     }
-
-                    result = current.postCallback.invoke(visitor, actuals);
                 }
+            } else if (actualCount >= formalCount - 1) {
+
+                Object[] actuals = new Object[formalCount];
+                int lastFixedFormalPos = formalCount - 1;
+                int lastFixedSubtree = lastFixedFormalPos - 1;
+                actuals[0] = node;
+
+                for (int i = 0; i < lastFixedFormalPos; i++) {
+                    actuals[i+1] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                }
+
+                int nVarArgs = Math.max(0, actualCount - lastFixedFormalPos);
+                Class<?> lastFormal = current.postCallback.getParameterTypes()[lastFixedFormalPos];
+
+                Object varArgs = actuals[lastFixedFormalPos] = Array.newInstance(lastFormal.getComponentType(), Math.max(0, nVarArgs));
+
+                for (int i = 0; i < nVarArgs; i++) {
+                    Array.set(varArgs, i, reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree)));
+                }
+
+                result = current.postCallback.invoke(visitor, actuals);
+
+            } else {
+                throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
             }
         }
 
