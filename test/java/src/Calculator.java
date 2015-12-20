@@ -30,10 +30,12 @@ public class Calculator
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
         productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Calculator.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
         productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, String.class, String.class), Nonterminal.String, Nonterminal.String);
 
         // Ternary operators
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
+
+        // Variadic operators
+        productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String, Nonterminal.String);
 
         // Conversion operators
         productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
@@ -109,9 +111,15 @@ public class Calculator
         return x / y;
     }
 
-    public String concat(Node node, String lhs, String rhs)
+    public String concat(Node node, String... args)
     {
-        return lhs + rhs;
+        StringBuilder result = new StringBuilder();
+
+        for (String s: args) {
+            result.append(s);
+        }
+
+        return result.toString();
     }
 
     /**
