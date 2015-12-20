@@ -94,7 +94,6 @@ class HyperPlane<Nonterminal, NodeType>
         if (nextDimension.isEmpty()) {
 
             for (RepresenterState<Nonterminal, NodeType> key: finalDimension.keySet()) {
-                State<Nonterminal, NodeType> goalState = finalDimension.get(key);
 
                 for (State<Nonterminal, NodeType> s: key.representedStates) {
                     s.miniDump(out);
