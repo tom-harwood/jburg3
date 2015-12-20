@@ -17,8 +17,20 @@ import java.util.List;
  */
 public class PatternMatcher<Nonterminal, NodeType> extends Production<Nonterminal>
 {
-    final NodeType                          nodeType;
-    final List<Nonterminal>                 childTypes;
+    /**
+     * The node type of the subtree root.
+     */
+    final NodeType              nodeType;
+
+    /**
+     * The nonterminal types the root's children must produce.
+     */
+    final List<Nonterminal>     childTypes;
+
+    /**
+     * If true, the final child may be a list of children.
+     */
+    boolean                     isVarArgs;
 
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
@@ -33,14 +45,20 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
 
     public Nonterminal getNonterminal(int index)
     {
-        // TODO: Variadics
-        return childTypes.get(index);
+        if (isVarArgs && index >= size()) {
+            return childTypes.get(childTypes.size() - 1);
+        } else {
+            return childTypes.get(index);
+        }
     }
 
     public boolean usesNonterminalAt(Nonterminal n, int index)
     {
-        // TODO: Variadics
-        return index < childTypes.size() && getNonterminal(index) == n;
+        if (isVarArgs && index >= size()) {
+            return getNonterminal(size()-1) == n;
+        } else {
+            return index < childTypes.size() && getNonterminal(index) == n;
+        }
     }
 
     public boolean isLeaf()
@@ -55,8 +73,7 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
 
     public boolean acceptsDimension(int dim)
     {
-        // TODO: Variadics
-        return size() == dim;
+        return isVarArgs? size() <= dim: size() == dim;
     }
 
     @Override
