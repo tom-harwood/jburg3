@@ -1,12 +1,10 @@
 <project name="JBurg3JavaTests" default="cleanBuildAndTest" basedir=".">
 
     <target name="init">
-        <!-- Load the properties from 
-           $HOME/ant.properties. 
-           Please do not change any properties here. 
-        -->
         <property file="${user.home}/ant.properties" />
         <property file="../..build.properties" />
+
+        <property name="debug.symbols" value="yes"/>
 
         <property name="jburg.home" value="${user.home}/projects/jburg3"/>
         <property name="lib.dir" value="${jburg.home}/lib" />
@@ -16,9 +14,7 @@
         <property name="gensrc.dir" value="./gensrc" />
         <property name="classes.dir" value="./classes" />
         <property name="junit.log.dir" value="./log" />
-
-        <!--  Third-party tools. -->
-        <property name="cpp.compiler" value="g++"/>
+        <property name="calculator.xml" value="src/FirstTest.xml"/>
     </target>
 
     <target name="cleanBuildAndTest" depends="clean,buildJar,compile,test"/>
@@ -65,7 +61,7 @@ test - run java tests
                 <pathelement path="${jburg.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
-            <arg value="src/FirstTest.xml"/>
+            <arg value="${calculator.xml}"/>
         </java>
     </target>
 
