@@ -1,0 +1,9 @@
+<Test>
+    <Testcase name="concat" type="String" expected="abc">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+            <Node op="StringLiteral" content="c"/>
+        </Node>
+    </Testcase>
+</Test>
