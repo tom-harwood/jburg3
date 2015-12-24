@@ -1,1 +1,1 @@
-public enum NodeType { ShortLiteral, IntLiteral, StringLiteral, Add, Subtract, Multiply };
+public enum NodeType { ShortLiteral, IntLiteral, StringLiteral, Add, Concat, Subtract, Multiply };
