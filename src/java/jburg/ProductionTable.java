@@ -81,31 +81,7 @@ public class ProductionTable<Nonterminal, NodeType>
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
-        assert preCallback == null; // not ready for this
-        PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, postCallback, childTypes);
-        nonterminals.add(nt);
-        getPatternsForNodeType(nodeType).add(patternMatcher);
-
-        // Add an Operator to handle this pattern, if one is not already present.
-        // TODO: Handle variadic productions by propagating the "variadic" property
-        // forward through the operator list; this means the intermediate operators
-        // cannot be null, they must be present.
-        if (getOperator(nodeType, patternMatcher.size()) == null) {
-
-            if (!operators.containsKey(nodeType)) {
-                operators.put(nodeType, new ArrayList<Operator<Nonterminal,NodeType>>());
-            }
-
-            List<Operator<Nonterminal,NodeType>> ops = operators.get(nodeType);
-
-            if (ops.size() < patternMatcher.size() + 1) {
-                ops.addAll(Collections.nCopies((patternMatcher.size() + 1) - ops.size(), (Operator<Nonterminal,NodeType>)null));
-            }
-
-            ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
-        }
-
-        return patternMatcher;
+        return addPatternMatch(nt, nodeType, cost, preCallback, postCallback, false, childTypes);
     }
 
     /**
@@ -120,6 +96,48 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         return addPatternMatch(nt, nodeType, 1, null, postCallback, childTypes);
     }
+
+    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
+    public PatternMatcher<Nonterminal, NodeType> addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    {
+        return addPatternMatch(nt, nodeType, cost, preCallback, postCallback, true, childTypes);
+    }
+
+    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
+    private PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
+    {
+        assert preCallback == null; // not ready for this
+        PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, postCallback, isVarArgs, childTypes);
+        nonterminals.add(nt);
+        getPatternsForNodeType(nodeType).add(patternMatcher);
+
+        // Add an Operator or Operators to handle this pattern, if one is not already present.
+        if (fetchOperator(nodeType, patternMatcher.size()) == null) {
+
+            if (!operators.containsKey(nodeType)) {
+                operators.put(nodeType, new ArrayList<Operator<Nonterminal,NodeType>>());
+            }
+
+            List<Operator<Nonterminal,NodeType>> ops = operators.get(nodeType);
+
+            if (ops.size() < patternMatcher.size() + 1) {
+                ops.addAll(Collections.nCopies((patternMatcher.size() + 1) - ops.size(), (Operator<Nonterminal,NodeType>)null));
+            }
+
+            ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
+
+            if (isVarArgs && patternMatcher.size() + 1 <= ops.size()) {
+                int limit = ops.size();
+
+                for (int i = patternMatcher.size() + 1; i <= limit; i++) {
+                    ops.add(new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
+                }
+            }
+        }
+
+        return patternMatcher;
+    }
+
 
     /**
      * Add a closure to the grammar, with unit cost.
@@ -238,7 +256,7 @@ public class ProductionTable<Nonterminal, NodeType>
         Queue<State<Nonterminal, NodeType>> result = new ArrayDeque<State<Nonterminal, NodeType>>();
 
         for (NodeType nodeType: operators.keySet()) {
-            Operator<Nonterminal, NodeType> leafOperator = getOperator(nodeType, 0);
+            Operator<Nonterminal, NodeType> leafOperator = fetchOperator(nodeType, 0);
 
             if (leafOperator != null) {
                 State<Nonterminal, NodeType> state = new State<Nonterminal, NodeType>(nodeType);
@@ -405,13 +423,37 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         List<Operator<Nonterminal, NodeType>> opsForNodeType = operators.get(nodeType);
 
-        // TODO: Check the final operator for variadics.
-        if (opsForNodeType != null && opsForNodeType.size() > arity) {
-            return opsForNodeType.get(arity);
+        if (opsForNodeType != null) {
+            if (opsForNodeType.size() > arity) {
+                return opsForNodeType.get(arity);
+            } else if (opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
+                return opsForNodeType.get(opsForNodeType.size()-1);
+            }
         }
 
         return null;
     }
+
+    /**
+     * Get the Operator of a specific node type and arity.
+     * This differs from getOperator(), the external API,
+     * in that fetchOperator() handles variadic operators
+     * using their fixed arity; this is necessary to build
+     * the operator lists in the first place.
+     * @param nodeType  the node type of interest.
+     * @param arity     the actual arity of the subtree.
+     */
+    private Operator<Nonterminal, NodeType> fetchOperator(NodeType nodeType, int arity)
+    {
+        List<Operator<Nonterminal, NodeType>> opsForNodeType = operators.get(nodeType);
+
+        if (opsForNodeType != null && opsForNodeType.size() > arity) {
+            return opsForNodeType.get(arity);
+        } else {
+            return null;
+        }
+    }
+
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {

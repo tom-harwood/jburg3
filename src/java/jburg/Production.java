@@ -14,13 +14,15 @@ abstract class Production<Nonterminal>
 {
     public final Nonterminal    target;
     public final int            ownCost;
+    public final boolean        isVarArgs;
     public final Method         preCallback;
     public final Method         postCallback;
 
-    Production(Nonterminal target, int ownCost, Method preCallback, Method postCallback)
+    Production(Nonterminal target, int ownCost, boolean isVarArgs, Method preCallback, Method postCallback)
     {
         this.target         = target;
         this.ownCost        = ownCost;
+        this.isVarArgs      = isVarArgs;
         this.preCallback    = preCallback;
         this.postCallback   = postCallback;
     }

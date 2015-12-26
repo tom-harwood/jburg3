@@ -27,17 +27,12 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
      */
     final List<Nonterminal>     childTypes;
 
-    /**
-     * If true, the final child may be a list of children.
-     */
-    boolean                     isVarArgs;
-
     // TODO: @SafeVarargs would be a better annotation,
     // but that would require Java 1.7 or above.
     @SuppressWarnings({"unchecked"})
-    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, Nonterminal... childTypes)
+    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
-        super(target, cost, null, postCallback);
+        super(target, cost, isVarArgs, null, postCallback);
 
         this.nodeType       = nodeType;
         this.childTypes     = Arrays.asList(childTypes);

@@ -20,14 +20,10 @@ class HyperPlane<Nonterminal, NodeType>
 {
     /**
      * The next dimension of the map, if this is not the final dimension.
-     * TODO: Make HyperPlane abstract and provide final-dimension
-     * and non-final dimension specializations.
      */
     final Map<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>> nextDimension;
     /**
      * The states in this dimension, if this is the final dimension.
-     * TODO: Make HyperPlane abstract and provide final-dimension
-     * and non-final dimension specializations.
      */
     final Map<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
 
@@ -39,6 +35,7 @@ class HyperPlane<Nonterminal, NodeType>
 
     void add(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
     {
+
         assert childStates.size() > 0;
 
         RepresenterState<Nonterminal, NodeType> key = childStates.get(currentDim);
@@ -49,10 +46,39 @@ class HyperPlane<Nonterminal, NodeType>
                 nextDimension.put(key, new HyperPlane<Nonterminal, NodeType>());
             }
             nextDimension.get(key).add(childStates, currentDim+1, resultantState);
-
         } else {
             finalDimension.put(key, resultantState);
+
+            // If all the patterns in this state are variadic, add a variadic transition.
+            if (isVarArgs()) {
+                nextDimension.put(key, this);
+            }
         }
+    }
+
+    /**
+     * Is this HyperPlane variadic?
+     * @return true if all this HyperPlane's productions,
+     * as well as all its descendents' productions, are variadic.
+     */
+    boolean isVarArgs()
+    {
+        for (State<Nonterminal, NodeType> s: finalDimension.values()) {
+
+            if (!s.isVarArgs()) {
+                return false;
+            }
+        }
+
+        for (HyperPlane<Nonterminal, NodeType> child: nextDimension.values()) {
+            // TODO: More complex hyperplane shapes will require
+            // better cycle detection.
+            if (!(child == this || child.isVarArgs())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     HyperPlane<Nonterminal, NodeType> getNextDimension(RepresenterState<Nonterminal, NodeType> rs)
@@ -105,7 +131,11 @@ class HyperPlane<Nonterminal, NodeType>
 
                 for (State<Nonterminal, NodeType> s: key.representedStates) {
                     out.printf("<plane state=\"%d\">", s.number);
-                    nextDimension.get(key).dump(out);
+                    if (nextDimension.get(key) != this) {
+                        nextDimension.get(key).dump(out);
+                    } else {
+                        out.println("<variadic/>");
+                    }
                     out.println("</plane>");
                 }
             }

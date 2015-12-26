@@ -149,6 +149,26 @@ class State<Nonterminal, NodeType>
         }
     }
 
+    Collection<Production<Nonterminal>> getNonClosureProductions()
+    {
+        return nonClosureProductions.values();
+    }
+
+    /**
+     * Does this State accept variadic arguments?
+     * @return true if all productions in the state are variadic.
+     */
+    boolean isVarArgs()
+    {
+        for (Production<Nonterminal> p: getNonClosureProductions()) {
+            if (!p.isVarArgs) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Add a closure to the closure map if it's the best alternative seen so far.
      * @return true if the closure is added to the map.

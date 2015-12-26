@@ -116,7 +116,11 @@ class Operator<Nonterminal, NodeType>
      */
     RepresenterState<Nonterminal, NodeType> getRepresenterState(Integer key, int dim)
     {
-        RepresenterState<Nonterminal, NodeType> result = indexMap.get(dim).get(key);
+        int nominalDim = isVarArgs()?
+            dim < indexMap.size()? dim: indexMap.size() - 1:
+            dim;
+
+        RepresenterState<Nonterminal, NodeType> result = indexMap.get(nominalDim).get(key);
 
         if (result == null) {
             throw new IllegalArgumentException(String.format("State %d has no representer in dimension %d of %s", key, dim, this));
@@ -151,6 +155,16 @@ class Operator<Nonterminal, NodeType>
                 indexForDim.put(s.number, rs);
             }
         }
+    }
+
+    /**
+     * Is this operator variadic?
+     * @return true if all the operator's patterns are variadic.
+     */
+    boolean isVarArgs()
+    {
+        // TODO: Memoize this once the transition table is complete.
+        return transitionTable.isVarArgs();
     }
 
     /**
