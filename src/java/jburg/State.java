@@ -175,16 +175,20 @@ class State<Nonterminal, NodeType>
      */
     boolean addClosure(Closure<Nonterminal> closure)
     {
-        // The cost of a closure is its own cost,
-        // plus the cost of producing its antecedent.
-        long closureCost = closure.ownCost + getCost(closure.source);
+        // Don't replace patterns with closures.
+        // TODO: Analyze this and find the cases where it's appropriate.
+        if (!patternCosts.containsKey(closure.target)) {
+            // The cost of a closure is its own cost,
+            // plus the cost of producing its antecedent.
+            long closureCost = closure.ownCost + getCost(closure.source);
 
-        if (closureCost < this.getCost(closure.target)) {
-            closures.put(closure.target, closure);
-            return true;
-        } else {
-            return false;
+            if (closureCost < this.getCost(closure.target)) {
+                closures.put(closure.target, closure);
+                return true;
+            }
         }
+
+        return false;
     }
 
     /**
