@@ -55,4 +55,25 @@
             </Node>
         </Node>
     </Testcase>
+    <Testcase name="concat, various modes" type="String" expected="a48defgj">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="Add">
+                <Node op="IntLiteral" content="4"/>
+                <Node op="Multiply">
+                    <Node op="IntLiteral" content="2"/>
+                    <Node op="ShortLiteral" content="4"/>
+                </Node>
+            </Node>
+            <Node op="Concat">
+                <Node op="StringLiteral" content="d"/>
+                <Node op="StringLiteral" content="e"/>
+                <Node op="StringLiteral" content="f"/>
+            </Node>
+            <Node op="Concat">
+                <Node op="StringLiteral" content="g"/>
+            </Node>
+            <Node op="StringLiteral" content="j"/>
+        </Node>
+    </Testcase>
 </Test>
