@@ -37,10 +37,22 @@
             <Node op="StringLiteral" content="d"/>
         </Node>
     </Testcase>
-    <Testcase name="concat string and int" type="String" expected="a1">
+    <Testcase name="concat string and int" type="String" expected="a12">
         <Node op="Concat">
             <Node op="StringLiteral" content="a"/>
-            <Node op="IntLiteral" content="1"/>
+            <Node op="Add">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="ShortLiteral" content="2"/>
+            </Node>
+        </Node>
+    </Testcase>
+    <Testcase name="concat string and int, strict" type="String" expected="a3">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="AddStrict">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="ShortLiteral" content="2"/>
+            </Node>
         </Node>
     </Testcase>
 </Test>
