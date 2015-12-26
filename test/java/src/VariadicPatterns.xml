@@ -37,4 +37,10 @@
             <Node op="StringLiteral" content="d"/>
         </Node>
     </Testcase>
+    <Testcase name="concat string and int" type="String" expected="a1">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="IntLiteral" content="1"/>
+        </Node>
+    </Testcase>
 </Test>

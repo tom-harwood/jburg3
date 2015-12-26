@@ -40,6 +40,7 @@ public class Calculator
 
         // Conversion operators
         productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
+        productions.addClosure(Nonterminal.String, Nonterminal.Int, Calculator.class.getDeclaredMethod("convertToString", Node.class, Object.class));
 
         productions.generateStates();
         productions.dump(new java.io.PrintWriter("/Users/tharwood/tmp/burmdump.xml"));
