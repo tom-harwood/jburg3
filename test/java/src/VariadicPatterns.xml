@@ -1,9 +1,40 @@
 <Test>
-    <Testcase name="concat" type="String" expected="abc">
+    <Testcase name="concat 1" type="String" expected="a">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+        </Node>
+    </Testcase>
+    <Testcase name="concat 2" type="String" expected="ab">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+        </Node>
+    </Testcase>
+    <Testcase name="concat 3" type="String" expected="abc">
         <Node op="Concat">
             <Node op="StringLiteral" content="a"/>
             <Node op="StringLiteral" content="b"/>
             <Node op="StringLiteral" content="c"/>
+        </Node>
+    </Testcase>
+    <Testcase name="concat 4" type="String" expected="abcd">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+            <Node op="StringLiteral" content="c"/>
+            <Node op="StringLiteral" content="d"/>
+        </Node>
+    </Testcase>
+    <Testcase name="concat with subtrees" type="String" expected="abcd">
+        <Node op="Concat">
+            <Node op="Concat">
+                <Node op="StringLiteral" content="a"/>
+                <Node op="Concat">
+                    <Node op="StringLiteral" content="b"/>
+                </Node>
+            </Node>
+            <Node op="StringLiteral" content="c"/>
+            <Node op="StringLiteral" content="d"/>
         </Node>
     </Testcase>
 </Test>

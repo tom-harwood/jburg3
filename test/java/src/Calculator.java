@@ -35,6 +35,8 @@ public class Calculator
         // Ternary operators
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
 
+        // Variadic operators
+        productions.addVarArgsPatternMatch(Nonterminal.String, NodeType.Concat, 1, null, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String);
 
         // Conversion operators
         productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
@@ -135,6 +137,11 @@ public class Calculator
     public Integer widenShortToInt(Node node, Short operand)
     {
         return operand.intValue();
+    }
+
+    public String convertToString(Node node, Object o)
+    {
+        return o.toString();
     }
 
     /*
