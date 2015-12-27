@@ -15,7 +15,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * into a singleton state, with no operator, and the resulting
      * state is applied to all null pointers.
      */
-    private List<PatternMatcher<Nonterminal, NodeType>> nullProductions = new ArrayList<PatternMatcher<Nonterminal, NodeType>>();;
+    private List<NullPointerProduction<Nonterminal>> nullProductions = new ArrayList<NullPointerProduction<Nonterminal>>();;
 
     /**
      * The State that "derives" all null pointers.
@@ -80,9 +80,9 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
-        return addPatternMatch(nt, nodeType, cost, preCallback, postCallback, false, childTypes);
+        addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, false, childTypes);
     }
 
     /**
@@ -93,9 +93,9 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    public void addPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
     {
-        return addPatternMatch(nt, nodeType, 1, null, postCallback, childTypes);
+        addPatternMatch(nt, nodeType, 1, null, null, postCallback, false, childTypes);
     }
 
     /**
@@ -109,9 +109,9 @@ public class ProductionTable<Nonterminal, NodeType>
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public PatternMatcher<Nonterminal, NodeType> addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
-        return addPatternMatch(nt, nodeType, cost, preCallback, postCallback, true, childTypes);
+        addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, true, childTypes);
     }
 
     /**
@@ -119,6 +119,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param nt            the nonterminal this production produces.
      * @param nodeType      the node type of the root of the subtree matched.
      * @param cost          the cost of this production.
+     * @param predicate     the semantic predicate guarding this pattern match,
+     * or null if the pattern match has no predicate guard.
      * @param preCallback   the callback run before deriving the child nodes.
      * @param postCallback  the callback run after deriving the child nodes.
      * @param isVariadic    if true, then the final nonterminal in childTypes
@@ -126,10 +128,10 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    private PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
+    private PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
         assert preCallback == null; // not ready for this
-        PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, postCallback, isVarArgs, childTypes);
+        PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, childTypes);
         nonterminals.add(nt);
         getPatternsForNodeType(nodeType).add(patternMatcher);
 
@@ -227,24 +229,21 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public Production<Nonterminal> addNullPointerProduction(Nonterminal nt, int cost, Method postCallback)
     {
-        /*
-        Production<Nonterminal> np = new NullPointerProduction(nt, cost, postCallback);
+        NullPointerProduction<Nonterminal> np = new NullPointerProduction<Nonterminal>(nt, cost, postCallback);
         nullProductions.add(np);
         return np;
-        */
-        return null;
     }
 
     /**
      * Get the singleton state that specifies valid transitions for a null pointer.
      * If the grammar did not record any null productions, then this state is empty.
      */
-    State<Nonterminal, NodeType> getNullState()
+    State<Nonterminal, NodeType> getNullPointerState()
     {
         if (nullState == null) {
 
             nullState = new State<Nonterminal, NodeType>();
-            for (PatternMatcher<Nonterminal, NodeType> p: nullProductions) {
+            for (NullPointerProduction<Nonterminal> p: nullProductions) {
                 if (p.ownCost < nullState.getCost(p.target)) {
                     nullState.setNonClosureProduction(p, p.ownCost);
                 }

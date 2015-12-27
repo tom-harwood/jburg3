@@ -26,17 +26,31 @@ class State<Nonterminal, NodeType>
     /** "Typedef" a map of costs by nonterminal. */
     @SuppressWarnings("serial")
 	class CostMap extends HashMap<Nonterminal,Long> {}
-    /** "Typedef" a map of Productions keyed by Nonterminal. */
+    /** "typedef" a map of Productions keyed by Nonterminal. */
     @SuppressWarnings("serial")
 	class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
-    /** "Typedef" a map of Closures by Nonterminal. */
+    /** "typedef" a multimap of Productions, keyed by cost. */
+    class ProductionMultimap extends TreeMap<Integer, List<Production<Nonterminal>>> {}
+    /** "typedef" a map of ProductionMultimaps, keyed by Nonterminal. */
+    class PredicatedProductionMap extends HashMap<Nonterminal, ProductionMultimap> {}
+    /** "typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
 	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
     /**
-     * This state's non-closure productions.
+     * This state's non-closure productions; reset to null
+     * if the state has predicated productions.
      */
     private ProductionMap  nonClosureProductions = new ProductionMap();
+
+    /**
+     * This state's predicated productions; if the state contained
+     * non-predicated productions before this set of predicated
+     * productions was introduced, those productions migrate into
+     * this table.
+     */
+    private PredicatedProductionMap predicatedProductionMap = null;
+
     /**
      * Cost of each pattern match.
      */
@@ -66,6 +80,7 @@ class State<Nonterminal, NodeType>
      */
     State(NodeType nodeType)
     {
+        assert nodeType != null: "Add null pointer productions' states using the no-args State() constructor";
         this.nodeType = nodeType;
     }
 

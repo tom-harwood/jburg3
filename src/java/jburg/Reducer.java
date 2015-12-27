@@ -30,34 +30,36 @@ public class Reducer<Nonterminal, NodeType>
      */
     public void label(BurgInput<NodeType> node)
     {
-        Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
+        if (node != null) {
+            Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
 
-        if (op != null) {
-            int subtreeCount = node.getSubtreeCount();
+            if (op != null) {
+                int subtreeCount = node.getSubtreeCount();
 
-            if (subtreeCount > 0) {
+                if (subtreeCount > 0) {
 
-                for (int i = 0; i < subtreeCount; i++) {
-                    label(node.getSubtree(i));
-                }
-
-                // Navigate the operator's transition table.
-                HyperPlane<Nonterminal, NodeType> current = op.transitionTable;
-
-                for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
-                    RepresenterState<Nonterminal, NodeType> rs = op.getRepresenterState(node.getSubtree(dim).getStateNumber(), dim);
-
-                    if (dim < subtreeCount-1) {
-                        current = current.getNextDimension(rs);
-                    } else {
-                        current.getResultState(rs).assignNumber(node,visitor);
+                    for (int i = 0; i < subtreeCount; i++) {
+                        label(node.getSubtree(i));
                     }
-                }
 
-            } else {
-                op.getLeafState().assignNumber(node, visitor);
+                    // Navigate the operator's transition table.
+                    HyperPlane<Nonterminal, NodeType> current = op.transitionTable;
+
+                    for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
+                        RepresenterState<Nonterminal, NodeType> rs = op.getRepresenterState(node.getSubtree(dim).getStateNumber(), dim);
+
+                        if (dim < subtreeCount-1) {
+                            current = current.getNextDimension(rs);
+                        } else {
+                            current.getResultState(rs).assignNumber(node,visitor);
+                        }
+                    }
+
+                } else {
+                    op.getLeafState().assignNumber(node, visitor);
+                }
             }
-        }
+        } 
     }
 
     /**
@@ -91,11 +93,17 @@ public class Reducer<Nonterminal, NodeType>
     private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
-        if (node.getStateNumber() < 0) {
-            throw new IllegalStateException(String.format("Unlabeled node %s",node));
-        }
+        State<Nonterminal,NodeType> state;
 
-        State<Nonterminal,NodeType> state = productionTable.getState(node.getStateNumber());
+        if (node != null) {
+            if (node.getStateNumber() < 0) {
+                throw new IllegalStateException(String.format("Unlabeled node %s",node));
+            }
+
+            state = productionTable.getState(node.getStateNumber());
+        } else {
+            state = productionTable.getNullPointerState();
+        }
 
         // Run pre-callbacks on any closures to get to the pattern matcher.
         Production<Nonterminal> current = state.getProduction(goal);

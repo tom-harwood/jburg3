@@ -12,7 +12,7 @@ public class Closure<Nonterminal> extends Production<Nonterminal>
 
     public Closure(Nonterminal target, Nonterminal source, int ownCost, Method postCallback)
     {
-        super(target, ownCost, false, null, postCallback);
+        super(target, ownCost, false, null, null, postCallback);
         this.source = source;
     }
 
