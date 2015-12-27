@@ -71,8 +71,6 @@ class HyperPlane<Nonterminal, NodeType>
         }
 
         for (HyperPlane<Nonterminal, NodeType> child: nextDimension.values()) {
-            // TODO: More complex hyperplane shapes will require
-            // better cycle detection.
             if (!(child == this || child.isVarArgs())) {
                 return false;
             }
