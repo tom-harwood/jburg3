@@ -49,7 +49,8 @@ class HyperPlane<Nonterminal, NodeType>
         } else {
             finalDimension.put(key, resultantState);
 
-            // If all the patterns in this state are variadic, add a variadic transition.
+            // If all the states in this final dimension are variadic,
+            // add a variadic transition back to this hyper plane.
             if (isVarArgs()) {
                 nextDimension.put(key, this);
             }

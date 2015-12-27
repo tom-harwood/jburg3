@@ -54,6 +54,13 @@ class State<Nonterminal, NodeType>
     final NodeType  nodeType;
 
     /**
+     * This state's arity kind: unknown, fixed-arity, or variadic.
+     * The state's arity kind is set by its first production, and
+     * subsequent productions must be of the same arity kind.
+     */
+    ArityKind arityKind = null;
+
+    /**
      * Construct a state that characterizes non-null nodes.
      * @param nodeType the node type of the nodes.
      */
@@ -84,6 +91,12 @@ class State<Nonterminal, NodeType>
         assert !(p instanceof Closure): "use addClosure to add closures";
         patternCosts.put(p.target, cost);
         nonClosureProductions.put(p.target, p);
+
+        if (arityKind == null) {
+            arityKind = p.isVarArgs? ArityKind.Variadic:ArityKind.Fixed;
+        } else if (isVarArgs() != p.isVarArgs) {
+            throw new UnsupportedOperationException("Cannot mix variadic and fixed-arity productions");
+        }
     }
 
     /**
@@ -160,13 +173,8 @@ class State<Nonterminal, NodeType>
      */
     boolean isVarArgs()
     {
-        for (Production<Nonterminal> p: getNonClosureProductions()) {
-            if (!p.isVarArgs) {
-                return false;
-            }
-        }
-
-        return true;
+        assert arityKind != null;
+        return arityKind == ArityKind.Variadic;
     }
 
     /**

@@ -66,12 +66,12 @@ test - run java tests
     <target name="calculator">
         <echo>Testing ${calculator.xml}</echo>
         <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="${calculator.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
-            <arg value="${calculator.xml}"/>
         </java>
     </target>
 

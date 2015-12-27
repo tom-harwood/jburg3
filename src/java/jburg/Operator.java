@@ -48,6 +48,16 @@ class Operator<Nonterminal, NodeType>
     State<Nonterminal, NodeType> leafState = null;
 
     /**
+     * This operator's arity kind: unknown, fixed-arity, or variadic.
+     * The arity kind starts out unknown, and is set by the first state
+     * added to the operator; subsequent productions must have the same
+     * arity kind. The ProductionTable manages mixed fixed and variadic
+     * productions; such productions generally entail creating copies of
+     * states, and possibly copying or shifting operators.
+     */
+    ArityKind arityKind = null;
+
+    /**
      * @param nodeType  the Operator's node type.
      * @param arity     the Operator's arity.
      * @todo variadic operators.
@@ -138,6 +148,14 @@ class Operator<Nonterminal, NodeType>
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> resultantState)
     {
         assert childStates.size() == this.size();
+        assert resultantState.arityKind != null;
+
+        if (arityKind == null) {
+            arityKind = resultantState.arityKind;
+        } else if (arityKind != resultantState.arityKind) {
+            throw new IllegalStateException("Cannot mix variadic and fixed arity productions");
+        }
+
         transitionTable.add(childStates, 0, resultantState);
 
         for (int dim = 0; dim < size(); dim++) {
@@ -163,8 +181,8 @@ class Operator<Nonterminal, NodeType>
      */
     boolean isVarArgs()
     {
-        // TODO: Memoize this once the transition table is complete.
-        return transitionTable.isVarArgs();
+        assert arityKind != null;
+        return arityKind == ArityKind.Variadic;
     }
 
     /**
