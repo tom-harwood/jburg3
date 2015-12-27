@@ -50,12 +50,12 @@ public class Reducer<Nonterminal, NodeType>
                     if (dim < subtreeCount-1) {
                         current = current.getNextDimension(rs);
                     } else {
-                        node.setStateNumber(current.getResultState(rs).number);
+                        current.getResultState(rs).assignNumber(node,visitor);
                     }
                 }
 
             } else {
-                node.setStateNumber(op.getLeafState().number);
+                op.getLeafState().assignNumber(node, visitor);
             }
         }
     }

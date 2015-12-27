@@ -78,6 +78,17 @@ class State<Nonterminal, NodeType>
     }
 
     /**
+     * Assign a state number to a node.
+     * @param node  the node
+     * @param visitor   the visitor, a receiver
+     * object of semantic predicate method invocations.
+     */
+    void assignNumber(BurgInput node, Object visitor)
+    {
+        node.setStateNumber(this.number);
+    }
+
+    /**
      * Add a non-closure production to this state.
      * This production may displace a previously
      * added production.
