@@ -82,7 +82,7 @@ test - call the test/MAT directory's build.xml
 	</target>
 
     <target name="test">
-        <!-- ant dir="test/MAT" target="MAT"/ -->
+        <ant dir="test/java" target="test" inheritAll="false"/>
     </target>
 
 </project>

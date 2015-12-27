@@ -54,7 +54,17 @@ test - run java tests
 		</javac>
 	</target>
 
-    <target name="test">
+    <target name="test" depends="init">
+        <antcall target="calculator">
+            <param name="calculator.xml" value="src/FirstTest.xml"/>
+        </antcall>
+        <antcall target="calculator">
+            <param name="calculator.xml" value="src/VariadicPatterns.xml"/>
+        </antcall>
+    </target>
+
+    <target name="calculator">
+        <echo>Testing ${calculator.xml}</echo>
         <java classname="Calculator" fork="true" failonerror="true">
             <classpath>
                 <pathelement path="${classes.dir}"/>
