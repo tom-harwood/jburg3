@@ -36,8 +36,9 @@ public class ProductionTable<Nonterminal, NodeType>
 
     /**
      * Unique states, computed by permuting all inputs to each operator.
+     * The states are mapped to themselves so they can be efficaciously retrieved.
      */
-    private Set<State<Nonterminal, NodeType>> states = new HashSet<State<Nonterminal, NodeType>>();
+    private Map<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>> states = new HashMap<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
 
     /**
      * States in entry order, used for faster lookup by state number
@@ -52,7 +53,7 @@ public class ProductionTable<Nonterminal, NodeType>
         new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
     /**
-     * RepresenterStates, keyed by themselves
+     * RepresenterStates, mapped to themselves
      * so they can be efficaciously retrieved.
      */
     private Map<RepresenterState<Nonterminal,NodeType>, RepresenterState<Nonterminal,NodeType>> repStates =
@@ -97,12 +98,33 @@ public class ProductionTable<Nonterminal, NodeType>
         return addPatternMatch(nt, nodeType, 1, null, postCallback, childTypes);
     }
 
+    /**
+     * Add a variadic pattern-matching production to the grammar.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce;
+     * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
+     */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     public PatternMatcher<Nonterminal, NodeType> addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
         return addPatternMatch(nt, nodeType, cost, preCallback, postCallback, true, childTypes);
     }
 
+    /**
+     * Add a pattern matcher to its operator.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param isVariadic    if true, then the final nonterminal in childTypes
+     * may be used more than once to cover the "tail" of a subtree's children.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce.
+     */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     private PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
@@ -162,10 +184,18 @@ public class ProductionTable<Nonterminal, NodeType>
 
     /**
      * Generate the states and transition tables for a grammar.
+     * <ul>
+     * <li> Begin by computing states for all leaf operators;
+     * this forms the initial worklist.
+     * <li> While the worklist contains candidate entries,
+     * compute potentially novel transition table entries for
+     * every non-leaf operator. This process generates new states,
+     * which are appended to the worklist; the algorithm terminates
+     * when all operators have processed all relevant transitions
+     * and the worklist empties.
      * @post states contains all state entries for the grammar,
      * and each operator's transition table contains mappings
      * to the corresponding states.
-     * TODO: explain this in more detail.
      */
     public void generateStates()
     {
@@ -228,6 +258,10 @@ public class ProductionTable<Nonterminal, NodeType>
         return nullState;
     }
 
+    /**
+     * Record a state's closure set.
+     * @param state the state.
+     */
     private void closure(State<Nonterminal,NodeType> state)
     {
         boolean closureRecorded;
@@ -242,15 +276,10 @@ public class ProductionTable<Nonterminal, NodeType>
         } while (closureRecorded);
     }
 
-    private List<PatternMatcher<Nonterminal,NodeType>> getPatternsForNodeType(NodeType op)
-    {
-        if (!patternMatchersByNodeType.containsKey(op)) {
-            patternMatchersByNodeType.put(op, new ArrayList<PatternMatcher<Nonterminal,NodeType>>());
-        }
-
-        return patternMatchersByNodeType.get(op);
-    }
-
+    /**
+     * Generate the table's leaf states.
+     * @return the initial worklist, populated with the leaf states.
+     */
     private Queue<State<Nonterminal, NodeType>> generateLeafStates()
     {
         Queue<State<Nonterminal, NodeType>> result = new ArrayDeque<State<Nonterminal, NodeType>>();
@@ -312,14 +341,14 @@ public class ProductionTable<Nonterminal, NodeType>
                 // as operands to the pattern matching productions applicable
                 // to the operator.
                 for (List<RepresenterState<Nonterminal,NodeType>> repSet: op.generatePermutations(pState, dim)) {
-                    State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
-
                     // Each permutation generates a candidate state (called "result"
                     // in Proebsting's algorithm) with a cost matrix determined by
                     // the production's cost, plus the cost of the current permuatation
                     // of representer states; if this aggregate cost is less than the "unfeasible" cost
                     // Integer.MAX_VALUE and also less than the candidate's current best cost for
                     // the production's nonterminal, then add the production to the candidate.
+                    State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
+
                     for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
 
                         if (p.acceptsDimension(arity)) {
@@ -336,7 +365,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
                     if (!result.isEmpty()) {
 
-                        if (!states.contains(result)) {
+                        if (!states.containsKey(result)) {
                             // We know that we will be using this state as the canonical
                             // state, since no equivalent state is already stored. So it's
                             // safe to add it to the worklist now; it will get its state
@@ -358,6 +387,18 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Form the representer state for a tuple (operator, dimension, state).
+     * @param op    the Operator.
+     * @param i     the dimension.
+     * @param state the potentially novel state.
+     * @return a representer state, which has best-cost entries for all patterns
+     * relevant to the operator that can use the state's i'th dimension.
+     * Note that the returned representer state has the input state's node type,
+     * not the operator's node type; the projected state is a representation of
+     * the input state against the operator, and so it needs to know the originating
+     * state's node type to preserve the originating state's associative behavior.
+     */
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
         RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(state.nodeType);
@@ -375,23 +416,48 @@ public class ProductionTable<Nonterminal, NodeType>
         return result;
     }
 
-    private State<Nonterminal, NodeType> addState(State<Nonterminal, NodeType> state)
+    /**
+     * Get the list of pattern matchers for a node type.
+     * @param nodeType  the node type of interest.
+     * @return the list of pattern matchers for this node type.
+     * @post If no list was present, it has been created.
+     */
+    private List<PatternMatcher<Nonterminal,NodeType>> getPatternsForNodeType(NodeType nodeType)
     {
-        if (this.states.add(state)) {
-            state.number = this.states.size();
-            statesInEntryOrder.add(state);
-            return state;
-        } else {
-            for (State<Nonterminal,NodeType> s: states) {
-                if (state.hashCode() == s.hashCode() && state.equals(s)) {
-                    return s;
-                }
-            }
+        if (!patternMatchersByNodeType.containsKey(nodeType)) {
+            patternMatchersByNodeType.put(nodeType, new ArrayList<PatternMatcher<Nonterminal,NodeType>>());
         }
-        // If we ever get here, there is probably a bug in the State's hashCode() or equals() methods.
-        throw new IllegalStateException(String.format("State %s not added and not present",state));
+
+        return patternMatchersByNodeType.get(nodeType);
     }
 
+    /**
+     * Add a potentially novel state.
+     * @param state the potentially novel state.
+     * @return the canonical representation of state;
+     * this may be the input state, if it is in fact novel,
+     * or it may be an existing equivalent state.
+     */
+    private State<Nonterminal, NodeType> addState(State<Nonterminal, NodeType> state)
+    {
+        if (!this.states.containsKey(state)) {
+            states.put(state,state);
+            state.number = this.states.size();
+            statesInEntryOrder.add(state);
+        }
+
+        return states.get(state);
+    }
+
+    /**
+     * Add a potentially novel representer state.
+     * It is not as important to create a minimized set of representer states
+     * as it is to create a minimized set of states; this is mostly done as a
+     * convenience for table-generating logic, which can thus rely on the mapping
+     * from represented state to states in the canonical representer state.
+     * @param rs    the potentially novel representer state.
+     * @return the canonical version of the state.
+     */
     private RepresenterState<Nonterminal,NodeType> addRepresenterState(RepresenterState<Nonterminal,NodeType> rs)
     {
         if (!repStates.containsKey(rs)) {
@@ -454,6 +520,10 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Dump the production table.
+     * @param out   the sink.
+     */
     public void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
