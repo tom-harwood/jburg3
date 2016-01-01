@@ -45,7 +45,7 @@ public class Calculator
         productions.addClosure(Nonterminal.String, Nonterminal.Int, Calculator.class.getDeclaredMethod("convertToString", Node.class, Object.class));
 
         productions.generateStates();
-        productions.dump(new java.io.PrintWriter("/Users/tharwood/tmp/burmdump.xml"));
+        productions.dump(System.getenv("BURMDUMP"));
 
         Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
 

@@ -520,6 +520,21 @@ public class ProductionTable<Nonterminal, NodeType>
     }
 
     /**
+     * Dump the production table, if a destination was provided.
+     * @param dumpPath  a pathname for the dump, or null.
+     */
+    public void dump(String dumpPath)
+    {
+        if (dumpPath != null) {
+            try {
+                dump(new java.io.PrintWriter(dumpPath));
+            } catch (java.io.IOException cannotDump) {
+                cannotDump.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Dump the production table.
      * @param out   the sink.
      */
