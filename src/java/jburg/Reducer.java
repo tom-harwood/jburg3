@@ -46,7 +46,14 @@ public class Reducer<Nonterminal, NodeType>
                     HyperPlane<Nonterminal, NodeType> current = op.transitionTable;
 
                     for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
-                        RepresenterState<Nonterminal, NodeType> rs = op.getRepresenterState(node.getSubtree(dim).getStateNumber(), dim);
+                        BurgInput<NodeType> subtree = node.getSubtree(dim);
+                        int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
+
+                        if (stateNumber == -1) {
+                            throw new IllegalArgumentException(String.format("Unlabeled node %s", subtree));
+                        }
+
+                        RepresenterState<Nonterminal, NodeType> rs = op.getRepresenterState(stateNumber, dim);
 
                         if (dim < subtreeCount-1) {
                             current = current.getNextDimension(rs);
@@ -117,7 +124,7 @@ public class Reducer<Nonterminal, NodeType>
         }
 
         if (current.preCallback != null) {
-            current.preCallback.invoke(visitor, node,goal);
+            current.preCallback.invoke(visitor, node, goal);
         }
 
         Object result = null;
@@ -175,21 +182,21 @@ public class Reducer<Nonterminal, NodeType>
             } else if (actualCount >= formalCount - 1) {
 
                 Object[] actuals = new Object[formalCount];
-                int lastFixedFormalPos = formalCount - 1;
-                int lastFixedSubtree = lastFixedFormalPos - 1;
+                int variadicFormalPos = formalCount - 1;
+                int lastFixedSubtree = variadicFormalPos - 1;
                 actuals[0] = node;
 
-                for (int i = 0; i < lastFixedFormalPos; i++) {
+                for (int i = 0; i < lastFixedSubtree; i++) {
                     actuals[i+1] = reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
                 }
 
-                int nVarArgs = Math.max(0, actualCount - lastFixedFormalPos);
-                Class<?> lastFormal = current.postCallback.getParameterTypes()[lastFixedFormalPos];
+                int nVarArgs = Math.max(0, actualCount - variadicFormalPos);
+                Class<?> variadicFormalClass = current.postCallback.getParameterTypes()[variadicFormalPos];
 
-                Object varArgs = actuals[lastFixedFormalPos] = Array.newInstance(lastFormal.getComponentType(), Math.max(0, nVarArgs));
+                Object variadicActuals = actuals[variadicFormalPos] = Array.newInstance(variadicFormalClass.getComponentType(), nVarArgs);
 
                 for (int i = 0; i < nVarArgs; i++) {
-                    Array.set(varArgs, i, reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree)));
+                    Array.set(variadicActuals, i, reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree)));
                 }
 
                 result = current.postCallback.invoke(visitor, actuals);

@@ -181,7 +181,11 @@ class Operator<Nonterminal, NodeType>
      */
     boolean isVarArgs()
     {
-        assert arityKind != null;
+        // Ensure the operator's ready.
+        if (arityKind == null) {
+            throw new IllegalStateException(String.format("Operator %s is incomplete; run generateStates() and ensure all child nonterminals are feasible",this));
+        }
+
         return arityKind == ArityKind.Variadic;
     }
 
