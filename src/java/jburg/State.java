@@ -30,9 +30,11 @@ class State<Nonterminal, NodeType>
     @SuppressWarnings("serial")
 	class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
     /** "typedef" a multimap of Productions, keyed by cost. */
-    class ProductionMultimap extends TreeMap<Integer, List<Production<Nonterminal>>> {}
+    @SuppressWarnings("serial")
+	class ProductionMultimap extends TreeMap<Integer, List<Production<Nonterminal>>> {}
     /** "typedef" a map of ProductionMultimaps, keyed by Nonterminal. */
-    class PredicatedProductionMap extends HashMap<Nonterminal, ProductionMultimap> {}
+    @SuppressWarnings("serial")
+	class PredicatedProductionMap extends HashMap<Nonterminal, ProductionMultimap> {}
     /** "typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
 	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
@@ -364,11 +366,10 @@ class State<Nonterminal, NodeType>
             State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
 
             if (this.nodeType == s.nodeType) {
-                return true;
+                return this.nonClosureProductions.equals(s.nonClosureProductions);
             } else if (this.nodeType != null && s.nodeType != null) {
                 return this.nodeType.equals(s.nodeType) && this.nonClosureProductions.equals(s.nonClosureProductions);
             }
-
         }
 
         return false;

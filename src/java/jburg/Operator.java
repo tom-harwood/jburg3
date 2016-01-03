@@ -133,7 +133,7 @@ class Operator<Nonterminal, NodeType>
         RepresenterState<Nonterminal, NodeType> result = indexMap.get(nominalDim).get(key);
 
         if (result == null) {
-            throw new IllegalArgumentException(String.format("State %d has no representer in dimension %d of %s", key, dim, this));
+            throw new IllegalArgumentException(String.format("State %d is not usable in dimension %d of %s", key, dim, this));
         }
 
         return result;
@@ -153,7 +153,7 @@ class Operator<Nonterminal, NodeType>
         if (arityKind == null) {
             arityKind = resultantState.arityKind;
         } else if (arityKind != resultantState.arityKind) {
-            throw new IllegalStateException("Cannot mix variadic and fixed arity productions");
+            throw new IllegalArgumentException("Cannot mix variadic and fixed arity productions");
         }
 
         transitionTable.add(childStates, 0, resultantState);
@@ -173,6 +173,42 @@ class Operator<Nonterminal, NodeType>
                 indexForDim.put(s.number, rs);
             }
         }
+    }
+
+    /**
+     * We have a novel state that already has a representer state in this transition table;
+     * add a mapping so we can find that representer state.
+     * @param s         the novel state.
+     * @param dim       the dimension of the transition table affected.
+     * @param pState    a copy of the relevant representer state.
+     */
+    void addRepresentedState(State<Nonterminal, NodeType> s, int dim, RepresenterState<Nonterminal, NodeType> pState)
+    {
+        RepresenterState<Nonterminal, NodeType> canonicalRs = getCanonicalRepresenterState(dim, pState);
+        assert canonicalRs != null;
+        Map<Integer, RepresenterState<Nonterminal, NodeType>> indexForDim = indexMap.get(dim);
+
+        indexForDim.put(s.number, canonicalRs);
+    }
+
+    /**
+     * Get a canonical representer state, given a copy and the dimension.
+     * @param dim       the dimension of the transition table affected.
+     * @param pState    a copy of the relevant representer state.
+     * @pre this operator must have a equivalent representer state in dim.
+     * @return the equivalent representer state previously stored.
+     * @throws IllegalStateException if there is no equivalent representer state.
+     */
+    private RepresenterState<Nonterminal, NodeType> getCanonicalRepresenterState(int dim, RepresenterState<Nonterminal, NodeType> pState)
+    {
+        for (RepresenterState<Nonterminal, NodeType> rs: reps.get(dim)) {
+
+            if (rs.equals(pState)) {
+                return rs;
+            }
+        }
+
+        throw new IllegalStateException(String.format("No canonical represeter state matches %s in dimension d of operator %s", pState));
     }
 
     /**

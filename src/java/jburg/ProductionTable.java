@@ -202,9 +202,12 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         Queue<State<Nonterminal, NodeType>> worklist = generateLeafStates();
 
-        while (worklist.peek() != null) {
+        if (!getNullPointerState().isEmpty()) {
+            worklist.add(getNullPointerState());
+        }
 
-            State<Nonterminal,NodeType> state = worklist.remove();
+        while (worklist.peek() != null) {
+            State<Nonterminal, NodeType> state = worklist.remove();
 
             for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
@@ -230,27 +233,30 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         NullPointerProduction<Nonterminal> np = new NullPointerProduction<Nonterminal>(nt, cost, postCallback);
         nullProductions.add(np);
+        nonterminals.add(nt);
         return np;
     }
 
     /**
-     * Get the singleton state that specifies valid transitions for a null pointer.
+     * Generate or retrieve the singleton state that specifies valid transitions for a null pointer.
      * If the grammar did not record any null productions, then this state is empty.
+     * @return the state that specifies valid transitions for a null pointer.
      */
     State<Nonterminal, NodeType> getNullPointerState()
     {
         if (nullState == null) {
-
             nullState = new State<Nonterminal, NodeType>();
+
             for (NullPointerProduction<Nonterminal> p: nullProductions) {
+
                 if (p.ownCost < nullState.getCost(p.target)) {
                     nullState.setNonClosureProduction(p, p.ownCost);
                 }
             }
 
             closure(nullState);
-            State<Nonterminal, NodeType> result = addState(nullState);
-            assert result == nullState;
+            State<Nonterminal, NodeType> canonicalNullState = addState(nullState);
+            assert canonicalNullState == nullState;
         }
 
         return nullState;
@@ -321,7 +327,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param state     the new state.
      * @param workList  [out] the work list of states to process;
      * any novel states discovered while permuting the input state
-     * against the operator are appended to workList for subsequent
+     * against the operator are appended to worklist for subsequent
      * iterations of the driver loop.
      */
     private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, Queue<State<Nonterminal, NodeType>> workList)
@@ -381,6 +387,8 @@ public class ProductionTable<Nonterminal, NodeType>
                         }
                     }
                 }
+            } else if (!pState.isEmpty()) {
+                op.addRepresentedState(state, dim, pState);
             }
         }
     }

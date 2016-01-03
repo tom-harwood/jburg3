@@ -93,7 +93,11 @@ class RepresenterState<Nonterminal,NodeType>
      */
     public int hashCode()
     {
-        return nodeType.hashCode() * 31 + costMap.hashCode();
+        if (nodeType != null) {
+            return nodeType.hashCode() * 31 + costMap.hashCode();
+        } else {
+            return costMap.hashCode();
+        }
     }
 
     @Override
@@ -106,10 +110,20 @@ class RepresenterState<Nonterminal,NodeType>
     {
         if (x instanceof RepresenterState) {
             RepresenterState<Nonterminal,NodeType> rs = (RepresenterState<Nonterminal,NodeType>)x;
-            return this.nodeType.equals(rs.nodeType) && this.costMap.equals(rs.costMap);
+
+            if (this.nodeType != null) {
+                return this.nodeType.equals(rs.nodeType) && this.costMap.equals(rs.costMap);
+            } else {
+                return rs.nodeType == null && this.costMap.equals(rs.costMap);
+            }
         } else {
             return false;
         }
+    }
+
+    public Set<Nonterminal> keySet()
+    {
+        return costMap.keySet();
     }
 
     @Override
