@@ -121,6 +121,9 @@ class RepresenterState<Nonterminal,NodeType>
         }
     }
 
+    /**
+     * @return the set of nonterminals this RepresenterState can produce.
+     */
     public Set<Nonterminal> keySet()
     {
         return costMap.keySet();
