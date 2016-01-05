@@ -169,7 +169,7 @@ class Operator<Nonterminal, NodeType>
             // but in that case we must be adding the same representer state.
             for (State<Nonterminal, NodeType> s: rs.representedStates) {
 
-                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs): String.format("Operator %s expected rs %s, got %s", this, indexForDim.get(s.number), rs);
+                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs): String.format("Operator %s addTransition() dim %d expected rs %s, got %s", this, dim, indexForDim.get(s.number), rs);
                 indexForDim.put(s.number, rs);
             }
         }
