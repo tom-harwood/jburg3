@@ -132,8 +132,7 @@ class NodeBuilder extends tl3BaseListener
 
     public void exitBuiltinProcedure(tl3Parser.BuiltinProcedureContext ctx)
     {
-        Node result = new Node(Verify, 3);
-        result.setChild(2, nodeStack.pop());
+        Node result = new Node(Verify, 2);
         result.setChild(1, nodeStack.pop());
         result.setChild(0, nodeStack.pop());
 

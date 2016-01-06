@@ -4,19 +4,19 @@
     var y = "original y";
     x = 1;
     xInt = x + 1;
-    verify(xInt, 2, "integer addition");
+    verify(xInt == 2, "integer addition");
     x = "outer";
 
     {
         var x = x + 1;
-        verify(x, "outer1", "inner x");
-        verify(outer.x, "outer", "outer x");
+        verify(x == "outer1", "inner x");
+        verify(outer.x == "outer", "outer x");
 
         y = "changed in inner scope";
     }
 
-    verify(x, "outer", "x in outer scope");
-    verify(y, "changed in inner scope", "y in outer scope");
+    verify(x == "outer", "x in outer scope");
+    verify(y == "changed in inner scope", "y in outer scope");
 
     print "First.tl3 succeeded";
 }

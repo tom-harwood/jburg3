@@ -136,7 +136,7 @@ public class CodeGenerator
         productions.addPatternMatch(Statement,  VarDef,         1, noPreCallback, getPostCallback("varDefWithInitializer", String.class, String.class), Name, Expression);
         productions.addPatternMatch(Statement,  Assignment,     1, noPreCallback, getPostCallback("assignmentStmt", String.class, String.class), LValue, Expression);
         productions.addPatternMatch(Statement,  Print,          1, noPreCallback, getPostCallback("printStmt", String.class), Expression);
-        productions.addPatternMatch(Statement,  Verify,         1, noPreCallback, getPostCallback("verify", String.class, String.class, String.class), Expression, Expression, Expression);
+        productions.addPatternMatch(Statement,  Verify,         1, noPreCallback, getPostCallback("verify", String.class, String.class), Expression, Expression);
 
         // Identifiers
         productions.addPatternMatch(LValue,     Identifier,     1, noPreCallback, getPostCallback("identifier", String.class), Name);
@@ -240,9 +240,9 @@ public class CodeGenerator
         return String.format("Runtime.areEqual(%s,%s)", lhs, rhs);
     }
 
-    public String verify(Node node, String actual, String expected, String text)
+    public String verify(Node node, String condition, String text)
     {
-        return String.format("Runtime.verify(%s,%s, %s);", actual, expected, text);
+        return String.format("Runtime.verify(%s,%s);", condition, text);
     }
 
     public String statementList(Node node, String... statements)

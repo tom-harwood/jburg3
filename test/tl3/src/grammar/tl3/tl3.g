@@ -49,7 +49,7 @@ primaryExpression:
 identifier: ID ('.' ID)?;
 
 builtinProcedure:
-    'verify' '(' expression ',' expression ',' expression ')'
+    'verify' '(' expression ',' expression ')'
     ;
 
 ID : [a-zA-Z][a-zA-Z0-9]*;

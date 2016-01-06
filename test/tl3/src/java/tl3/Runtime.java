@@ -35,12 +35,12 @@ public class Runtime
             rhs == null;
     }
 
-    public static String verify(Object actual, Object expected, Object text)
+    public static String verify(Object condition, Object text)
     {
-        if (!areEqual(actual, expected)) {
-            throw new IllegalArgumentException(String.format("%s FAILED: expected %s, actual %s", text, expected, actual));
+        if (!Boolean.TRUE.equals(condition)) {
+            throw new IllegalArgumentException(String.format("%s FAILED", text));
         }
 
-        return actual.toString();
+        return condition.toString();
     }
 }
