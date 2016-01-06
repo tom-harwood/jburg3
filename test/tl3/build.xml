@@ -1,0 +1,85 @@
+<project name="tl3" default="cleanBuildAndTest" basedir=".">
+
+    <target name="init">
+        <property file="${user.home}/ant.properties" />
+        <property file="../..build.properties" />
+
+        <property name="debug.symbols" value="yes"/>
+
+        <property name="jburg.home" value="${user.home}/projects/jburg3"/>
+        <property name="lib.dir" value="${jburg.home}/lib" />
+        <property name="jburg.jar" value="${lib.dir}/jburg.jar"/>
+        <property name="antlr.jar" value="${user.home}/tools/antlr-4.5.1-complete.jar"/>
+    
+        <property name="src.dir" value="./src" />
+        <property name="gensrc.dir" value="${basedir}/gensrc" />
+        <property name="classes.dir" value="./classes" />
+        <property name="junit.log.dir" value="./log" />
+
+        <property name="tl3.grammar" value="tl3/tl3.g"/>
+        <property name="tl3.source" value="${src.dir}/tl3/First.tl3"/>
+    </target>
+
+    <target name="cleanBuildAndTest" depends="clean,buildParser,compile,test"/>
+
+    <target name="clean" depends="init">
+        <!-- Remove VIM backup files.  -->
+        <delete>
+            <fileset dir="${basedir}" includes="**/*.*~" defaultexcludes="no"/>
+        </delete>
+            
+        <delete dir="${classes.dir}" />
+        <delete dir="${gensrc.dir}"/>
+    </target>
+
+    <target name="help">
+    <echo>
+cleanBuildAndTest - clean, build, and test
+test - run java tests
+    </echo>
+    </target>
+    
+    <target name="buildParser" depends="init">
+        <mkdir  dir="${gensrc.dir}"/>
+        <java jar="${antlr.jar}" fork="true" failonerror="true" dir="src/grammar">
+            <arg value="-o"/>
+            <arg value="${gensrc.dir}"/>
+            <arg value="-lib"/>
+            <arg value="${gensrc.dir}"/>
+            <arg value="${tl3.grammar}"/>
+        </java>
+    </target>
+
+	<target name="compile" depends="init" description="Build and compile source files">
+		<mkdir dir="${classes.dir}" />
+
+		<javac 
+			debug="${debug.symbols}" 
+			destdir="${classes.dir}" includes="**/*.java"
+			>
+            <classpath>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${antlr.jar}"/>
+            </classpath>
+			<src path="${src.dir}/java"/>
+			<src path="${gensrc.dir}"/>
+		</javac>
+	</target>
+
+    <target name="test" depends="init">
+        <java classname="tl3.TL3" fork="true" failonerror="true">
+            <classpath>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${antlr.jar}"/>
+                <pathelement path="${classes.dir}"/>
+            </classpath>
+            <arg value="${tl3.source}"/>
+            <jvmarg value="-ea"/>
+        </java>
+        <java classname="tl3Main" fork="true" failonerror="true">
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+            </classpath>
+        </java>
+    </target>
+</project>
