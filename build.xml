@@ -82,7 +82,8 @@ test - call the test/MAT directory's build.xml
 	</target>
 
     <target name="test">
-        <ant dir="test/java" target="test" inheritAll="false"/>
+        <ant dir="test/java" target="cleanBuildAndTest" inheritAll="false"/>
+        <ant dir="test/tl3" target="cleanBuildAndTest" inheritAll="false"/>
     </target>
 
 </project>
