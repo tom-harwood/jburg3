@@ -25,15 +25,15 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * The states in this dimension, if this is the final dimension.
      */
-    final Map<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>      finalDimension;
+    final Map<RepresenterState<Nonterminal, NodeType>, PredicatedState<Nonterminal, NodeType>> finalDimension;
 
     HyperPlane()
     {
         nextDimension   = new HashMap<RepresenterState<Nonterminal, NodeType>, HyperPlane<Nonterminal, NodeType>>();
-        finalDimension  = new HashMap<RepresenterState<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
+        finalDimension  = new HashMap<RepresenterState<Nonterminal, NodeType>, PredicatedState<Nonterminal, NodeType>>();
     }
 
-    void add(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, State<Nonterminal, NodeType> resultantState)
+    void add(List<RepresenterState<Nonterminal, NodeType>> childStates, int currentDim, PredicatedState<Nonterminal, NodeType> resultantState)
     {
 
         assert childStates.size() > 0;
@@ -47,6 +47,7 @@ class HyperPlane<Nonterminal, NodeType>
             }
             nextDimension.get(key).add(childStates, currentDim+1, resultantState);
         } else {
+            assert !finalDimension.containsKey(key);
             finalDimension.put(key, resultantState);
 
             // If all the states in this final dimension are variadic,
@@ -64,7 +65,7 @@ class HyperPlane<Nonterminal, NodeType>
      */
     boolean isVarArgs()
     {
-        for (State<Nonterminal, NodeType> s: finalDimension.values()) {
+        for (PredicatedState<Nonterminal, NodeType> s: finalDimension.values()) {
 
             if (!s.isVarArgs()) {
                 return false;
@@ -80,6 +81,12 @@ class HyperPlane<Nonterminal, NodeType>
         return true;
     }
 
+    /**
+     * Get the next dimension of this hyperplane.
+     * @param rs the RepresenterState in the next dimension.
+     * @return the corresponding hyperplane.
+     * @throws IllegalStateException if there is no corresponding hyperplane.
+     */
     HyperPlane<Nonterminal, NodeType> getNextDimension(RepresenterState<Nonterminal, NodeType> rs)
     {
         HyperPlane<Nonterminal, NodeType> result = nextDimension.get(rs);
@@ -91,15 +98,25 @@ class HyperPlane<Nonterminal, NodeType>
         return result;
     }
 
-    State<Nonterminal, NodeType> getResultState(RepresenterState<Nonterminal, NodeType> rs)
+    /**
+     * Assign a state number to a node.
+     * @pre this must be the final dimension of the hyperplane.
+     * @param node      the node being labelled.
+     * @param visitor   the receiver object for predicate method calls.
+     * @post the node's state number will be assigned.
+     * @throws Exception of arbitrary type from predicate invocation.
+     */
+    void assignStateNumber(RepresenterState<Nonterminal, NodeType> rs, BurgInput<NodeType> node, Object visitor)
+    throws Exception
     {
-        State<Nonterminal, NodeType> result = finalDimension.get(rs);
+        assert !finalDimension.isEmpty();
+        State<Nonterminal, NodeType> result = finalDimension.get(rs).getState(node, visitor);
 
         if (result == null) {
             throw new IllegalStateException(String.format("No hyperplane mapping for %s", rs));
         }
 
-        return result;
+        node.setStateNumber(result.number);
     }
 
     @Override
@@ -113,6 +130,10 @@ class HyperPlane<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Dump this hyperplane.
+     * @param out   the dump sink.
+     */
     void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {

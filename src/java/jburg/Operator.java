@@ -40,12 +40,11 @@ class Operator<Nonterminal, NodeType>
     final List<Map<Integer, RepresenterState<Nonterminal, NodeType>>> indexMap;
 
     /**
-     * If this State is a leaf state, there is either only one state
-     * (if the productions had no semantic guards), or a state that
-     * represents the "high" node in a lattice-like structure of states
-     * that correspond to the results of the semantic guards.
+     * If this State is a leaf state, it has a composite
+     * state, with permutations of the leaf productions'
+     * predicate methods (if any).
      */
-    State<Nonterminal, NodeType> leafState = null;
+    PredicatedState<Nonterminal, NodeType> leafState = null;
 
     /**
      * This operator's arity kind: unknown, fixed-arity, or variadic.
@@ -95,25 +94,29 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
-     * Get a leaf Operator's single state.
+     * Set a leaf Operator's single state number into a node.
+     * @param node      the node.
+     * @param visitor   the semantic predicate receiver.
      * @todo leaf operators with semantic guards
      * will have multiple states.
      */
-    State<Nonterminal, NodeType> getLeafState()
+    void setLeafState(BurgInput<NodeType> node, Object visitor)
+    throws Exception
     {
         assert leafState != null;
-        return leafState;
+        node.setStateNumber(leafState.getState(node, visitor).number);
     }
 
     /**
-     * Set the leaf state.
+     * Create the leaf state.
+     * @param states the set of leaf states.
      * @pre the Operator must be of arity zero.
      */
-    void setLeafState(State<Nonterminal, NodeType> leafState)
+    void createLeafState(List<State<Nonterminal, NodeType>> states)
     {
-        assert reps == null;
+        assert this.reps == null;
         assert this.leafState == null;
-        this.leafState = leafState;
+        this.leafState = new PredicatedState<Nonterminal, NodeType>(states);
     }
 
     /**
@@ -145,14 +148,14 @@ class Operator<Nonterminal, NodeType>
      * the transition; these representer states are its compound key.
      * @param resultantState    the state produced by this transition.
      */
-    void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, State<Nonterminal,NodeType> resultantState)
+    void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, PredicatedState<Nonterminal,NodeType> resultantState)
     {
         assert childStates.size() == this.size();
-        assert resultantState.arityKind != null;
+        ArityKind stateArityKind = resultantState.getArityKind();
 
         if (arityKind == null) {
-            arityKind = resultantState.arityKind;
-        } else if (arityKind != resultantState.arityKind) {
+            arityKind = stateArityKind;
+        } else if (arityKind != stateArityKind) {
             throw new IllegalArgumentException("Cannot mix variadic and fixed arity productions");
         }
 

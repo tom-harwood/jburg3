@@ -29,6 +29,7 @@ public class Reducer<Nonterminal, NodeType>
      * @param node the root of the tree to label.
      */
     public void label(BurgInput<NodeType> node)
+    throws Exception
     {
         if (node != null) {
             Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
@@ -58,12 +59,12 @@ public class Reducer<Nonterminal, NodeType>
                         if (dim < subtreeCount-1) {
                             current = current.getNextDimension(rs);
                         } else {
-                            current.getResultState(rs).assignNumber(node,visitor);
+                            current.assignStateNumber(rs, node, visitor);
                         }
                     }
 
                 } else {
-                    op.getLeafState().assignNumber(node, visitor);
+                    op.setLeafState(node, visitor);
                 }
             }
         } 

@@ -101,7 +101,6 @@ class RepresenterState<Nonterminal,NodeType>
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     /**
      * A representer state is equal to another representer state
      * if their node types and cost maps are equal.
@@ -109,7 +108,7 @@ class RepresenterState<Nonterminal,NodeType>
     public boolean equals(Object x)
     {
         if (x instanceof RepresenterState) {
-            RepresenterState<Nonterminal,NodeType> rs = (RepresenterState<Nonterminal,NodeType>)x;
+            RepresenterState<?,?> rs = (RepresenterState<?,?>)x;
 
             if (this.nodeType != null) {
                 return this.nodeType.equals(rs.nodeType) && this.costMap.equals(rs.costMap);

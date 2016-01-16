@@ -20,7 +20,10 @@ public class Calculator
         // Leaf operators
         productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Calculator.class.getDeclaredMethod("intLiteral", Node.class));
         productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
-        productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
+
+        // Predicated leaf operators
+        //productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
+        productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, 1, Calculator.class.getDeclaredMethod("shortGuard", Node.class), null, Calculator.class.getDeclaredMethod("shortLiteral", Node.class), false);
 
         // Unary operators
         productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
@@ -159,4 +162,12 @@ public class Calculator
         return result;
     }
 
+    /*
+     * Predicate methods
+     */
+    public Boolean shortGuard(Node n)
+    {
+        int nodeValue = Integer.valueOf(n.content);
+        return nodeValue >= Short.MIN_VALUE && nodeValue <= Short.MAX_VALUE;
+    }
 }

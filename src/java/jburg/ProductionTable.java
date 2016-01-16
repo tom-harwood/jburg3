@@ -128,7 +128,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    private PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
+    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
         PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, childTypes);
         nonterminals.add(nt);
@@ -292,21 +292,26 @@ public class ProductionTable<Nonterminal, NodeType>
             Operator<Nonterminal, NodeType> leafOperator = fetchOperator(nodeType, 0);
 
             if (leafOperator != null) {
-                State<Nonterminal, NodeType> state = new State<Nonterminal, NodeType>(nodeType);
+                List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
+                newStates.add(new State<Nonterminal,NodeType>(leafOperator.nodeType));
 
                 for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(nodeType)) {
-                    if (p.isLeaf() && p.ownCost < state.getCost(p.target)) {
-                        state.setNonClosureProduction(p, p.ownCost);
+                    if (p.isLeaf()) {
+                        coalesceProduction(Collections.emptyList(), p, newStates);
                     }
                 }
 
                 // The set of non-empty leaf states is the basis for
                 // computing the transition tables.
-                if (state.size() > 0) {
-                    closure(state);
-                    result.add(addState(state));
-                    leafOperator.setLeafState(state);
+                for (State<Nonterminal, NodeType> state: newStates) {
+
+                    if (state.size() > 0) {
+                        closure(state);
+                        result.add(addState(state));
+                    }
                 }
+
+                leafOperator.createLeafState(newStates);
             }
 
         }
@@ -334,6 +339,7 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         int arity = op.size();
 
+
         for (int dim = 0; dim < arity; dim++) {
 
             RepresenterState<Nonterminal,NodeType> pState = project(op, dim, state);
@@ -344,51 +350,107 @@ public class ProductionTable<Nonterminal, NodeType>
                 // Try all permutations of the operator's nonterminal children
                 // as operands to the pattern matching productions applicable
                 // to the operator.
-                for (List<RepresenterState<Nonterminal,NodeType>> repSet: op.generatePermutations(pState, dim)) {
+                for (List<RepresenterState<Nonterminal,NodeType>> repStates: op.generatePermutations(pState, dim)) {
                     // Each permutation generates a candidate state (called "result"
                     // in Proebsting's algorithm) with a cost matrix determined by
                     // the production's cost, plus the cost of the current permuatation
                     // of representer states; if this aggregate cost is less than the "unfeasible" cost
                     // Integer.MAX_VALUE and also less than the candidate's current best cost for
                     // the production's nonterminal, then add the production to the candidate.
-                    State<Nonterminal,NodeType> result = new State<Nonterminal,NodeType>(op.nodeType);
+                    List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
+                    newStates.add(new State<Nonterminal,NodeType>(op.nodeType));
 
                     for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-
                         if (p.acceptsDimension(arity)) {
-                            long cost = p.ownCost;
-                            for (int i = 0; i < arity && cost < Integer.MAX_VALUE; i++) {
-                                cost += repSet.get(i).getCost(p.getNonterminal(i));
-                            }
+                            coalesceProduction(repStates, p, newStates);
+                        }
+                    }
 
-                            if (cost < result.getCost(p.target)) {
-                                result.setNonClosureProduction(p,cost);
+                    List<State<Nonterminal, NodeType>> nontrivialStates = new ArrayList<State<Nonterminal, NodeType>>();
+
+                    for (int i = 0; i < newStates.size(); i++) {
+                        State<Nonterminal, NodeType> resultState = newStates.get(i);
+
+                        if (!resultState.isEmpty()) {
+
+                            if (!this.states.containsKey(resultState)) {
+                                // We know that we will be using this state as the canonical
+                                // state, since no equivalent state is already stored. So it's
+                                // safe to add it to the worklist now; it will get its state
+                                // number via the call to addState().
+                                closure(resultState);
+                                workList.add(resultState);
+                                nontrivialStates.add(addState(resultState));
+                            } else {
+                                // Get the canonical representation of the result state
+                                // from the state table; the canonical representation
+                                // is equivalent to the result state, but has a unique
+                                // state number.
+                                State<Nonterminal, NodeType> canonicalState = addState(resultState);
+                                nontrivialStates.add(canonicalState);
                             }
                         }
                     }
 
-                    if (!result.isEmpty()) {
-
-                        if (!states.containsKey(result)) {
-                            // We know that we will be using this state as the canonical
-                            // state, since no equivalent state is already stored. So it's
-                            // safe to add it to the worklist now; it will get its state
-                            // number via the call to addState().
-                            op.addTransition(repSet, addState(result));
-                            closure(result);
-                            workList.add(result);
-                        } else {
-                            // Get the canonical representation of the result state
-                            // from the state table; the canonical representation
-                            // is equivalent to the result state, but has a unique
-                            // state number.
-                            State<Nonterminal, NodeType> canonicalState = addState(result);
-                            op.addTransition(repSet, canonicalState);
-                        }
+                    if (nontrivialStates.size() > 0) {
+                        op.addTransition(repStates, new PredicatedState<Nonterminal, NodeType>(nontrivialStates));
                     }
                 }
             } else if (!pState.isEmpty()) {
                 op.addRepresentedState(state, dim, pState);
+            }
+        }
+    }
+
+    /**
+     * Coalesce a PatternMatcher into a list of States, potentially creating
+     * new States if the PatternMatcher has a predicate that has not been seen.
+     * @param repStates the active representer states for the in-flight transition.
+     * repStates is empty if the PatternMatcher is a leaf.
+     * @param p         the PatternMatcher.
+     * @param newStates the list of states.
+     * @post if the PatternMatcher has a predicate that does not appear in a
+     * State previously added to the list, then that State will be copied
+     * into a new State that includes predicate. This is done even if the
+     * PatternMatcher is not the best fit for its nonterminal in the state;
+     * this is so that the compile-time logic has a full permutation of
+     * all the predicates, and can thus do a simple selection of the
+     * appropriate State by running all predicates and forming a key
+     * of all successful ones.
+     * @post for all States in the list, both incumbent and new, the
+     * PatternMatcher will recorded as the State's production for the
+     * PatternMatcher's target nonterminal if the State can satisfy the
+     * predicate method and the new PatternMatcher is the best fit.
+     */
+    void coalesceProduction(List<RepresenterState<Nonterminal,NodeType>> repStates, PatternMatcher<Nonterminal, NodeType> p, List<State<Nonterminal, NodeType>> newStates)
+    {
+        long cost = p.ownCost;
+
+        for (int j = 0; j < repStates.size() && cost < Integer.MAX_VALUE; j++) {
+            cost += repStates.get(j).getCost(p.getNonterminal(j));
+        }
+
+        for (int i = 0; i < newStates.size(); i++) {
+            State<Nonterminal, NodeType> candidate = newStates.get(i);
+
+            if (p.hasPredicate()) {
+
+                if (candidate.satisfiesPredicate(p.predicate)) {
+
+                    if (cost < candidate.getCost(p.target)) {
+                        candidate.setNonClosureProduction(p,cost);
+                    }
+
+                } else {
+                    State<Nonterminal, NodeType> predicatedState = new State<Nonterminal, NodeType>(candidate, p.predicate);
+                    newStates.add(predicatedState);
+
+                    if (cost < predicatedState.getCost(p.target)) {
+                        predicatedState.setNonClosureProduction(p,cost);
+                    }
+                }
+            } else if (cost < candidate.getCost(p.target)) {
+                candidate.setNonClosureProduction(p,cost);
             }
         }
     }

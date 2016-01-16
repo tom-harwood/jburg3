@@ -1,5 +1,6 @@
 package jburg;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -32,26 +33,14 @@ class State<Nonterminal, NodeType>
     /** "typedef" a multimap of Productions, keyed by cost. */
     @SuppressWarnings("serial")
 	class ProductionMultimap extends TreeMap<Integer, List<Production<Nonterminal>>> {}
-    /** "typedef" a map of ProductionMultimaps, keyed by Nonterminal. */
-    @SuppressWarnings("serial")
-	class PredicatedProductionMap extends HashMap<Nonterminal, ProductionMultimap> {}
     /** "typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
 	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
     /**
-     * This state's non-closure productions; reset to null
-     * if the state has predicated productions.
+     * This state's non-closure productions.
      */
     private ProductionMap  nonClosureProductions = new ProductionMap();
-
-    /**
-     * This state's predicated productions; if the state contained
-     * non-predicated productions before this set of predicated
-     * productions was introduced, those productions migrate into
-     * this table.
-     */
-    private PredicatedProductionMap predicatedProductionMap = null;
 
     /**
      * Cost of each pattern match.
@@ -77,6 +66,11 @@ class State<Nonterminal, NodeType>
     ArityKind arityKind = null;
 
     /**
+     * This state's predicate methods.
+     */
+    final List<Method> predicates = new ArrayList<Method>();
+
+    /**
      * Construct a state that characterizes non-null nodes.
      * @param nodeType the node type of the nodes.
      */
@@ -95,14 +89,23 @@ class State<Nonterminal, NodeType>
     }
 
     /**
-     * Assign a state number to a node.
-     * @param node  the node
-     * @param visitor   the visitor, a receiver
-     * object of semantic predicate method invocations.
+     * Construct a state based on a source state, with a new predicate.
+     * @param source    the source state.
+     * @param predicate the predicate.
      */
-    void assignNumber(BurgInput node, Object visitor)
+    State(State<Nonterminal, NodeType> source, Method predicate)
     {
-        node.setStateNumber(this.number);
+        this.nodeType = source.nodeType;
+        this.arityKind = source.arityKind;
+        this.nonClosureProductions.putAll(source.nonClosureProductions);
+        this.patternCosts.putAll(source.patternCosts);
+        this.closures.putAll(source.closures);
+        // Add the new predicate, and sort the predicate
+        // list into its canonical form by hash code.
+        assert !source.predicates.contains(predicate);
+        this.predicates.addAll(source.predicates);
+        this.predicates.add(predicate);
+        Collections.sort(this.predicates, new MethodComparator());
     }
 
     /**
@@ -142,6 +145,17 @@ class State<Nonterminal, NodeType>
     boolean isEmpty()
     {
         return size() == 0;
+    }
+
+    /**
+     * Do nodes labeled with this state satisfy a particular predicate?
+     * @predicate   the predicate of interest.
+     * @return true if a node labeled with this state is
+     * known to satisfy the given predicate.
+     */
+    boolean satisfiesPredicate(Method predicate)
+    {
+        return this.predicates.contains(predicate);
     }
 
     /**
@@ -347,28 +361,29 @@ class State<Nonterminal, NodeType>
     public int hashCode()
     {
         int nodeHash = nodeType != null? nodeType.hashCode(): 0;
-        return nodeHash * 31 + nonClosureProductions.hashCode();
+        return nodeHash * 31 + predicates.hashCode() * 31 + nonClosureProductions.hashCode();
     }
 
     /**
-     * Two states are equal if their node types
-     * and pattern maps are equal.
+     * Two states are equal if their node types,
+     * pattern maps, and predicate guards are equal.
      * @param o the object to compare against.
-     * @return true if o is a State and its node
-     * type and pattern map are equal to this
-     * state's corresponding members; false otherwise.
+     * @return true if o is a State and equal to this State.
      */
     @Override
-    @SuppressWarnings({"unchecked"})
     public boolean equals(Object o)
     {
         if (o instanceof State) {
-            State<Nonterminal,NodeType> s = (State<Nonterminal,NodeType>)o;
+            State<?,?> s = (State<?,?>)o;
 
             if (this.nodeType == s.nodeType) {
-                return this.nonClosureProductions.equals(s.nonClosureProductions);
+                return this.nonClosureProductions.equals(s.nonClosureProductions) && this.predicates.equals(s.predicates);
             } else if (this.nodeType != null && s.nodeType != null) {
-                return this.nodeType.equals(s.nodeType) && this.nonClosureProductions.equals(s.nonClosureProductions);
+                return
+                    this.nodeType.equals(s.nodeType) &&
+                    this.nonClosureProductions.equals(s.nonClosureProductions) &&
+                    this.predicates.equals(s.predicates)
+                    ;
             }
         }
 

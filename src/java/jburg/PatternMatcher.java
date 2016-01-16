@@ -27,9 +27,7 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
      */
     final List<Nonterminal>     childTypes;
 
-    // TODO: @SafeVarargs would be a better annotation,
-    // but that would require Java 1.7 or above.
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked"}) // TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
         super(target, cost, isVarArgs, predicate, preCallback, postCallback);
