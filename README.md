@@ -1,6 +1,6 @@
 # jburg3
 JBurg3 is  extended form of the algorithm outlined in Dr. Todd Proebsting's 1992 paper, [Simple and Efficient BURS Table Generation](http://research.cs.wisc.edu/techreports/1991/TR1065.pdf). JBurg3 extends Proebsting's BURG's capabilities in several respects which have proven valuable in practice:
-The pattern matching productions accept arbitrary numbers of children, both fixed arity and variadic.
+* The pattern matching productions accept arbitrary numbers of children, both fixed arity and variadic.
 * Specialized "pattern matching" rules to handle null nodes.
 * Pattern matching rules can be guarded by semantic predicates.
 * Nonterminal-to-nonterminal rules can execute reduction actions.
@@ -16,6 +16,6 @@ Work outstanding before beta:
 
 The author also wishes to thank former and present employers who have supported the JBurg project:
 
-* Adobe Systems
-* NuoDB
-* Veracode
+* [Adobe Systems](http://www.adobe.com)
+* [NuoDB](http://www.nuodb.com)
+* [Veracode](http://www.veracode.com)
