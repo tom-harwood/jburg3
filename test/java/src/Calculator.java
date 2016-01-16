@@ -53,13 +53,21 @@ public class Calculator
         Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
 
         for (Testcase tc: nf.testcases) {
-            reducer.label(tc.root);
-            String result = reducer.reduce(tc.root, tc.type).toString();;
+            try {
+                reducer.label(tc.root);
+                String result = reducer.reduce(tc.root, tc.type).toString();;
 
-            if (tc.expected.equals(result)) {
-                System.out.printf("Succeeded: %s\n", tc.name);
-            } else {
-                System.out.printf("FAILED: %s: expected %s got %s\n", tc.name, tc.expected, result);
+                if (tc.expected.equals(result)) {
+                    System.out.printf("Succeeded: %s\n", tc.name);
+                } else {
+                    System.out.printf("FAILED: %s: expected %s got %s\n", tc.name, tc.expected, result);
+                }
+            } catch (Exception ex) {
+                if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+                    System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                } else {
+                    throw ex;
+                }
             }
         }
     }

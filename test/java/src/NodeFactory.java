@@ -46,8 +46,16 @@ class NodeFactory extends DefaultHandler
 
         } else if (localName.equals("Testcase")) {
 
+            // Do a little validation to get better diagnostics.
+            String testcaseName = atts.getValue("name");
+            String testcaseType = atts.getValue("type");
+
+            if (testcaseType == null) {
+                throw new IllegalArgumentException(String.format("Testcase %s requires a type specifier", testcaseName));
+            }
+
             if (nodeStack.isEmpty()) {
-                testcases.add(new Testcase(atts.getValue("name"), Nonterminal.valueOf(atts.getValue("type")), atts.getValue("expected")));
+                testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(testcaseType), atts.getValue("expected"), atts.getValue("expectedException")));
             } else {
                 throw new IllegalStateException("Testcases cannot be nested.");
             }
