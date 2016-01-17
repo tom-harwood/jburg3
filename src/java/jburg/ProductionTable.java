@@ -161,6 +161,30 @@ public class ProductionTable<Nonterminal, NodeType>
         return patternMatcher;
     }
 
+    /**
+     * Add a closure to the grammar.
+     * @param targetNt      the nonterminal this closure produces.
+     * @param sourceNt      the nonterminal that must be produced before this closure runs.
+     * @param cost          the closure's cost metric.
+     * @param postCallback  the callback method run after the method that produces the source nonterminal completes.
+     */
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost, Method method)
+    {
+        Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, cost, method);
+        closures.add(closure);
+        return closure;
+    }
+
+    /**
+     * Add a closure to the grammar, with no callback.
+     * @param targetNt      the nonterminal this closure produces.
+     * @param sourceNt      the nonterminal that must be produced before this closure runs.
+     * @param cost          the closure's cost metric.
+     */
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost)
+    {
+        return addClosure(targetNt, sourceNt, cost, null);
+    }
 
     /**
      * Add a closure to the grammar, with unit cost.
@@ -170,17 +194,15 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, Method method)
     {
-        Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, method);
-        closures.add(closure);
-        return closure;
+        return addClosure(targetNt, sourceNt, 1, method);
     }
 
     /**
      * Add a closure to the grammar, with unit cost and no callbacks.
      */
-    public void addClosure(Nonterminal targetNt, Nonterminal sourceNt)
+    public Closure addClosure(Nonterminal targetNt, Nonterminal sourceNt)
     {
-        addClosure(targetNt, sourceNt, null);
+        return addClosure(targetNt, sourceNt, 1, null);
     }
 
     /**

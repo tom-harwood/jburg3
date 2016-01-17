@@ -140,6 +140,7 @@ public class CodeGenerator
 
         // Identifiers
         productions.addPatternMatch(LValue,     Identifier,     1, noPreCallback, getPostCallback("identifier", String.class), Name);
+        productions.addPatternMatch(Expression, Identifier,     1, getPredicate("isAlias"), noPreCallback, getPostCallback("aliasedIdentifier", String.class), false, Name);
         productions.addPatternMatch(LValue,     Identifier,     1, noPreCallback, getPostCallback("identifier", String.class, String.class), Name, Name);
         productions.addPatternMatch(Name,       IdentifierPart, 1, noPreCallback, getPostCallback("nameRef"));
 
@@ -150,7 +151,7 @@ public class CodeGenerator
         // Leaf expressions
         productions.addPatternMatch(Expression, IntegerLiteral, getPostCallback("integerLiteral"));
         productions.addPatternMatch(Expression, StringLiteral,  getPostCallback("stringLiteral"));
-        productions.addClosure(Expression, LValue);
+        productions.addClosure(Expression, LValue, 2);
 
         productions.addNullPointerProduction(NullPtr, 1, null);
 
@@ -187,6 +188,17 @@ public class CodeGenerator
         return null;
     }
 
+    static Method getPredicate(String methodName)
+    {
+        try {
+            return CodeGenerator.class.getDeclaredMethod(methodName, Node.class);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
     public String nameRef(Node node)
     {
         return node.content.toString();
@@ -201,6 +213,11 @@ public class CodeGenerator
             }
         }
         return namespaces.peek().resolve(name);
+    }
+
+    public String aliasedIdentifier(Node node, String name)
+    {
+        throw new UnsupportedOperationException();
     }
 
     public String identifier(Node node, String qualifier, String name)
@@ -297,5 +314,13 @@ public class CodeGenerator
         // TODO: check scope name
         namespaces.pop();
         return statements;
+    }
+
+    /*
+     * Semantic predicates
+     */
+    public boolean isAlias(Node n)
+    {
+        return false;
     }
 }
