@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Jburg3 by tom-harwood</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Jburg3</h1>
+        <p>Extended BURS generator</p>
+        <p class="view"><a href="https://github.com/tom-harwood/jburg3">View the Project on GitHub <small>tom-harwood/jburg3</small></a></p>
+        <ul>
+          <li><a href="https://github.com/tom-harwood/jburg3/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/tom-harwood/jburg3/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/tom-harwood/jburg3">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="jburg3" class="anchor" href="#jburg3" aria-hidden="true"><span class="octicon octicon-link"></span></a>jburg3</h1>
+
+<p>JBurg3 is  extended form of the algorithm outlined in Dr. Todd Proebsting's 1992 paper, <a href="http://research.cs.wisc.edu/techreports/1991/TR1065.pdf">Simple and Efficient BURS Table Generation</a>. JBurg3 extends Proebsting's BURG's capabilities in several respects which have proven valuable in practice:</p>
+
+<ul>
+<li>The pattern matching productions accept arbitrary numbers of children, both fixed arity and variadic.</li>
+<li>Specialized "pattern matching" rules to handle null nodes.</li>
+<li>Pattern matching rules can be guarded by semantic predicates.</li>
+<li>Nonterminal-to-nonterminal rules can execute reduction actions.
+JBurg3 shares most of these capabilities with JBurg2, which uses an "iburg" type algorithm that generates rewrite machines that defer dynamic programming to compile time. JBurg3, however, does its dynamic programming at BURG initialization time. With a set of dump/load routines, this can be translated into compiler-compile time table generation.</li>
+</ul>
+
+<p>JBurg3 also differs fundamentally from most other BURGs in that it does not have a specification language; the benefits of a bespoke language have, in many deployment scenarios, been outweighed by the overhead of educating developers in the tool and integrating the tool into build processes. The first implementation of JBurg3 is a Java implementation, but a C++ port should not be difficult; the implementation uses Java reflection where C++ would more efficiently use function pointers, and the data structures make use of the hash/equality/comparison characteristics of Java containers in a straightforward way.</p>
+
+<p>Work outstanding before beta:</p>
+
+<ul>
+<li>The transition table dump/load routines.</li>
+<li>A better toy compiler; I'm considering a "4GL" with embedded SQL, since SQL <code>SELECT</code> statements are among the gnarlier things one's called upon to translate.</li>
+<li>A good deal more documentation, in particular presentations of the reasoning behind variadic productions and nonterminal-to-nonterminal productions with logic.</li>
+<li>A great deal more testing!</li>
+</ul>
+
+<p>The author also wishes to thank former and present employers who have supported the JBurg project:</p>
+
+<ul>
+<li><a href="http://www.adobe.com">Adobe Systems</a></li>
+<li><a href="http://www.nuodb.com">NuoDB</a></li>
+<li><a href="http://www.veracode.com">Veracode</a></li>
+</ul>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/tom-harwood">tom-harwood</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
