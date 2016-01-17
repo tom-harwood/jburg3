@@ -66,7 +66,8 @@ class State<Nonterminal, NodeType>
     ArityKind arityKind = null;
 
     /**
-     * This state's predicate methods.
+     * This state's predicate methods. Nodes belonging to this
+     * state's equivalence class satisfy all the predicates.
      */
     final List<Method> predicates = new ArrayList<Method>();
 
@@ -342,8 +343,8 @@ class State<Nonterminal, NodeType>
 
     /**
      * Define a state's hash code in terms of its
-     * node type's hash code and its pattern map's
-     * hash code.
+     * node type's hash code, its pattern map's
+     * hash code, and its predicate list's hash code.
      *
      * <p> <strong>Using the cost map's hash code is invalid,</strong>
      * since subsequent iterations may produce states that
@@ -355,7 +356,8 @@ class State<Nonterminal, NodeType>
      * so the pattern map is a valid choice for hashing.
      *
      * @return this state's node type's hashCode(),
-     * concatenated with the pattern map's hashCode().
+     * concatenated with the pattern map's hashCode()
+     * and the predicate list's hashCode().
      */
     @Override
     public int hashCode()

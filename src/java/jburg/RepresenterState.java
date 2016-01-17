@@ -6,9 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A RepresenterState is a "skeleton" representation
- * of a State, a tuple of (NodeType, {Nonterminal=cost}*).
- * Many states may map to the same RepresenterState.
+ * A RepresenterState is a abstract representation of an equivalence
+ * class of States, a tuple of (NodeType, {Nonterminal=cost}*).
  * The transition tables are keyed by tuples of RepresenterState
  * objects, which effects a very significant compaction of the
  * resulting transition table.
@@ -40,6 +39,11 @@ class RepresenterState<Nonterminal,NodeType>
      * The cost to produce this representer state's nonterminals.
      */
     Map<Nonterminal, Long>              costMap = new HashMap<Nonterminal, Long>();
+
+    /**
+     * States in this equivalence class. This is denormalized data,
+     * maintained here to speed up transition table processing.
+     */
     Set<State<Nonterminal, NodeType>>   representedStates = new HashSet<State<Nonterminal, NodeType>>();
 
     /**

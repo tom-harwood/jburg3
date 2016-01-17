@@ -194,6 +194,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * which are appended to the worklist; the algorithm terminates
      * when all operators have processed all relevant transitions
      * and the worklist empties.
+     * </ul>
      * @post states contains all state entries for the grammar,
      * and each operator's transition table contains mappings
      * to the corresponding states.

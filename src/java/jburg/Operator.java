@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An Operator represents an opcode(operand, operand) tuple.
+ * An Operator represents an opcode(operand...) tuple.
  * The pattern-matching and closure productions for all inputs
  * with this opcode/arity are encoded into the operator's
  * transition table.
@@ -51,15 +51,15 @@ class Operator<Nonterminal, NodeType>
      * The arity kind starts out unknown, and is set by the first state
      * added to the operator; subsequent productions must have the same
      * arity kind. The ProductionTable manages mixed fixed and variadic
-     * productions; such productions generally entail creating copies of
-     * states, and possibly copying or shifting operators.
+     * productions; combinations of fixed-arity and variadic productions
+     * generally entail creating copies of states, and possibly copying
+     * or shifting operators.
      */
     ArityKind arityKind = null;
 
     /**
      * @param nodeType  the Operator's node type.
      * @param arity     the Operator's arity.
-     * @todo variadic operators.
      */
     Operator(NodeType nodeType, int arity)
     {
@@ -94,11 +94,9 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
-     * Set a leaf Operator's single state number into a node.
+     * Set a leaf Operator's state number into a node.
      * @param node      the node.
      * @param visitor   the semantic predicate receiver.
-     * @todo leaf operators with semantic guards
-     * will have multiple states.
      */
     void setLeafState(BurgInput<NodeType> node, Object visitor)
     throws Exception
@@ -340,10 +338,10 @@ class Operator<Nonterminal, NodeType>
                         result.add(rsTable.get(i).get(rsIndex[i]));
                     }
 
-                    // Starting with the last dimension, increment indexes;
-                    // this process continues until a dimension has more
-                    // rep states to examine, or until we reach the first
-                    // dimension, where we stop and the iterator is at end.
+                    // Starting with the last dimension, increment indexes
+                    // with carry; this process continues until a dimension
+                    // has more rep states to examine, or until we reach the
+                    // first dimension, where we stop and the iterator is at end.
                     int idx = rsIndex.length - 1;
                     rsIndex[idx]++;
 
