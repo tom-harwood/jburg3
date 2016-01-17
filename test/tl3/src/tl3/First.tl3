@@ -1,11 +1,16 @@
-{:outer
+outer:{
+
     var x;
+    alias foo = x + "-foo-";
     var xInt;
     var y = "original y";
     x = 1;
+    print "foo is " + foo;
     xInt = x + 1;
     verify(xInt == 2, "integer addition");
     x = "outer";
+
+    print "foo is " + foo;
 
     {
         var x = x + 1;

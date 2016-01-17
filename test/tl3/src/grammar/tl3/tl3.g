@@ -3,7 +3,7 @@ grammar tl3;
     package tl3;
 }
 
-scope  : '{' (':' ID)? scopeContents '}';
+scope  : (ID ':')? '{' scopeContents '}';
 
 scopeContents:
     (
@@ -13,11 +13,14 @@ scopeContents:
     ;
 
 statement:
-    assignment
+    aliasDef
+    |assignment
     | print
     | varDef
     | exprStmt
     ;
+
+aliasDef: 'alias' ID '=' expression ';';
 
 assignment: identifier '=' expression ';';
 

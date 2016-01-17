@@ -32,6 +32,7 @@ public class CodeGenerator
 
         final String nsName;
         final Map<String,String>  names = new HashMap<String,String>();
+        final Map<String,String>  aliases = new HashMap<String,String>();
 
         String addDefinition(String name)
         {
@@ -44,10 +45,22 @@ public class CodeGenerator
             return names.containsKey(name);
         }
 
+        void addAlias(String name, String aliasedExpression)
+        {
+            this.names.put(name, aliasedExpression);
+        }
+
+        boolean hasAlias(String name)
+        {
+            return aliases.containsKey(name);
+        }
+
         String resolve(String name)
         {
             if (this.hasDefinition(name)) {
                 return names.get(name);
+            } else if (this.hasAlias(name)) {
+                return aliases.get(name);
             } else {
                 throw new IllegalArgumentException("Unresolved name " + name);
             }
@@ -103,6 +116,10 @@ public class CodeGenerator
 
         boolean success = task.call();
 
+        if (!success) {
+            System.err.printf("Compilation FAILED:\n%s\n",source);
+        }
+
         for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
             System.err.println(diagnostic.getCode());
             System.err.println(diagnostic.getKind());
@@ -132,6 +149,7 @@ public class CodeGenerator
 
         productions.addVarArgsPatternMatch(Statements, ScopeContents, 1, noPreCallback,  statementList, Statement);
 
+        productions.addPatternMatch(Statement,  AliasDef,       1, noPreCallback, getPostCallback("aliasDefinition", String.class, String.class), Name, Expression);
         productions.addPatternMatch(Statement,  VarDef,         1, noPreCallback, getPostCallback("varDefNoInitializer", String.class), Name);
         productions.addPatternMatch(Statement,  VarDef,         1, noPreCallback, getPostCallback("varDefWithInitializer", String.class, String.class), Name, Expression);
         productions.addPatternMatch(Statement,  Assignment,     1, noPreCallback, getPostCallback("assignmentStmt", String.class, String.class), LValue, Expression);
@@ -217,7 +235,15 @@ public class CodeGenerator
 
     public String aliasedIdentifier(Node node, String name)
     {
-        throw new UnsupportedOperationException();
+        for (int idx = namespaces.size() - 1; idx >= 0; idx--) {
+
+            if (namespaces.get(idx).hasAlias(name)) {
+                return this.namespaces.get(idx).resolve(name);
+            }
+        }
+
+        // Shouldn't happen, the isAlias routine checked the namespaces.
+        throw new IllegalStateException(String.format("aliasedIdentifier(%s) not found?", name));
     }
 
     public String identifier(Node node, String qualifier, String name)
@@ -289,6 +315,12 @@ public class CodeGenerator
         return String.format("Object %s = %s;", namespaces.peek().addDefinition(varName), initializer);
     }
 
+    public String aliasDefinition(Node node, String aliasName, String aliasBody)
+    {
+        namespaces.peek().addAlias(aliasName, aliasBody);
+        return String.format("// alias %s = %s", aliasName, aliasBody);
+    }
+
     public String assignmentStmt(Node node, String lvalue, String rvalue)
     {
         return String.format("%s = %s;", lvalue, rvalue);
@@ -321,6 +353,16 @@ public class CodeGenerator
      */
     public boolean isAlias(Node n)
     {
-        return false;
+        // TODO: Aliases can be general identifiers;
+        // qualify the search through the namespaces.
+        String name = n.getSubtree(0).content.toString();
+
+        boolean aliasFound = false;
+
+        for (int idx = namespaces.size() - 1; !aliasFound && idx >= 0; idx--) {
+            aliasFound |= namespaces.get(idx).hasAlias(name);
+        }
+
+        return aliasFound;
     }
 }

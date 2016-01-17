@@ -3,6 +3,7 @@ package tl3;
 public enum NodeType
 {
     Add,
+    AliasDef,
     Assignment,
     Divide,
     Equal,

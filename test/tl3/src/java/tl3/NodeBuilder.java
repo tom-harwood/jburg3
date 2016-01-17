@@ -138,4 +138,12 @@ class NodeBuilder extends tl3BaseListener
 
         nodeStack.push(result);
     }
+
+    public void exitAliasDef(tl3Parser.AliasDefContext ctx)
+    {
+        Node result = new Node(AliasDef, 2);
+        result.setChild(0, new Node(IdentifierPart, ctx.ID().getSymbol().getText()));
+        result.setChild(1, nodeStack.pop());
+        nodeStack.push(result);
+    }
 }
