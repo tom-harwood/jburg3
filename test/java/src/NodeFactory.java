@@ -61,13 +61,20 @@ class NodeFactory extends DefaultHandler
             }
         } else {
             Node        node;
+            NodeType    nodeType = null;
+            String      nodeTypeName = atts.getValue("op");
             String      content = atts.getValue("content");
-            NodeType    nt = NodeType.valueOf(atts.getValue("op"));
+
+            if (nodeTypeName != null) {
+                nodeType = NodeType.valueOf(nodeTypeName);
+            } else {
+                throw new IllegalArgumentException("Nodes require an op specifier");
+            }
 
             if (content != null) {
-                node = new Node(nt, content);
+                node = new Node(nodeType, content);
             } else {
-                node = new Node(nt);
+                node = new Node(nodeType);
             }
 
             if (nodeStack.isEmpty()) {
