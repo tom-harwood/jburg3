@@ -200,7 +200,7 @@ public class ProductionTable<Nonterminal, NodeType>
     /**
      * Add a closure to the grammar, with unit cost and no callbacks.
      */
-    public Closure addClosure(Nonterminal targetNt, Nonterminal sourceNt)
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt)
     {
         return addClosure(targetNt, sourceNt, 1, null);
     }
