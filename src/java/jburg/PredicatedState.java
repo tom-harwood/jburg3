@@ -115,14 +115,26 @@ class PredicatedState<Nonterminal, NodeType>
     }
 
     /**
-     * Dump an abbreviated representation
-     * of this composite state.
+     * Dump this composite state.
      * @param out   the dump sink.
      */
-    void miniDump(java.io.PrintWriter out)
+    void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
         out.printf("<predicatedState>\n");
+
+        for (List<Method> predicateKey: states.keySet()) {
+            if (predicateKey.isEmpty()) {
+                out.printf("<defaultState>\n");
+                states.get(predicateKey).miniDump(out);
+                out.printf("</defaultState>\n");
+            } else {
+                out.printf("<predicate methods=\"%s\">\n", predicateKey);
+                states.get(predicateKey).miniDump(out);
+                out.printf("</predicate>\n");
+            }
+        }
+
         out.println("</predicatedState>");
     }
 }

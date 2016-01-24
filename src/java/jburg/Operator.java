@@ -206,7 +206,7 @@ class Operator<Nonterminal, NodeType>
         if (transitionTable != null) {
             transitionTable.dump(out);
         } else if (leafState != null) {
-            leafState.miniDump(out);
+            leafState.dump(out);
         }
         out.println("</operator>");
     }

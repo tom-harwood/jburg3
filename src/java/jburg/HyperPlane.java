@@ -268,31 +268,34 @@ class HyperPlane<Nonterminal, NodeType>
     void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        /*
-        if (nextDimension.isEmpty()) {
+        if (!finalDimension.isEmpty()) {
 
-            for (RepresenterState<Nonterminal, NodeType> key: finalDimension.keySet()) {
-
-                for (State<Nonterminal, NodeType> s: key.representedStates) {
-                    s.miniDump(out);
-                }
-            }
-        } else {
-                
-            for (RepresenterState<Nonterminal, NodeType> key: nextDimension.keySet()) {
-
-                for (State<Nonterminal, NodeType> s: key.representedStates) {
-                    out.printf("<plane state=\"%d\">", s.number);
-                    if (nextDimension.get(key) != this) {
-                        nextDimension.get(key).dump(out);
-                    } else {
-                        out.println("<variadic/>");
-                    }
-                    out.println("</plane>");
-                }
+            for (PredicatedState<Nonterminal, NodeType> s: finalDimension) {
+                s.dump(out);
             }
         }
-        */
+                
+        for (int i = 0; i < nextDimension.size(); i++) {
+            if (nextDimension.get(i) != this) {
+                out.printf("<plane index=\"%d\" states=\"%s\">\n", i, getStatesForPlane(i));
+                nextDimension.get(i).dump(out);
+                out.println("</plane>\n");
+            } else {
+                out.println("<variadic/>\n");
+            }
+        }
+    }
+
+    List<Integer> getStatesForPlane(int idx)
+    {
+        List<Integer> result = new ArrayList<Integer>();
+        for (Integer stateNum: nextDimIndexMap.keySet()) {
+            if (nextDimIndexMap.get(stateNum) == idx) {
+                result.add(stateNum);
+            }
+        }
+
+        return result;
     }
 
     private class RepresenterStateToIndexMap
