@@ -179,7 +179,7 @@ class HyperPlane<Nonterminal, NodeType>
             }
 
             for (Integer index: finalDimRsMap.getMappings(pState)) {
-                nextDimIndexMap.put(s.number, index);
+                finalDimIndexMap.put(s.number, index);
             }
 
         } else {
