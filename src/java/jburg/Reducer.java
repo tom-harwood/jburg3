@@ -43,25 +43,7 @@ public class Reducer<Nonterminal, NodeType>
                         label(node.getSubtree(i));
                     }
 
-                    // Navigate the operator's transition table.
-                    HyperPlane<Nonterminal, NodeType> current = op.transitionTable;
-
-                    for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
-                        BurgInput<NodeType> subtree = node.getSubtree(dim);
-                        int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
-
-                        if (stateNumber == -1) {
-                            throw new IllegalArgumentException(String.format("Unlabeled node %s", subtree));
-                        }
-
-                        RepresenterState<Nonterminal, NodeType> rs = op.getRepresenterState(stateNumber, dim);
-
-                        if (dim < subtreeCount-1) {
-                            current = current.getNextDimension(rs);
-                        } else {
-                            current.assignStateNumber(rs, node, visitor);
-                        }
-                    }
+                    op.assignState(node, visitor);
 
                 } else {
                     op.setLeafState(node, visitor);

@@ -147,13 +147,13 @@ public class ProductionTable<Nonterminal, NodeType>
                 ops.addAll(Collections.nCopies((patternMatcher.size() + 1) - ops.size(), (Operator<Nonterminal,NodeType>)null));
             }
 
-            ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
+            ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size(), this));
 
             if (isVarArgs && patternMatcher.size() + 1 <= ops.size()) {
                 int limit = ops.size();
 
                 for (int i = patternMatcher.size() + 1; i <= limit; i++) {
-                    ops.add(new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size()));
+                    ops.add(new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size(), this));
                 }
             }
         }
@@ -223,6 +223,9 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public void generateStates()
     {
+
+        statesInEntryOrder.add(new ErrorState<Nonterminal, NodeType>());
+
         Queue<State<Nonterminal, NodeType>> worklist = generateLeafStates();
 
         if (!getNullPointerState().isEmpty()) {
@@ -563,11 +566,11 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     State<Nonterminal, NodeType> getState(int stateNumber) {
 
-        if (stateNumber < 1 || stateNumber > statesInEntryOrder.size()) {
-            throw new IllegalArgumentException(String.format("State number %d is out of range 1..%d", stateNumber, states.size()));
+        if (stateNumber < 0 || stateNumber > statesInEntryOrder.size()) {
+            throw new IllegalArgumentException(String.format("State number %d is out of range 0..%d", stateNumber, states.size()));
         }
 
-        return statesInEntryOrder.get(stateNumber-1);
+        return statesInEntryOrder.get(stateNumber);
     }
 
 

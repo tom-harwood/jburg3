@@ -82,7 +82,7 @@ class State<Nonterminal, NodeType>
     }
 
     /**
-     * Construct a state that characterizes null pointers.
+     * Construct a state that characterizes null pointers, or the error state.
      */
     State()
     {

@@ -58,12 +58,19 @@ class Operator<Nonterminal, NodeType>
     ArityKind arityKind = null;
 
     /**
+     * The production table that created this operator; used to look up
+     * the null pointer state, etc.
+     */
+    final ProductionTable<Nonterminal, NodeType> productionTable;
+
+    /**
      * @param nodeType  the Operator's node type.
      * @param arity     the Operator's arity.
      */
-    Operator(NodeType nodeType, int arity)
+    Operator(NodeType nodeType, int arity, ProductionTable<Nonterminal, NodeType> productionTable)
     {
         this.nodeType = nodeType;
+        this.productionTable = productionTable;
 
         if (arity > 0) {
             this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
@@ -144,6 +151,8 @@ class Operator<Nonterminal, NodeType>
      * Add an entry to this operator's transition table.
      * @param childStates       the list of representer states that produced
      * the transition; these representer states are its compound key.
+     * state in the compound key; states may already have mappings in the
+     * transition table, which will be extended.
      * @param resultantState    the state produced by this transition.
      */
     void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, PredicatedState<Nonterminal,NodeType> resultantState)
@@ -151,29 +160,13 @@ class Operator<Nonterminal, NodeType>
         assert childStates.size() == this.size();
         ArityKind stateArityKind = resultantState.getArityKind();
 
-        if (arityKind == null) {
-            arityKind = stateArityKind;
-        } else if (arityKind != stateArityKind) {
+        if (this.arityKind == null) {
+            this.arityKind = stateArityKind;
+        } else if (this.arityKind != stateArityKind) {
             throw new IllegalArgumentException("Cannot mix variadic and fixed arity productions");
         }
 
-        transitionTable.add(childStates, 0, resultantState);
-
-        for (int dim = 0; dim < size(); dim++) {
-            Map<Integer, RepresenterState<Nonterminal, NodeType>> indexForDim = indexMap.get(dim);
-            RepresenterState<Nonterminal, NodeType> rs = childStates.get(dim);
-
-            // Add the state to the operator's state->representer state
-            // lookup table. It may already be present, because we create
-            // a canonical state to represent all equivalent states, and
-            // that state may have already interacted with this operator;
-            // but in that case we must be adding the same representer state.
-            for (State<Nonterminal, NodeType> s: rs.representedStates) {
-
-                assert !indexForDim.containsKey(s.number) || indexForDim.get(s.number).equals(rs): String.format("Operator %s addTransition() dim %d expected rs %s, got %s", this, dim, indexForDim.get(s.number), rs);
-                indexForDim.put(s.number, rs);
-            }
-        }
+        transitionTable.addTransition(childStates, 0, resultantState);
     }
 
     /**
@@ -185,31 +178,7 @@ class Operator<Nonterminal, NodeType>
      */
     void addRepresentedState(State<Nonterminal, NodeType> s, int dim, RepresenterState<Nonterminal, NodeType> pState)
     {
-        RepresenterState<Nonterminal, NodeType> canonicalRs = getCanonicalRepresenterState(dim, pState);
-        assert canonicalRs != null;
-        Map<Integer, RepresenterState<Nonterminal, NodeType>> indexForDim = indexMap.get(dim);
-
-        indexForDim.put(s.number, canonicalRs);
-    }
-
-    /**
-     * Get a canonical representer state, given a copy and the dimension.
-     * @param dim       the dimension of the transition table affected.
-     * @param pState    a copy of the relevant representer state.
-     * @pre this operator must have a equivalent representer state in dim.
-     * @return the equivalent representer state previously stored.
-     * @throws IllegalStateException if there is no equivalent representer state.
-     */
-    private RepresenterState<Nonterminal, NodeType> getCanonicalRepresenterState(int dim, RepresenterState<Nonterminal, NodeType> pState)
-    {
-        for (RepresenterState<Nonterminal, NodeType> rs: reps.get(dim)) {
-
-            if (rs.equals(pState)) {
-                return rs;
-            }
-        }
-
-        throw new IllegalStateException(String.format("No canonical represeter state matches %s in dimension d of operator %s", pState));
+        transitionTable.addRepresentedState(s, dim, pState);
     }
 
     /**
@@ -354,6 +323,29 @@ class Operator<Nonterminal, NodeType>
                     return result;
                 }
             };
+        }
+    }
+
+    void assignState(BurgInput<NodeType> node, Object visitor)
+    throws Exception
+    {
+        int subtreeCount = node.getSubtreeCount();
+        HyperPlane<Nonterminal, NodeType> current = this.transitionTable;
+
+        for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
+            BurgInput<NodeType> subtree = node.getSubtree(dim);
+            int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
+
+            if (stateNumber == -1) {
+                // TODO: Return the error state
+                throw new IllegalArgumentException(String.format("Unlabeled node %s", subtree));
+            }
+
+            if (dim < subtreeCount-1) {
+                current = current.getNextDimension(stateNumber);
+            } else {
+                current.assignStateNumber(stateNumber, node, visitor);
+            }
         }
     }
 }
