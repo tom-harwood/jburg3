@@ -4,10 +4,11 @@ import java.util.*;
 
 /**
  * A HyperPlane is a representation of one dimension
- * of a multi-dimensional map of child state tuples
- * to the corresponding states of the subtree root.
+ * of the BURM's transition table: a multi-dimensional map
+ * of child state tuples to the corresponding state to be
+ * assigned to the subtree root.
  * Each Operator has a reference to the first dimension
- * of its multidimensional map; each dimension maps its
+ * of its transtition table; each subtable maps its
  * representer states to the next dimension, or in the
  * case of the final dimension, to the states which can
  * be assigned to the subtree root.
@@ -19,7 +20,7 @@ import java.util.*;
 class HyperPlane<Nonterminal, NodeType>
 {
     /**
-     * The next dimension of the map, if this is not the final dimension.
+     * The next dimension of the table, if this is not the final dimension.
      */
     final List<HyperPlane<Nonterminal, NodeType>> nextDimension = new ArrayList<HyperPlane<Nonterminal, NodeType>>();
 
@@ -61,8 +62,8 @@ class HyperPlane<Nonterminal, NodeType>
 
     /**
      * Add a transition to this transition subtable. This may involve extending existing
-     * subtrees, if they already have mappings for any of the states in the new state's
-     * representer states, or it may be a straightforward addition.
+     * child subtables, if they already have mappings for any of the states in the new
+     * state's representer state, or it may be a straightforward addition.
      * @param childStates       the list of representer states that identify this transition.
      * @param currentDim        this subtable's dimension in the transition table.
      * @param resultantState    the composite state at the vertex of this transition.
@@ -80,18 +81,10 @@ class HyperPlane<Nonterminal, NodeType>
         // First, find all the states that already have mappings in this prefix.
         for (State<Nonterminal, NodeType> s: rs.representedStates) {
 
-            // This should not happen; it implies that two disjoint vectors
-            // of representer states, which are known to have at least one
-            // disjoint member, can produce the same state.
-            if (finalDimIndexMap.containsKey(s.number)) {
-
-                if (!nextDimIndexMap.containsKey(s.number)) {
-                    throw new IllegalStateException(String.format("state %s has divergent representation %d in dimension %d of the transition table", s.number, finalDimIndexMap.get(s.number), currentDim));
-                } else {
-                    assert nextDimension.get(nextDimIndexMap.get(s.number)) == this: "divergent final state mappings";
-                }
-            }
-
+            // If this state already has a mapping, then extend that mapping;
+            // this should eventually create new mappings, because we know that
+            // there is at least one representer state in the child states that has
+            // never been processed by this subtable's parent Operator.
             if (nextDimIndexMap.containsKey(s.number)) {
                 Integer idx = nextDimIndexMap.get(s.number);
 
@@ -103,14 +96,18 @@ class HyperPlane<Nonterminal, NodeType>
                     }
                 }
             } else {
+                // Save all the new state numbers so we can add them en bloc.
                 novelStateNumbers.add(s.number);
             }
         }
 
         if (currentDim < childStates.size() - 1) {
+
+            // Create a new subtable, which will fan out to cover all these new states.
             if (novelStateNumbers.size() > 0) {
                 addHyperPlane(childStates, novelStateNumbers, currentDim+1, resultantState);
             }
+
         } else {
             int newStateNum = finalDimension.size();
             finalDimension.add(resultantState);
@@ -146,12 +143,13 @@ class HyperPlane<Nonterminal, NodeType>
         }
     }
 
-    private HyperPlane getNextDimension(Integer stateNumber)
-    {
-        assert nextDimIndexMap.containsKey(stateNumber);
-        return nextDimension.get(nextDimIndexMap.get(stateNumber));
-    }
-
+    /**
+     * Add a new subtable.
+     * @param childStates       the list of child states which are creating a new subtable.
+     * @param novelStateNumbers the new states that are being added to the subtable.
+     * @param nextDim           the dimension of the overall transition table being processed.
+     * @param resultantState    the state to add to the transition table.
+     */
     private void addHyperPlane(List<RepresenterState<Nonterminal, NodeType>> childStates, Set<Integer> novelStateNumbers, int nextDim, PredicatedState<Nonterminal, NodeType> resultantState)
     {
         Integer newHyperPlaneIdx = nextDimension.size();
@@ -165,9 +163,16 @@ class HyperPlane<Nonterminal, NodeType>
         }
     }
 
-    void addRepresentedState(State<Nonterminal, NodeType> s, int dim, RepresenterState<Nonterminal, NodeType> pState)
+    /**
+     * Add a new state whose generating representer state already has a mapping.
+     * @param s         the state to be added to its generating representer state's mapping.
+     * @param dimDiff   the distance from the dimension of interest to the current dimension;
+     * i.e., when dimDiff &gt; 0, continue traversing subtables to get to the dimension of interest.
+     * @param pState    the state's representer state.
+     */
+    void addRepresentedState(State<Nonterminal, NodeType> s, int dimDiff, RepresenterState<Nonterminal, NodeType> pState)
     {
-        if (dim == 0) {
+        if (dimDiff == 0) {
 
             for (Integer index: nextDimRsMap.getMappings(pState)) {
                 nextDimIndexMap.put(s.number, index);
@@ -179,7 +184,7 @@ class HyperPlane<Nonterminal, NodeType>
 
         } else {
             for (HyperPlane<Nonterminal, NodeType> child: nextDimension) {
-                child.addRepresentedState(s, dim-1, pState);
+                child.addRepresentedState(s, dimDiff-1, pState);
             }
         }
     }

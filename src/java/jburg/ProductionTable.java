@@ -370,60 +370,66 @@ public class ProductionTable<Nonterminal, NodeType>
 
             RepresenterState<Nonterminal,NodeType> pState = project(op, dim, state);
 
-            if (!pState.isEmpty() && !op.reps.get(dim).contains(pState)) {
-                op.reps.get(dim).add(pState);
+            if (!pState.isEmpty()) {
 
-                // Try all permutations of the operator's nonterminal children
-                // as operands to the pattern matching productions applicable
-                // to the operator.
-                for (List<RepresenterState<Nonterminal,NodeType>> repStates: op.generatePermutations(pState, dim)) {
-                    // Each permutation generates a candidate state (called "result"
-                    // in Proebsting's algorithm) with a cost matrix determined by
-                    // the production's cost, plus the cost of the current permuatation
-                    // of representer states; if this aggregate cost is less than the "unfeasible" cost
-                    // Integer.MAX_VALUE and also less than the candidate's current best cost for
-                    // the production's nonterminal, then add the production to the candidate.
-                    List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
-                    newStates.add(new State<Nonterminal,NodeType>(op.nodeType));
+                // Has this operator seen this representer state?
+                if (op.reps.get(dim).add(pState)) {
 
-                    for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                        if (p.acceptsDimension(arity)) {
-                            coalesceProduction(repStates, p, newStates);
-                        }
-                    }
+                    // Try all permutations of the operator's nonterminal children
+                    // as operands to the pattern matching productions applicable
+                    // to the operator.
+                    for (List<RepresenterState<Nonterminal,NodeType>> repStates: op.generatePermutations(pState, dim)) {
+                        // Each permutation generates a candidate state (called "result"
+                        // in Proebsting's algorithm) with a cost matrix determined by
+                        // the production's cost, plus the cost of the current permuatation
+                        // of representer states; if this aggregate cost is less than the "unfeasible" cost
+                        // Integer.MAX_VALUE and also less than the candidate's current best cost for
+                        // the production's nonterminal, then add the production to the candidate.
+                        List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
+                        newStates.add(new State<Nonterminal,NodeType>(op.nodeType));
 
-                    List<State<Nonterminal, NodeType>> nontrivialStates = new ArrayList<State<Nonterminal, NodeType>>();
-
-                    for (int i = 0; i < newStates.size(); i++) {
-                        State<Nonterminal, NodeType> resultState = newStates.get(i);
-
-                        if (!resultState.isEmpty()) {
-
-                            if (!this.states.containsKey(resultState)) {
-                                // We know that we will be using this state as the canonical
-                                // state, since no equivalent state is already stored. So it's
-                                // safe to add it to the worklist now; it will get its state
-                                // number via the call to addState().
-                                closure(resultState);
-                                workList.add(resultState);
-                                nontrivialStates.add(addState(resultState));
-                            } else {
-                                // Get the canonical representation of the result state
-                                // from the state table; the canonical representation
-                                // is equivalent to the result state, but has a unique
-                                // state number.
-                                State<Nonterminal, NodeType> canonicalState = addState(resultState);
-                                nontrivialStates.add(canonicalState);
+                        for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
+                            if (p.acceptsDimension(arity)) {
+                                coalesceProduction(repStates, p, newStates);
                             }
                         }
-                    }
 
-                    if (nontrivialStates.size() > 0) {
-                        op.addTransition(repStates, new PredicatedState<Nonterminal, NodeType>(nontrivialStates));
+                        List<State<Nonterminal, NodeType>> nontrivialStates = new ArrayList<State<Nonterminal, NodeType>>();
+
+                        for (int i = 0; i < newStates.size(); i++) {
+                            State<Nonterminal, NodeType> resultState = newStates.get(i);
+
+                            if (!resultState.isEmpty()) {
+
+                                if (!this.states.containsKey(resultState)) {
+                                    // We know that we will be using this state as the canonical
+                                    // state, since no equivalent state is already stored. So it's
+                                    // safe to add it to the worklist now; it will get its state
+                                    // number via the call to addState().
+                                    closure(resultState);
+                                    workList.add(resultState);
+                                    nontrivialStates.add(addState(resultState));
+                                } else {
+                                    // Get the canonical representation of the result state
+                                    // from the state table; the canonical representation
+                                    // is equivalent to the result state, but has a unique
+                                    // state number.
+                                    State<Nonterminal, NodeType> canonicalState = addState(resultState);
+                                    nontrivialStates.add(canonicalState);
+                                }
+                            }
+                        }
+
+                        if (nontrivialStates.size() > 0) {
+                            op.addTransition(repStates, new PredicatedState<Nonterminal, NodeType>(nontrivialStates));
+                        }
                     }
+                } else {
+                    // The operator has built a transition table
+                    // based on this representer state, but we have
+                    // a novel state to add to that subtable.
+                    op.addRepresentedState(state, dim, pState);
                 }
-            } else if (!pState.isEmpty()) {
-                op.addRepresentedState(state, dim, pState);
             }
         }
     }
