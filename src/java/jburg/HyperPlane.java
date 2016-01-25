@@ -276,6 +276,7 @@ class HyperPlane<Nonterminal, NodeType>
         }
                 
         for (int i = 0; i < nextDimension.size(); i++) {
+
             if (nextDimension.get(i) != this) {
                 out.printf("<plane index=\"%d\" states=\"%s\">\n", i, getStatesForPlane(i));
                 nextDimension.get(i).dump(out);
@@ -286,10 +287,17 @@ class HyperPlane<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Find all states mapped to a child hyperplane.
+     * @param idx   the index of the child of interest.
+     * @return a list of state numbers mapped to that hyperplane.
+     */
     List<Integer> getStatesForPlane(int idx)
     {
         List<Integer> result = new ArrayList<Integer>();
+
         for (Integer stateNum: nextDimIndexMap.keySet()) {
+
             if (nextDimIndexMap.get(stateNum) == idx) {
                 result.add(stateNum);
             }
@@ -298,10 +306,18 @@ class HyperPlane<Nonterminal, NodeType>
         return result;
     }
 
+    /**
+     * A RepresenterStateToIndexMap maps representer states to the
+     * child hyperplane(s) or state(s) they are mapped to. This allows
+     * post-hoc patching of new states that map to the same representer state.
+     */
     private class RepresenterStateToIndexMap
     {
         private Map<RepresenterState<Nonterminal, NodeType>, Set<Integer>> mappings = new HashMap<RepresenterState<Nonterminal, NodeType>, Set<Integer>>();
 
+        /**
+         * Add a new mapping; create the underlying map entry if necessary.
+         */
         void addMapping(RepresenterState<Nonterminal, NodeType> rs, Integer index)
         {
             if (!mappings.containsKey(rs)) {
@@ -311,6 +327,15 @@ class HyperPlane<Nonterminal, NodeType>
             mappings.get(rs).add(index);
         }
 
+        /**
+         * Get all child indexes mapped to the given representer state.
+         * @param rs    the representer state of interest.
+         * @return a list of index numbers mapped to this representer
+         * state, or the empty list if there are no mappings; this is
+         * common, because the set of representer states that map a
+         * subtable and the set of representer states that map the
+         * predicated states in the final dimension usually differ.
+         */
         Iterable<Integer> getMappings(RepresenterState<Nonterminal, NodeType> rs)
         {
             return mappings.containsKey(rs)?
