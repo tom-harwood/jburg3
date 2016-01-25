@@ -5,17 +5,18 @@ outer:{
     var xInt;
     var y = "original y";
     x = 1;
-    print "foo is " + foo;
+    verify(foo == "1-foo-", "aliasing #1");
     xInt = x + 1;
     verify(xInt == 2, "integer addition");
     x = "outer";
 
-    print "foo is " + foo;
+    verify(foo == "outer-foo-", "aliasing #2");
 
     {
         var x = x + 1;
         verify(x == "outer1", "inner x");
         verify(outer.x == "outer", "outer x");
+        verify(foo == "outer-foo-", "aliasing #3");
 
         y = "changed in inner scope";
     }
