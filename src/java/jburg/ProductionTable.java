@@ -340,7 +340,6 @@ public class ProductionTable<Nonterminal, NodeType>
 
                 leafOperator.createLeafState(newStates);
             }
-
         }
 
         return result;
@@ -591,8 +590,10 @@ public class ProductionTable<Nonterminal, NodeType>
         List<Operator<Nonterminal, NodeType>> opsForNodeType = operators.get(nodeType);
 
         if (opsForNodeType != null) {
+
             if (opsForNodeType.size() > arity) {
                 return opsForNodeType.get(arity);
+
             } else if (opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
                 return opsForNodeType.get(opsForNodeType.size()-1);
             }
@@ -628,6 +629,7 @@ public class ProductionTable<Nonterminal, NodeType>
     public void dump(String dumpPath)
     {
         if (dumpPath != null) {
+
             try {
                 dump(new java.io.PrintWriter(dumpPath));
             } catch (java.io.IOException cannotDump) {

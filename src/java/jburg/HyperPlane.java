@@ -224,8 +224,7 @@ class HyperPlane<Nonterminal, NodeType>
             assert nextDimIndexMap.get(stateNumber) < nextDimension.size(): String.format("state %d index %d out of range 0..%d",stateNumber, nextDimIndexMap.get(stateNumber), nextDimension.size());
             return nextDimension.get(nextDimIndexMap.get(stateNumber));
         } else {
-            // TODO: return null, let the operator sort it out.
-            throw new IllegalStateException(String.format("No hyperplane mapping for state %d", stateNumber));
+            return null;
         }
     }
 
@@ -292,7 +291,7 @@ class HyperPlane<Nonterminal, NodeType>
      * @param idx   the index of the child of interest.
      * @return a list of state numbers mapped to that hyperplane.
      */
-    List<Integer> getStatesForPlane(int idx)
+    private List<Integer> getStatesForPlane(int idx)
     {
         List<Integer> result = new ArrayList<Integer>();
 

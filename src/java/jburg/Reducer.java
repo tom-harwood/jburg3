@@ -15,9 +15,23 @@ import java.util.*;
  */
 public class Reducer<Nonterminal, NodeType>
 {
+    /**
+     * The tree parsing automaton drives the visitor by invoking
+     * methods as it walks the tree; the visitor also hosts the
+     * semantic predicate methods, which are called by the labeling pass.
+     */
     final Object visitor;
+
+    /**
+     * The production table this Reducer will use to derive its inputs.
+     */
     final ProductionTable<Nonterminal, NodeType> productionTable;
 
+    /**
+     * Construct a Reducer.
+     * @param visitor           the visitor.
+     * @param productionTable   the productions this reducer can use to derive its inputs.
+     */
     public Reducer(Object visitor, ProductionTable<Nonterminal, NodeType> productionTable)
     {
         this.visitor = visitor;
@@ -31,6 +45,9 @@ public class Reducer<Nonterminal, NodeType>
     public void label(BurgInput<NodeType> node)
     throws Exception
     {
+        // Null subtrees all share a singleton state in the production table;
+        // it's precomputed into the transition table and the operators use it
+        // when they encounter a null subtree.
         if (node != null) {
             Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
 
@@ -77,7 +94,7 @@ public class Reducer<Nonterminal, NodeType>
      * to avoid extra object creation, and eventually to be used
      * to run the algorithm iteratively.
      * @return the result of deriving the subtree.
-     * @throws exceptions from the production's semantic action routines,
+     * @throws Exception from the production's semantic action routines,
      * and a few diagnostics for unlabeled trees or mismatched parameters.
      */
     private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
@@ -86,7 +103,8 @@ public class Reducer<Nonterminal, NodeType>
         State<Nonterminal,NodeType> state;
 
         if (node != null) {
-            if (node.getStateNumber() < 0) {
+
+            if (node.getStateNumber() < 1) {
                 throw new IllegalStateException(String.format("Unlabeled node %s",node));
             }
 

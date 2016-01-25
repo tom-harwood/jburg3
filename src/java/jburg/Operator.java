@@ -332,20 +332,23 @@ class Operator<Nonterminal, NodeType>
         int subtreeCount = node.getSubtreeCount();
         HyperPlane<Nonterminal, NodeType> current = this.transitionTable;
 
-        for (int dim = 0; dim < node.getSubtreeCount(); dim++) {
+        for (int dim = 0; current != null && dim < node.getSubtreeCount(); dim++) {
             BurgInput<NodeType> subtree = node.getSubtree(dim);
             int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
 
             if (stateNumber == -1) {
-                // TODO: Return the error state
-                throw new IllegalArgumentException(String.format("Unlabeled node %s", subtree));
-            }
+                current = null;
 
-            if (dim < subtreeCount-1) {
+            } else if (dim < subtreeCount-1) {
                 current = current.getNextDimension(stateNumber);
+
             } else {
                 current.assignStateNumber(stateNumber, node, visitor);
             }
+        }
+
+        if (current == null) {
+            node.setStateNumber(0);
         }
     }
 }

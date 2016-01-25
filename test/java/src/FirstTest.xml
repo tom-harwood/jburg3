@@ -82,7 +82,7 @@
         </Node>
     </Testcase>
 
-    <Testcase name="shortGuard negative" type="Int" expected="no output" expectedException=".*Unlabeled node ShortLiteral.*">
+    <Testcase name="shortGuard negative" type="Int" expected="no output" expectedException=".*Unlabeled node .*">
         <Node op="Add">
             <Node op="IntLiteral" content="1"/>
             <Node op="ShortLiteral" content="400000"/>
