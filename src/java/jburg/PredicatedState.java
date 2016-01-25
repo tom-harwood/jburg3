@@ -121,7 +121,7 @@ class PredicatedState<Nonterminal, NodeType>
     void dump(java.io.PrintWriter out)
     throws java.io.IOException
     {
-        out.printf("<predicatedState>\n");
+        out.printf("<predicatedState arityKind=\"%s\">\n", getArityKind());
 
         for (List<Method> predicateKey: states.keySet()) {
             if (predicateKey.isEmpty()) {
