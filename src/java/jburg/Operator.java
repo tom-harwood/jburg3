@@ -330,14 +330,20 @@ class Operator<Nonterminal, NodeType>
     throws Exception
     {
         int subtreeCount = node.getSubtreeCount();
+
+        // Start at the root of the transition table, which is keyed
+        // by the input node's subtrees' state numbers; each subtree
+        // has a corresponding dimension in the transition table. If
+        // is no match then label the input node as an error.
         HyperPlane<Nonterminal, NodeType> current = this.transitionTable;
 
-        for (int dim = 0; current != null && dim < node.getSubtreeCount(); dim++) {
+        for (int dim = 0; dim < subtreeCount; dim++) {
             BurgInput<NodeType> subtree = node.getSubtree(dim);
             int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
 
-            if (stateNumber == -1) {
-                current = null;
+            if (stateNumber < 1) {
+                node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                break;
 
             } else if (dim < subtreeCount-1) {
                 current = current.getNextDimension(stateNumber);
@@ -345,10 +351,6 @@ class Operator<Nonterminal, NodeType>
             } else {
                 current.assignStateNumber(stateNumber, node, visitor);
             }
-        }
-
-        if (current == null) {
-            node.setStateNumber(0);
         }
     }
 }

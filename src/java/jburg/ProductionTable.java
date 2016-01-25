@@ -71,6 +71,11 @@ public class ProductionTable<Nonterminal, NodeType>
         new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
 
     /**
+     * The predetermined state number of the error state.
+     */
+    public static final int ERROR_STATE_NUM = 0;
+
+    /**
      * Add a pattern-matching production to the grammar.
      * @param nt            the nonterminal this production produces.
      * @param nodeType      the node type of the root of the subtree matched.
