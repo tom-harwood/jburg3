@@ -34,12 +34,6 @@ class Operator<Nonterminal, NodeType>
     final List<Set<RepresenterState<Nonterminal,NodeType>>> reps;
 
     /**
-     * Lookup table of RepresenterStates by state number;
-     * there is a sub-table for each dimension.
-     */
-    final List<Map<Integer, RepresenterState<Nonterminal, NodeType>>> indexMap;
-
-    /**
      * If this State is a leaf state, it has a composite
      * state, with permutations of the leaf productions'
      * predicate methods (if any).
@@ -80,14 +74,8 @@ class Operator<Nonterminal, NodeType>
                 reps.add(new HashSet<RepresenterState<Nonterminal,NodeType>>());
             }
 
-            this.indexMap = new ArrayList<Map<Integer, RepresenterState<Nonterminal, NodeType>>>();
-
-            for (int i = 0; i < arity; i++) {
-                indexMap.add(new HashMap<Integer, RepresenterState<Nonterminal, NodeType>>());
-            }
         } else {
             reps = null;
-            indexMap = null;
         }
     }
 
@@ -122,29 +110,6 @@ class Operator<Nonterminal, NodeType>
         assert this.reps == null;
         assert this.leafState == null;
         this.leafState = new PredicatedState<Nonterminal, NodeType>(states);
-    }
-
-    /**
-     * Map a state to its corresponding representer state in the given dimension.
-     * @param state the state to be mapped.
-     * @param dim   the dimension to search.
-     * @return      the RepresenterState that represents the state in that dimension.
-     * @throws      IllegalArgumentException if the state has no mapping to a
-     * representer state in the specified dimension.
-     */
-    RepresenterState<Nonterminal, NodeType> getRepresenterState(Integer key, int dim)
-    {
-        int nominalDim = isVarArgs()?
-            dim < indexMap.size()? dim: indexMap.size() - 1:
-            dim;
-
-        RepresenterState<Nonterminal, NodeType> result = indexMap.get(nominalDim).get(key);
-
-        if (result == null) {
-            throw new IllegalArgumentException(String.format("State %d is not usable in dimension %d of %s", key, dim, this));
-        }
-
-        return result;
     }
 
     /**
