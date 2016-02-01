@@ -44,12 +44,12 @@ public class ProductionTable<Nonterminal, NodeType>
      * States in entry order, used for faster lookup by state number
      * and to emit states in their "natural" order.
      */
-    private List<State<Nonterminal, NodeType>> statesInEntryOrder = new ArrayList<State<Nonterminal, NodeType>>();
+    List<State<Nonterminal, NodeType>> statesInEntryOrder = new ArrayList<State<Nonterminal, NodeType>>();
 
     /**
      * Operators computed from the specification, keyed by the nonterminal they produce.
      */
-    private Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
+    Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
         new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
     /**
@@ -636,44 +636,14 @@ public class ProductionTable<Nonterminal, NodeType>
         if (dumpPath != null) {
 
             try {
-                dump(new java.io.PrintWriter(dumpPath));
+                java.io.PrintWriter out = new java.io.PrintWriter(dumpPath);
+                new TransitionTableToXML<Nonterminal, NodeType>(out).dumpProductionTable(this);
+                out.flush();
+                out.close();
+
             } catch (java.io.IOException cannotDump) {
                 cannotDump.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Dump the production table.
-     * @param out   the sink.
-     */
-    public void dump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        out.printf("<burmDump date=\"%s\">\n", new Date());
-
-        out.println("<stateTable>");
-        for (State<Nonterminal, NodeType> s: statesInEntryOrder) {
-            s.dump(out);
-        }
-        out.println("</stateTable>");
-
-        out.println();
-
-        out.println("<transitionTable>");
-        for (NodeType nodeType: operators.keySet()) {
-
-            for (Operator<Nonterminal,NodeType> op: operators.get(nodeType)) {
-
-                if (op != null) {
-                    op.dump(out);
-                }
-            }
-        }
-        out.println("</transitionTable>");
-
-        out.println("</burmDump>");
-
-        out.flush();
     }
 }

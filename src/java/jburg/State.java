@@ -40,16 +40,17 @@ class State<Nonterminal, NodeType>
     /**
      * This state's non-closure productions.
      */
-    private ProductionMap  nonClosureProductions = new ProductionMap();
+    ProductionMap  nonClosureProductions = new ProductionMap();
 
     /**
      * Cost of each pattern match.
      */
-    private CostMap     patternCosts = new CostMap();
+    CostMap     patternCosts = new CostMap();
+
     /**
      * This state's closures, i.e., nonterminal-to-nonterminal productions.
      */
-    private ClosureMap  closures = new ClosureMap();
+    ClosureMap  closures = new ClosureMap();
 
     /**
      * The node type of this state; used while projecting
@@ -299,46 +300,6 @@ class State<Nonterminal, NodeType>
         }
 
         return buffer.toString();
-    }
-
-    /**
-     * Dump an XML rendering of this state.
-     * @param out   the output sink.
-     */
-    void dump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        out.printf("<state number=\"%d\" nodeType=\"%s\">", number, nodeType);
-
-        if (nonClosureProductions.size() > 0) {
-            out.println("<patterns>");
-
-            for (Nonterminal nt: nonClosureProductions.keySet()) {
-                Production<Nonterminal> p = nonClosureProductions.get(nt);
-                out.printf("<pattern nt=\"%s\" pattern=\"%s\"/>\n", nt, p);
-            }
-            out.printf("</patterns>");
-        }
-
-        if (closures.size() > 0) {
-            out.println("<closures>");
-            for (Closure<Nonterminal> closure: closures.values()) {
-                out.printf(String.format("<closure nt=\"%s\" source=\"%s\"/>", closure.target, closure.source));
-            }
-            out.println("</closures>");
-        }
-
-        out.println("</state>");
-    }
-
-    /**
-     * Dump an abbreviated rendering of this state.
-     * @param out   the output sink.
-     */
-    void miniDump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        out.printf("<leaf state=\"%d\"/>\n", number);
     }
 
     /**

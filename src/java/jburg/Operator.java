@@ -161,22 +161,6 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
-     * Dump this operator as XML.
-     * @param out   the output sink.
-     */
-    void dump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        out.printf("<operator nodeType=\"%s\" arity=\"%d\">\n", nodeType, size());
-        if (transitionTable != null) {
-            transitionTable.dump(out);
-        } else if (leafState != null) {
-            leafState.dump(out);
-        }
-        out.println("</operator>");
-    }
-
-    /**
      * Create an iterator over permutations of this operator's representer states,
      * with a novel representer state in one dimension.
      * @param pState    the novel representer state.

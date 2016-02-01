@@ -113,28 +113,4 @@ class PredicatedState<Nonterminal, NodeType>
         assert compositeArityKind != null;
         return compositeArityKind;
     }
-
-    /**
-     * Dump this composite state.
-     * @param out   the dump sink.
-     */
-    void dump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        out.printf("<predicatedState arityKind=\"%s\">\n", getArityKind());
-
-        for (List<Method> predicateKey: states.keySet()) {
-            if (predicateKey.isEmpty()) {
-                out.printf("<defaultState>\n");
-                states.get(predicateKey).miniDump(out);
-                out.printf("</defaultState>\n");
-            } else {
-                out.printf("<predicate methods=\"%s\">\n", predicateKey);
-                states.get(predicateKey).miniDump(out);
-                out.printf("</predicate>\n");
-            }
-        }
-
-        out.println("</predicatedState>");
-    }
 }

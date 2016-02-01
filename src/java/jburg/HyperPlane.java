@@ -261,37 +261,11 @@ class HyperPlane<Nonterminal, NodeType>
     }
 
     /**
-     * Dump this hyperplane.
-     * @param out   the dump sink.
-     */
-    void dump(java.io.PrintWriter out)
-    throws java.io.IOException
-    {
-        if (!finalDimension.isEmpty()) {
-
-            for (PredicatedState<Nonterminal, NodeType> s: finalDimension) {
-                s.dump(out);
-            }
-        }
-                
-        for (int i = 0; i < nextDimension.size(); i++) {
-
-            if (nextDimension.get(i) != this) {
-                out.printf("<plane index=\"%d\" states=\"%s\">\n", i, getStatesForPlane(i));
-                nextDimension.get(i).dump(out);
-                out.println("</plane>\n");
-            } else {
-                out.println("<variadic/>\n");
-            }
-        }
-    }
-
-    /**
      * Find all states mapped to a child hyperplane.
      * @param idx   the index of the child of interest.
      * @return a list of state numbers mapped to that hyperplane.
      */
-    private List<Integer> getStatesForPlane(int idx)
+    List<Integer> getStatesForPlane(int idx)
     {
         List<Integer> result = new ArrayList<Integer>();
 
