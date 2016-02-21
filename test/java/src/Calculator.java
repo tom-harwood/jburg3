@@ -1,5 +1,6 @@
 import jburg.ProductionTable;
 import jburg.Reducer;
+import jburg.TransitionTableLoader;
 
 /**
  * Create a table of arithmetic operations and try some arithmetic.
@@ -9,46 +10,66 @@ public class Calculator
     public static void main(String[] args)
     throws Exception
     {
-        // The only command line parameter to this routine
-        // is the filename of the XML file with testcases;
-        // it's called from build.xml so it may be presumed
-        // to be a valid file path.
-        NodeFactory nf = new NodeFactory(args[0]);
+        String dumpFile = null;
+        NodeFactory nf = null;
+        ProductionTable<Nonterminal, NodeType> productions = null;
 
-        ProductionTable<Nonterminal, NodeType> productions = new ProductionTable<Nonterminal, NodeType>();
+        for (int i = 0; i < args.length; i++) {
 
-        // Leaf operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Calculator.class.getDeclaredMethod("intLiteral", Node.class));
-        productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
+            if (args[i].equals("-load")) {
+                productions = new TransitionTableLoader<Nonterminal, NodeType>().load(NodeFactory.convertToFileURL(args[++i]), Nonterminal.class, NodeType.class);
 
-        // Predicated leaf operators
-        //productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
-        productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, 1, Calculator.class.getDeclaredMethod("shortGuard", Node.class), null, Calculator.class.getDeclaredMethod("shortLiteral", Node.class), false);
+                if (productions != null) {
+                    System.out.println("Load successful.");
+                } else {
+                    System.out.printf("Unable to load %s\n", args[i-1]);
+                    System.exit(1);
+                }
 
-        // Unary operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("negate", Node.class, Integer.class), Nonterminal.Int);
+            } else if (args[i].equals("-dump")) {
+                dumpFile = args[++i];
+            } else if (nf == null) {
+                nf = new NodeFactory(args[i]);
+            } else {
+                throw new IllegalArgumentException("unrecognized argument " + args[i]);
+            }
+        }
 
-        // Binary operators
-        // Note: this Add operator is intentionally poorly overloaded to test the production table.
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.AddStrict, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Calculator.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-        productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String, Nonterminal.String);
+        if (productions == null) {
+            productions = new ProductionTable<Nonterminal, NodeType>();
 
-        // Ternary operators
-        productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
+            // Leaf operators
+            productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Calculator.class.getDeclaredMethod("intLiteral", Node.class));
+            productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
 
-        // Variadic operators
-        productions.addVarArgsPatternMatch(Nonterminal.String, NodeType.Concat, 1, null, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String);
+            // Predicated leaf operators
+            //productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
+            productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, 1, Calculator.class.getDeclaredMethod("shortGuard", Node.class), null, Calculator.class.getDeclaredMethod("shortLiteral", Node.class), false);
 
-        // Conversion operators
-        productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
-        productions.addClosure(Nonterminal.String, Nonterminal.Int, Calculator.class.getDeclaredMethod("convertToString", Node.class, Object.class));
+            // Unary operators
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("negate", Node.class, Integer.class), Nonterminal.Int);
 
-        productions.generateStates();
-        productions.dump(System.getenv("BURMDUMP"));
+            // Binary operators
+            // Note: this Add operator is intentionally poorly overloaded to test the production table.
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+            productions.addPatternMatch(Nonterminal.Int, NodeType.AddStrict, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Calculator.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
+            productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String, Nonterminal.String);
+
+            // Ternary operators
+            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
+
+            // Variadic operators
+            productions.addVarArgsPatternMatch(Nonterminal.String, NodeType.Concat, 1, null, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String);
+
+            // Conversion operators
+            productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
+            productions.addClosure(Nonterminal.String, Nonterminal.Int, Calculator.class.getDeclaredMethod("convertToString", Node.class, Object.class));
+
+            productions.generateStates();
+        }
 
         Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
 
@@ -70,6 +91,11 @@ public class Calculator
                 }
             }
         }
+
+        if (dumpFile != null) {
+            productions.dump(dumpFile);
+        }
+
     }
 
     /*

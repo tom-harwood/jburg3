@@ -1,11 +1,9 @@
 package jburg;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -58,6 +56,11 @@ class Operator<Nonterminal, NodeType>
     final ProductionTable<Nonterminal, NodeType> productionTable;
 
     /**
+     * The operator's minumum number of children.
+     */
+    final int arity;
+
+    /**
      * @param nodeType  the Operator's node type.
      * @param arity     the Operator's arity.
      */
@@ -65,6 +68,7 @@ class Operator<Nonterminal, NodeType>
     {
         this.nodeType = nodeType;
         this.productionTable = productionTable;
+        this.arity = arity;
 
         if (arity > 0) {
             this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
@@ -85,7 +89,21 @@ class Operator<Nonterminal, NodeType>
      */
     int size()
     {
-        return reps != null? reps.size(): 0;
+        return arity;
+    }
+
+    /**
+     * Flush build-time data structures.
+     */
+    void flush()
+    {
+        if (reps != null) {
+            reps.clear();
+        }
+
+        if (transitionTable != null) {
+            transitionTable.flush();
+        }
     }
 
     /**
@@ -107,9 +125,18 @@ class Operator<Nonterminal, NodeType>
      */
     void createLeafState(List<State<Nonterminal, NodeType>> states)
     {
+        setLeafState(new PredicatedState<Nonterminal, NodeType>(states));
+    }
+
+    /**
+     * Set the leaf state.
+     * @param leafState the leaf state, typically from a load operation.
+     */
+    void setLeafState(PredicatedState<Nonterminal, NodeType> leafState)
+    {
         assert this.reps == null;
         assert this.leafState == null;
-        this.leafState = new PredicatedState<Nonterminal, NodeType>(states);
+        this.leafState = leafState;
     }
 
     /**
@@ -128,7 +155,8 @@ class Operator<Nonterminal, NodeType>
         if (this.arityKind == null) {
             this.arityKind = stateArityKind;
         } else if (this.arityKind != stateArityKind) {
-            throw new IllegalArgumentException("Cannot mix variadic and fixed arity productions");
+            // TODO: Figure out if this really works right.
+            this.arityKind = ArityKind.Variadic;
         }
 
         transitionTable.addTransition(childStates, 0, resultantState);
@@ -158,6 +186,11 @@ class Operator<Nonterminal, NodeType>
         }
 
         return arityKind == ArityKind.Variadic;
+    }
+
+    boolean isComplete()
+    {
+        return arityKind != null;
     }
 
     /**
@@ -297,8 +330,11 @@ class Operator<Nonterminal, NodeType>
             } else if (dim < subtreeCount-1) {
                 current = current.getNextDimension(stateNumber);
 
-            } else {
+            } else if (current != null) {
                 current.assignStateNumber(stateNumber, node, visitor);
+            } else {
+                node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                break;
             }
         }
     }

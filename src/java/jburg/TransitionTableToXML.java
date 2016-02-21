@@ -12,6 +12,10 @@ public class TransitionTableToXML<Nonterminal, NodeType>
         this.out = out;
     }
 
+    /**
+     * Dump an XML rendering of a Method.
+     * @param m the method.
+     */
     void dumpMethod(Method m)
     throws IOException
     {
@@ -36,7 +40,6 @@ public class TransitionTableToXML<Nonterminal, NodeType>
     /**
      * Dump an XML rendering of a state.
      * @param state the state.
-     * @param out   the output sink.
      */
     @SuppressWarnings("unchecked")
     void dumpState(State<Nonterminal, NodeType> state)
@@ -44,8 +47,6 @@ public class TransitionTableToXML<Nonterminal, NodeType>
     {
         out.printf("<state number=\"%d\" nodeType=\"%s\" arity=\"%s\">", state.number, state.nodeType, state.arityKind);
 
-        // Pattern/closure information is used at transition table
-        // build time; it's included in the dump for debugging.
         if (state.nonClosureProductions.size() > 0) {
             out.println("<patterns>");
 
@@ -58,23 +59,37 @@ public class TransitionTableToXML<Nonterminal, NodeType>
                 }
             }
             out.printf("</patterns>");
-        }
 
-        if (state.closures.size() > 0) {
-            out.println("<closures>");
-            for (Closure<Nonterminal> closure: state.closures.values()) {
-                dumpClosure(closure);
+            out.printf("<costMap>");
+            for (Nonterminal nt: state.getNonterminals()) {
+                out.printf("<cost nonterminal=\"%s\" cost=\"%d\"/>\n", nt, state.getCost(nt));
             }
-            out.println("</closures>");
+            out.printf("</costMap>");
+
+            if (state.closures.size() > 0) {
+                out.println("<closures>");
+
+                for (Closure<Nonterminal> closure: state.closures.values()) {
+                    dumpClosure(closure);
+                }
+                out.println("</closures>");
+            }
         }
 
+        out.println("<predicates>");
+
+        for (Method m: state.predicates) {
+            dumpMethod(m);
+        }
+
+        out.println("</predicates>");
         out.println("</state>");
     }
 
     void dumpPattern(Nonterminal nt, PatternMatcher<Nonterminal, NodeType> p, long cost)
     throws IOException
     {
-        out.printf("<pattern nodeType=\"%s\" nonterminal=\"%s\" cost=\"%d\">\n", p.nodeType, nt, cost);
+        out.printf("<pattern nodeType=\"%s\" nonterminal=\"%s\" cost=\"%d\" variadic=\"%s\">\n", p.nodeType, nt, cost, p.isVarArgs);
 
         if (p.childTypes.size() > 0) {
             out.println("<childTypes>");
@@ -82,12 +97,9 @@ public class TransitionTableToXML<Nonterminal, NodeType>
                 out.printf("<childType nonterminal=\"%s\"/>\n", c);
             }
             out.println("</childTypes>");
-        } else {
-            out.println("<childTypes/>");
         }
 
         dumpProduction(p);
-
         out.println("</pattern>");
     }
 
@@ -110,7 +122,7 @@ public class TransitionTableToXML<Nonterminal, NodeType>
     void dumpClosure(Closure<Nonterminal> closure)
     throws IOException
     {
-        out.printf(String.format("<closure nt=\"%s\" source=\"%s\">", closure.target, closure.source));
+        out.printf(String.format("<closure nonterminal=\"%s\" source=\"%s\" cost=\"%d\">", closure.target, closure.source, closure.ownCost));
         dumpProduction(closure);
         out.println("</closure>");
     }
@@ -124,30 +136,51 @@ public class TransitionTableToXML<Nonterminal, NodeType>
     {
         if (!h.finalDimension.isEmpty()) {
 
+            if (h.isVarArgs()) {
+                out.println("<variadic/>");
+            }
+
             out.println("<finalDimension>");
-            int idx = 0;
-            for (PredicatedState<Nonterminal, NodeType> s: h.finalDimension) {
-                out.printf("<entry index=\"%d\">\n",idx++);
-                dumpPredicatedState(s);
+
+            for (Integer stateNum: h.finalDimIndexMap.keySet()) {
+                Integer idx = h.finalDimIndexMap.get(stateNum);
+                out.printf("<entry stateNumber=\"%d\" index=\"%d\">\n", stateNum, idx);
+                dumpPredicatedState(h.finalDimension.get(idx));
                 out.printf("</entry>\n");
             }
+
             out.println("</finalDimension>");
         }
 
-        for (int i = 0; i < h.nextDimension.size(); i++) {
+        if (h.nextDimension.size() > 0) {
 
-            if (h.nextDimension.get(i) != h) {
-                out.printf("<plane index=\"%d\">\n", i);
+            // Don't emit the start tag until we find
+            // a transition to a different hyperplane.
+            boolean emittedStartTag = false;
 
-                out.println("<mappedStates>");
-                for (Integer idx: h.getStatesForPlane(i)) {
-                    out.printf("<mappedState number=\"%d\"/>\n", idx);
+            for (int stateIndex = 0; stateIndex < h.nextDimension.size(); stateIndex++) {
+
+                if (h.nextDimension.get(stateIndex) != h) {
+
+                    if (!emittedStartTag) {
+                        out.println("<nextDimension>");
+                        emittedStartTag = true;
+                    }
+
+                    out.printf("<hyperPlane index=\"%d\">\n", stateIndex);
+
+                    out.println("<mappedStates>");
+                    for (Integer mappedState: h.getStatesForPlane(stateIndex)) {
+                        out.printf("<mappedState stateNumber=\"%d\"/>\n", mappedState);
+                    }
+                    out.println("</mappedStates>");
+                    dumpHyperPlane(h.nextDimension.get(stateIndex));
+                    out.println("</hyperPlane>\n");
                 }
-                out.println("</mappedStates>");
-                dumpHyperPlane(h.nextDimension.get(i));
-                out.println("</plane>\n");
-            } else {
-                out.println("<variadic/>\n");
+            }
+
+            if (emittedStartTag) {
+                out.println("</nextDimension>");
             }
         }
     }
@@ -161,19 +194,9 @@ public class TransitionTableToXML<Nonterminal, NodeType>
     {
         out.printf("<predicatedState arityKind=\"%s\">\n", ps.getArityKind());
 
-        for (List<Method> predicateKey: ps.states.keySet()) {
-
-            if (predicateKey.isEmpty()) {
-                out.printf("<default state=\"%d\"/>\n", ps.states.get(predicateKey).number);
-
-            } else {
-                out.printf("<predicated state=\"%d\">\n", ps.states.get(predicateKey).number, predicateKey);
-
-                for (Method m: predicateKey) {
-                    dumpMethod(m);
-                }
-
-                out.printf("</predicated>\n");
+        for (State<Nonterminal, NodeType> s: ps.states.values()) {
+            if (s.number >= 0) {
+                out.printf("<constituentState stateNumber=\"%d\"/>\n", s.number);
             }
         }
 
@@ -190,7 +213,9 @@ public class TransitionTableToXML<Nonterminal, NodeType>
         out.printf("<operator nodeType=\"%s\" arity=\"%d\">\n", op.nodeType, op.size());
 
         if (op.transitionTable != null) {
+            out.println("<hyperPlane>");
             dumpHyperPlane(op.transitionTable);
+            out.println("</hyperPlane>");
 
         } else if (op.leafState != null) {
             dumpPredicatedState(op.leafState);

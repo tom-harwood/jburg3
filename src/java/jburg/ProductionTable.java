@@ -120,6 +120,21 @@ public class ProductionTable<Nonterminal, NodeType>
     }
 
     /**
+     * Add a variadic pattern-matching production to the grammar, with unit cost and no precallback.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce;
+     * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
+     */
+    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
+    public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    {
+        addPatternMatch(nt, nodeType, 1, null, null, postCallback, true, childTypes);
+    }
+
+    /**
      * Add a pattern matcher to its operator.
      * @param nt            the nonterminal this production produces.
      * @param nodeType      the node type of the root of the subtree matched.
@@ -250,6 +265,16 @@ public class ProductionTable<Nonterminal, NodeType>
                     if (op != null) {
                         computeTransitions(op, state, worklist);
                     }
+                }
+            }
+        }
+
+        // Flush table build data structures from the operators.
+        for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
+
+            for (Operator<Nonterminal, NodeType> op: opList) {
+                if (op != null) {
+                    op.flush();
                 }
             }
         }
@@ -578,10 +603,19 @@ public class ProductionTable<Nonterminal, NodeType>
     State<Nonterminal, NodeType> getState(int stateNumber) {
 
         if (stateNumber < 0 || stateNumber > statesInEntryOrder.size()) {
-            throw new IllegalArgumentException(String.format("State number %d is out of range 0..%d", stateNumber, states.size()));
+            return getErrorState();
+        } else {
+            return statesInEntryOrder.get(stateNumber);
         }
+    }
 
-        return statesInEntryOrder.get(stateNumber);
+    /**
+     * Get the error state.
+     */
+    State<Nonterminal, NodeType> getErrorState()
+    {
+        // The error state is always at position zero.
+        return statesInEntryOrder.get(0);
     }
 
 
@@ -596,10 +630,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
         if (opsForNodeType != null) {
 
-            if (opsForNodeType.size() > arity) {
+            // FIXME: make leaf nodes fixed arity.
+            if (opsForNodeType.size() > arity /*&& opsForNodeType.get(arity).isComplete()*/) {
                 return opsForNodeType.get(arity);
 
-            } else if (opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
+            } else if (opsForNodeType.get(opsForNodeType.size()-1).isComplete() && opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
                 return opsForNodeType.get(opsForNodeType.size()-1);
             }
         }
@@ -625,6 +660,24 @@ public class ProductionTable<Nonterminal, NodeType>
         } else {
             return null;
         }
+    }
+
+    void loadOperator(Operator<Nonterminal, NodeType> op)
+    {
+        NodeType nodeType = op.nodeType;
+        int arity = op.size();
+        List<Operator<Nonterminal, NodeType>> opsForNodeType = operators.get(nodeType);
+
+        if (opsForNodeType == null) {
+            opsForNodeType = new ArrayList<Operator<Nonterminal, NodeType>>();
+            operators.put(nodeType, opsForNodeType);
+        }
+        
+        while(opsForNodeType.size() <= arity) {
+            opsForNodeType.add(null);
+        }
+
+        opsForNodeType.set(arity, op);
     }
 
     /**

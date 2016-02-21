@@ -37,10 +37,14 @@ class PredicatedState<Nonterminal, NodeType>
      */
     PredicatedState(List<State<Nonterminal, NodeType>> states)
     {
-        // Don't store duplicates.
+        // Get the union of all states' predicate methods,
+        // which is then sorted by hash code so that it can
+        // be traversed at compile time to form a list of
+        // matched predicate methods to serve as a key.
         Set<Method> uniqueMethods = new HashSet<Method>();
 
         for (State<Nonterminal, NodeType> s: states) {
+            // Each key should be unique.
             assert !this.states.containsKey(s.predicates);
 
             if (compositeArityKind == null) {

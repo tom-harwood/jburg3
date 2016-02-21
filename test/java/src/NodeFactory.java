@@ -25,7 +25,7 @@ class NodeFactory extends DefaultHandler
         xmlReader.parse(convertToFileURL(filename));
     }
 
-    private static String convertToFileURL(String filename) {
+    public static String convertToFileURL(String filename) {
         String path = new File(filename).getAbsolutePath();
         if (File.separatorChar != '/') {
             path = path.replace(File.separatorChar, '/');

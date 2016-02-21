@@ -75,4 +75,34 @@ test - run java tests
         </java>
     </target>
 
+    <target name="dumpLoad" depends="compile">
+        <echo>Dumping to burmdump/dumpTest.xml</echo>
+        <mkdir dir="burmdump"/>
+        <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="-dump"/>
+            <arg value="burmdump/dumpTest.xml"/>
+            <arg value="${calculator.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+        <echo>Loading from burmdump/dumpTest.xml</echo>
+        <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="-load"/>
+            <arg value="burmdump/dumpTest.xml"/>
+            <arg value="${calculator.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+    </target>
+
+    <target name="jar">
+        <ant dir="../.." target="jar"/>
+    </target>
+
 </project>

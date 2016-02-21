@@ -57,10 +57,13 @@ public class Node implements jburg.BurgInput<NodeType>
     @Override
     public String toString()
     {
-        if (content == null) {
-            return String.format("%s{%d}%s", nodeType, stateNumber, children);
-        } else {
-            return String.format("%s{%d}(%s)%s", nodeType, stateNumber, content, children);
-        }
+        return String.format("%s{%d}%s%s", nodeType, stateNumber, optional(content, "(%s)"), optional(children, " %s"));
     }
+
+    private String optional(Object member, String format)
+    {
+        return member != null? String.format(format, member.toString()):"";
+    }
+
+
 }

@@ -109,16 +109,16 @@ class HyperPlane<Nonterminal, NodeType>
             }
 
         } else {
-            int newStateNum = finalDimension.size();
+            int newStateIdx = finalDimension.size();
             finalDimension.add(resultantState);
-            finalDimRsMap.addMapping(rs, newStateNum);
+            finalDimRsMap.addMapping(rs, newStateIdx);
 
             // Any of the represented states might have
             // already been mapped to a resultant state;
             // the new resultant state will have the same
             // or better costs, so use it unconditionally.
             for (Integer sNum: novelStateNumbers) {
-                finalDimIndexMap.put(sNum, newStateNum);
+                finalDimIndexMap.put(sNum, newStateIdx);
             }
 
             // If all the states in this final dimension are variadic,
@@ -127,20 +127,30 @@ class HyperPlane<Nonterminal, NodeType>
             // variadic handling dictates that if any state is
             // variadic, then they all are.
             if (isVarArgs()) {
-                int thisNum = nextDimension.indexOf(this);
-
-                if (thisNum == -1) {
-                    thisNum = nextDimension.size();
-                    nextDimension.add(this);
-                }
-
+                int thisNum = this.makeVariadic();
                 nextDimRsMap.addMapping(rs, thisNum);
-
-                for (Integer sNum: novelStateNumbers) {
-                    nextDimIndexMap.put(sNum, thisNum);
-                }
             }
         }
+    }
+
+    /**
+     * Make this HyperPlane variadic by adding transition
+     * entries back to itself.
+     */
+    int makeVariadic()
+    {
+        int thisNum = nextDimension.indexOf(this);
+
+        if (thisNum == -1) {
+            thisNum = nextDimension.size();
+            nextDimension.add(this);
+        }
+
+        for (Integer sNum: finalDimIndexMap.keySet()) {
+            nextDimIndexMap.put(sNum, thisNum);
+        }
+
+        return thisNum;
     }
 
     /**
@@ -160,6 +170,37 @@ class HyperPlane<Nonterminal, NodeType>
 
         for (Integer sNum: novelStateNumbers) {
             nextDimIndexMap.put(sNum, newHyperPlaneIdx);
+        }
+    }
+
+    /**
+     * Load a PredicatedState into the final dimension.
+     * @param stateNum  the state's state number.
+     * @param state     the state.
+     */
+    void loadPredicatedState(Integer sNum, PredicatedState<Nonterminal, NodeType> state)
+    {
+        int newStateIdx = finalDimension.size();
+        finalDimension.add(state);
+        finalDimIndexMap.put(sNum, newStateIdx);
+    }
+
+    /**
+     * Load a child HyperPlane into the next dimension.
+     * @param hyperPlane    the child hyperplane.
+     * @param mappedStates  the states the hyperplane is mapped to.
+     */
+    void loadHyperPlane(HyperPlane<Nonterminal, NodeType> hyperPlane, Integer[] mappedStates)
+    {
+        // TODO: Why are there trivial mappings?
+        //assert mappedStates.length > 0: "empty mapped states";
+        if (mappedStates.length > 0) {
+            int hyperPlaneIndex = nextDimension.size();
+            nextDimension.add(hyperPlane);
+
+            for (Integer sNum: mappedStates) {
+                nextDimIndexMap.put(sNum, hyperPlaneIndex);
+            }
         }
     }
 
@@ -239,13 +280,11 @@ class HyperPlane<Nonterminal, NodeType>
     void assignStateNumber(int stateNumber, BurgInput<NodeType> node, Object visitor)
     throws Exception
     {
-        assert !finalDimension.isEmpty();
         if (finalDimIndexMap.containsKey(stateNumber)) {
             State<Nonterminal, NodeType> result = finalDimension.get(finalDimIndexMap.get(stateNumber)).getState(node, visitor);
             node.setStateNumber(result.number);
         } else {
-            // TODO: Assign the error state
-            throw new IllegalStateException(String.format("No hyperplane mapping for state %d", stateNumber));
+            node.setStateNumber(0);
         }
     }
 
@@ -265,18 +304,34 @@ class HyperPlane<Nonterminal, NodeType>
      * @param idx   the index of the child of interest.
      * @return a list of state numbers mapped to that hyperplane.
      */
-    List<Integer> getStatesForPlane(int idx)
+    List<Integer> getStatesForPlane(int stateIndex)
     {
         List<Integer> result = new ArrayList<Integer>();
 
         for (Integer stateNum: nextDimIndexMap.keySet()) {
 
-            if (nextDimIndexMap.get(stateNum) == idx) {
+            if (nextDimIndexMap.get(stateNum) == stateIndex) {
                 result.add(stateNum);
             }
         }
 
         return result;
+    }
+
+    /**
+     * Flush build-time data structures;
+     */
+    void flush()
+    {
+        nextDimRsMap.clear();
+        finalDimRsMap.clear();
+
+        for (HyperPlane<Nonterminal, NodeType> child: nextDimension) {
+
+            if (child != this) {
+                child.flush();
+            }
+        }
     }
 
     /**
@@ -314,6 +369,11 @@ class HyperPlane<Nonterminal, NodeType>
             return mappings.containsKey(rs)?
                 mappings.get(rs):
                 Collections.emptyList();
+        }
+
+        void clear()
+        {
+            mappings.clear();
         }
     }
 }

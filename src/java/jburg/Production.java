@@ -35,21 +35,23 @@ abstract class Production<Nonterminal>
      * A semantic predicate method that guards this production,
      * or null if the production is evaluated solely by cost.
      */
-    final Method         predicate;
+    Method         predicate;
+
     /**
      * A reducer method to call before deriving the subtree's
      * children (or advancing from a closure to the source
      * derivation of the subtree). Null if no such callback
      * is required.
      */
-    final Method         preCallback;
+    Method         preCallback;
+
     /**
      * A reducer method to call after deriving the subtree's
      * children (or continuing after producing a closure's
      * source nonterminal). Null if no such callback
      * is required.
      */
-    final Method         postCallback;
+    Method         postCallback;
 
     /**
      * Construct a production.

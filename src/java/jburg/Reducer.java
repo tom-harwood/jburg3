@@ -49,24 +49,36 @@ public class Reducer<Nonterminal, NodeType>
         // it's precomputed into the transition table and the operators use it
         // when they encounter a null subtree.
         if (node != null) {
+
+            int subtreeCount = node.getSubtreeCount();
+
+            for (int i = 0; i < subtreeCount; i++) {
+                label(node.getSubtree(i));
+            }
+
             Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
 
             if (op != null) {
-                int subtreeCount = node.getSubtreeCount();
 
                 if (subtreeCount > 0) {
-
-                    for (int i = 0; i < subtreeCount; i++) {
-                        label(node.getSubtree(i));
-                    }
-
                     op.assignState(node, visitor);
-
                 } else {
                     op.setLeafState(node, visitor);
                 }
             }
         } 
+    }
+
+    /**
+     * Can the given node produce the given nonterminal?
+     * @param node  the node of interest.
+     * @param goal  the nonterminal of interest.
+     * @return true if node's state table entry can produce goalNt.
+     */
+    boolean canProduce(BurgInput<NodeType> node, Nonterminal goal)
+    {
+        State<Nonterminal,NodeType> state = node != null? productionTable.getState(node.getStateNumber()): productionTable.getNullPointerState();
+        return state.getCost(goal) < Integer.MAX_VALUE;
     }
 
     /**
@@ -105,6 +117,8 @@ public class Reducer<Nonterminal, NodeType>
         if (node != null) {
 
             if (node.getStateNumber() < 1) {
+                // Debugging: uncomment to see why the first pass didn't label the node.
+            	label(node);
                 throw new IllegalStateException(String.format("Unlabeled node %s",node));
             }
 
@@ -124,6 +138,7 @@ public class Reducer<Nonterminal, NodeType>
             current = state.getProduction(((Closure<Nonterminal>)current).source);
         }
 
+
         if (current.preCallback != null) {
             current.preCallback.invoke(visitor, node, goal);
         }
@@ -133,9 +148,9 @@ public class Reducer<Nonterminal, NodeType>
         // Reduce children and collect results
         if (current.postCallback != null) {
 
-            assert current instanceof PatternMatcher;
+            assert current instanceof PatternMatcher: String.format("Expected PatternMatcher, got %s\n", current);
             @SuppressWarnings("unchecked")
-			PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
+            PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
 
             int formalCount = current.postCallback.getParameterCount();
             // The actual parameters are the root of the subtree itself,
@@ -197,7 +212,8 @@ public class Reducer<Nonterminal, NodeType>
                 Object variadicActuals = actuals[variadicFormalPos] = Array.newInstance(variadicFormalClass.getComponentType(), nVarArgs);
 
                 for (int i = 0; i < nVarArgs; i++) {
-                    Array.set(variadicActuals, i, reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree)));
+                    Object actual = reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree));
+                    Array.set(variadicActuals, i, actual);
                 }
 
                 result = current.postCallback.invoke(visitor, actuals);
@@ -205,6 +221,22 @@ public class Reducer<Nonterminal, NodeType>
             } else {
                 throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
             }
+        } else {
+
+                if (node != null) {
+
+                assert current instanceof PatternMatcher: String.format("Expected PatternMatcher, got %s\n", current);
+                @SuppressWarnings("unchecked")
+                PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
+
+
+                // Reduce the children, there may be side effects.
+                for (int i = 0; i < node.getSubtreeCount(); i++) {
+                    reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
+                }
+            }
+
+            result = null;
         }
 
         while (!pendingProductions.isEmpty()) {
