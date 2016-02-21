@@ -645,6 +645,15 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 result.addClosure(c);
             }
 
+            if (predicates.length > 0) {
+
+                for (Method m: predicates) {
+                    result.predicates.add(m);
+                }
+
+                Collections.sort(result.predicates, new MethodComparator());
+            }
+
             return result;
         }
 

@@ -53,7 +53,7 @@ class PredicatedState<Nonterminal, NodeType>
                     compositeArityKind = s.arityKind;
                 }
             } else if (s.arityKind != null && s.arityKind != compositeArityKind) {
-                throw new IllegalStateException("Cannot mix fixed-size and variadic productions");
+                compositeArityKind = ArityKind.Variadic;
             }
 
             this.states.put(s.predicates, s);
