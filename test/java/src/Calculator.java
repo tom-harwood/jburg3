@@ -1,3 +1,5 @@
+import java.util.*;
+
 import jburg.ProductionTable;
 import jburg.Reducer;
 import jburg.TransitionTableLoader;
@@ -11,31 +13,42 @@ public class Calculator
     throws Exception
     {
         String dumpFile = null;
-        NodeFactory nf = null;
-        ProductionTable<Nonterminal, NodeType> productions = null;
+        String loadFile = null;
+        String grammarFile = null;
+        String testcaseFile = null;
+
+        List<String>    failedTestcases = new ArrayList<String>();
 
         for (int i = 0; i < args.length; i++) {
 
             if (args[i].equals("-load")) {
-                productions = new TransitionTableLoader<Nonterminal, NodeType>().load(NodeFactory.convertToFileURL(args[++i]), Nonterminal.class, NodeType.class);
-
-                if (productions != null) {
-                    System.out.println("Load successful.");
-                } else {
-                    System.out.printf("Unable to load %s\n", args[i-1]);
-                    System.exit(1);
-                }
-
+                loadFile = args[++i];
             } else if (args[i].equals("-dump")) {
                 dumpFile = args[++i];
-            } else if (nf == null) {
-                nf = new NodeFactory(args[i]);
+            } else if (args[i].equals("-grammar")) {
+                grammarFile = args[++i];
+            } else if (testcaseFile == null) {
+                testcaseFile = args[i];
             } else {
                 throw new IllegalArgumentException("unrecognized argument " + args[i]);
             }
         }
 
-        if (productions == null) {
+        ProductionTable<Nonterminal, NodeType> productions = null;
+
+        if (loadFile != null) {
+            productions = new TransitionTableLoader<Nonterminal, NodeType>().load(NodeFactory.convertToFileURL(loadFile), Nonterminal.class, NodeType.class);
+
+            if (productions != null) {
+                System.out.println("Load successful.");
+            } else {
+                System.out.printf("Unable to load %s\n", loadFile);
+                System.exit(1);
+            }
+
+        } else if (grammarFile != null) {
+            productions = new GrammarBuilder<Nonterminal,NodeType>(Nonterminal.class, NodeType.class).build(NodeFactory.convertToFileURL(grammarFile));
+        } else {
             productions = new ProductionTable<Nonterminal, NodeType>();
 
             // Leaf operators
@@ -43,7 +56,6 @@ public class Calculator
             productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
 
             // Predicated leaf operators
-            //productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, Calculator.class.getDeclaredMethod("shortLiteral", Node.class));
             productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, 1, Calculator.class.getDeclaredMethod("shortGuard", Node.class), null, Calculator.class.getDeclaredMethod("shortLiteral", Node.class), false);
 
             // Unary operators
@@ -71,32 +83,46 @@ public class Calculator
             productions.generateStates();
         }
 
-        Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
-
-        for (Testcase tc: nf.testcases) {
-            try {
-                reducer.label(tc.root);
-                String result = reducer.reduce(tc.root, tc.type).toString();;
-
-                if (tc.expected.equals(result)) {
-                    System.out.printf("Succeeded: %s\n", tc.name);
-                } else {
-                    System.out.printf("FAILED: %s: expected %s got %s\n", tc.name, tc.expected, result);
-                }
-            } catch (Exception ex) {
-                if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
-                    System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
-                } else {
-                    throw ex;
-                }
-            }
-        }
-
         if (dumpFile != null) {
             productions.dump(dumpFile);
         }
 
+
+        if (dumpFile == null && testcaseFile != null) {
+
+            Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(new Calculator(), productions);
+            NodeFactory nf = new NodeFactory(testcaseFile);
+
+            for (Testcase tc: nf.testcases) {
+                try {
+                    reducer.label(tc.root);
+                    String result = reducer.reduce(tc.root, tc.type).toString();;
+
+                    if (tc.expected.equals(result)) {
+                        System.out.printf("Succeeded: %s\n", tc.name);
+                    } else {
+                        failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
+                    }
+                } catch (Exception ex) {
+                    if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+                        System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                    } else {
+                        failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
+                    }
+                }
+            }
+        }
+
+        for (String tcFail: failedTestcases) {
+            System.err.println(tcFail);
+        }
+
+        System.exit(failedTestcases.size());
     }
+
+    /*
+     * ** Callback routines **
+     */
 
     /*
      * ** Nullary Operators **
