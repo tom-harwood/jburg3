@@ -92,13 +92,14 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Variadic,
     }
 
-    private class Node implements BurgInput<DumpType>
+    private class Node implements BurgInput<Load, DumpType>
     {
         final DumpType              nodeType;
         final Map<String,String>    attributes = new HashMap<String,String>();
         final List<Node>            children = new ArrayList<Node>();
 
         int                         stateNumber;
+        State<Load, DumpType>       transitionTableLeaf;
 
         Node(String localName, Attributes atts)
         {
@@ -124,6 +125,16 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         public Node getSubtree(int idx)             { return this.children.get(idx); }
         @Override
         public DumpType getNodeType()               { return this.nodeType; }
+
+        public State<Load, DumpType> getTransitionTableLeaf()
+        {
+            return this.transitionTableLeaf;
+        }
+
+        public void setTransitionTableLeaf(State<Load, DumpType> transitionTableLeaf)
+        {
+            this.transitionTableLeaf = transitionTableLeaf;
+        }
 
         @SuppressWarnings("unused")
 		void dump(java.io.PrintStream out)
@@ -200,7 +211,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             ProductionTable<Load,DumpType> productions = new ProductionTable<Load,DumpType>();
 
             // Production table
-            productions.addVarArgsPatternMatch(
+            productions.addPatternMatch(
                 Load.ProductionTable, DumpType.burmDump,
                 builder.getPostCallback("buildProductionTable", getArrayArgs(State.class), getArrayArgs(Operator.class)),
                 Load.StateTable,
@@ -567,7 +578,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 preCallback,
                 postCallback,
                 Boolean.parseBoolean(node.get("variadic")), 
-                (Nonterminal[])childTypes
+                Arrays.asList((Nonterminal[])childTypes)
             );
         }
 
@@ -682,7 +693,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
         HyperPlaneDesc parseVariadicFinalDimension(Node node, Integer[] mappedStates, HyperPlane<Nonterminal, NodeType> finalDimension)
         {
-            finalDimension.makeVariadic();
             return new HyperPlaneDesc(finalDimension, mappedStates, true);
         }
 
@@ -741,6 +751,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         {
             Operator<Nonterminal, NodeType> operator = new Operator<Nonterminal, NodeType>(getNodeType(node.get("nodeType")), Integer.parseInt(node.get("arity")), this.productionTable);
             operator.transitionTable = rootPlane;
+            operator.arityKind = rootPlane.isVarArgs()? ArityKind.Variadic:ArityKind.Fixed;
             return operator;
         }
 

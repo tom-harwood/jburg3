@@ -42,7 +42,7 @@ public class Reducer<Nonterminal, NodeType>
      * First pass: label a tree.
      * @param node the root of the tree to label.
      */
-    public void label(BurgInput<NodeType> node)
+    public void label(BurgInput<Nonterminal, NodeType> node)
     throws Exception
     {
         // Null subtrees all share a singleton state in the production table;
@@ -75,7 +75,7 @@ public class Reducer<Nonterminal, NodeType>
      * @param goal  the nonterminal of interest.
      * @return true if node's state table entry can produce goalNt.
      */
-    boolean canProduce(BurgInput<NodeType> node, Nonterminal goal)
+    boolean canProduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
     {
         State<Nonterminal,NodeType> state = node != null? productionTable.getState(node.getStateNumber()): productionTable.getNullPointerState();
         return state.getCost(goal) < Integer.MAX_VALUE;
@@ -89,7 +89,7 @@ public class Reducer<Nonterminal, NodeType>
      * @return the result of deriving the tree using the
      * productions specified by each node's state.
      */
-    public Object reduce(BurgInput<NodeType> node, Nonterminal goal)
+    public Object reduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
     throws Exception
     {
         // TODO: Run the entire algorithm iteratively, using the stack.
@@ -109,20 +109,19 @@ public class Reducer<Nonterminal, NodeType>
      * @throws Exception from the production's semantic action routines,
      * and a few diagnostics for unlabeled trees or mismatched parameters.
      */
-    private Object reduce(BurgInput<NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
+    private Object reduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
         State<Nonterminal,NodeType> state;
 
         if (node != null) {
+            state = node.getTransitionTableLeaf();
 
-            if (node.getStateNumber() < 1) {
+            if (state == null) {
                 // Debugging: uncomment to see why the first pass didn't label the node.
             	label(node);
                 throw new IllegalStateException(String.format("Unlabeled node %s",node));
             }
-
-            state = productionTable.getState(node.getStateNumber());
         } else {
             state = productionTable.getNullPointerState();
         }
@@ -137,7 +136,6 @@ public class Reducer<Nonterminal, NodeType>
             pendingProductions.push(current);
             current = state.getProduction(((Closure<Nonterminal>)current).source);
         }
-
 
         if (current.preCallback != null) {
             current.preCallback.invoke(visitor, node, goal);

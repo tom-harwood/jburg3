@@ -150,6 +150,24 @@ public class ProductionTable<Nonterminal, NodeType>
     @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
+        return addPatternMatch(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, Arrays.asList(childTypes));
+    }
+
+    /**
+     * Add a pattern matcher to its operator.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param predicate     the semantic predicate guarding this pattern match,
+     * or null if the pattern match has no predicate guard.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param isVariadic    if true, then the final nonterminal in childTypes
+     * may be used more than once to cover the "tail" of a subtree's children.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce.
+     */
+    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
+    {
         PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, childTypes);
         nonterminals.add(nt);
         getPatternsForNodeType(nodeType).add(patternMatcher);
@@ -169,7 +187,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
             ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size(), this));
 
-            if (isVarArgs && patternMatcher.size() + 1 <= ops.size()) {
+            if (patternMatcher.isVarArgs && patternMatcher.size() + 1 <= ops.size()) {
                 int limit = ops.size();
 
                 for (int i = patternMatcher.size() + 1; i <= limit; i++) {
@@ -177,7 +195,6 @@ public class ProductionTable<Nonterminal, NodeType>
                 }
             }
         }
-
         return patternMatcher;
     }
 
@@ -251,14 +268,14 @@ public class ProductionTable<Nonterminal, NodeType>
         // leaf operators.
         Queue<State<Nonterminal, NodeType>> worklist = new ArrayDeque<State<Nonterminal, NodeType>>();
         worklist.add(getNullPointerState());
-        worklist.addAll(generateLeafStates());
+        generateLeafStates(worklist);
 
         while (worklist.peek() != null) {
             State<Nonterminal, NodeType> state = worklist.remove();
 
             for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
-                // Skip the leaf nodes; they're already done.
+                // Skip leaf operators; they're already done.
                 for (int i = 1; i < opList.size(); i++) {
                     Operator<Nonterminal,NodeType> op = opList.get(i);
 
@@ -269,12 +286,12 @@ public class ProductionTable<Nonterminal, NodeType>
             }
         }
 
-        // Flush table build data structures from the operators.
+        // Finish compilation of the operators' transition tables.
         for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
             for (Operator<Nonterminal, NodeType> op: opList) {
                 if (op != null) {
-                    op.flush();
+                    op.finishCompilation();
                 }
             }
         }
@@ -339,11 +356,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
     /**
      * Generate the table's leaf states.
-     * @return the initial worklist, populated with the leaf states.
+     * @param worklist  the compilation's worklist.
+     * @post the initial worklist is populated with the leaf states.
      */
-    private Queue<State<Nonterminal, NodeType>> generateLeafStates()
+    private void generateLeafStates(Queue<State<Nonterminal, NodeType>> worklist)
     {
-        Queue<State<Nonterminal, NodeType>> result = new ArrayDeque<State<Nonterminal, NodeType>>();
 
         for (NodeType nodeType: operators.keySet()) {
             Operator<Nonterminal, NodeType> leafOperator = fetchOperator(nodeType, 0);
@@ -359,20 +376,18 @@ public class ProductionTable<Nonterminal, NodeType>
                 }
 
                 // The set of non-empty leaf states is the basis for
-                // computing the transition tables.
+                // computing the transition table.
                 for (State<Nonterminal, NodeType> state: newStates) {
 
                     if (state.size() > 0) {
                         closure(state);
-                        result.add(addState(state));
+                        worklist.add(addState(state));
                     }
                 }
 
                 leafOperator.createLeafState(newStates);
             }
         }
-
-        return result;
     }
 
     /**
@@ -393,8 +408,8 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, Queue<State<Nonterminal, NodeType>> workList)
     {
+        //System.out.printf("\ncomputeTransitions(%s,%s)\n",op,state);
         int arity = op.size();
-
 
         for (int dim = 0; dim < arity; dim++) {
 
@@ -402,63 +417,49 @@ public class ProductionTable<Nonterminal, NodeType>
 
             if (!pState.isEmpty()) {
 
-                // Has this operator seen this representer state?
-                if (op.reps.get(dim).add(pState)) {
+                boolean novelPState = !op.reps.get(dim).contains(pState);
 
-                    // Try all permutations of the operator's nonterminal children
-                    // as operands to the pattern matching productions applicable
-                    // to the operator.
-                    for (List<RepresenterState<Nonterminal,NodeType>> repStates: op.generatePermutations(pState, dim)) {
-                        // Each permutation generates a candidate state (called "result"
-                        // in Proebsting's algorithm) with a cost matrix determined by
-                        // the production's cost, plus the cost of the current permuatation
-                        // of representer states; if this aggregate cost is less than the "unfeasible" cost
-                        // Integer.MAX_VALUE and also less than the candidate's current best cost for
-                        // the production's nonterminal, then add the production to the candidate.
-                        List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
-                        newStates.add(new State<Nonterminal,NodeType>(op.nodeType));
+                if (novelPState) {
+                    //System.out.printf("\tnovel pState %s\n\t..reps[%d]=%s\n", pState, dim, op.reps.get(dim));
+                }
 
-                        for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                            if (p.acceptsDimension(arity)) {
-                                coalesceProduction(repStates, p, newStates);
-                            }
-                        }
+                op.reps.get(dim).add(pState);
 
-                        List<State<Nonterminal, NodeType>> nontrivialStates = new ArrayList<State<Nonterminal, NodeType>>();
+                // Try all permutations of the operator's nonterminal children
+                // as operands to the pattern matching productions applicable
+                // to the operator.
+                for (List<RepresenterState<Nonterminal,NodeType>> repStates: op.generatePermutations(pState, dim)) {
+                    List<State<Nonterminal, NodeType>> newStates = new ArrayList<State<Nonterminal, NodeType>>();
+                    newStates.add(new State<Nonterminal,NodeType>(op.nodeType));
 
-                        for (int i = 0; i < newStates.size(); i++) {
-                            State<Nonterminal, NodeType> resultState = newStates.get(i);
-
-                            if (!resultState.isEmpty()) {
-
-                                if (!this.states.containsKey(resultState)) {
-                                    // We know that we will be using this state as the canonical
-                                    // state, since no equivalent state is already stored. So it's
-                                    // safe to add it to the worklist now; it will get its state
-                                    // number via the call to addState().
-                                    closure(resultState);
-                                    workList.add(resultState);
-                                    nontrivialStates.add(addState(resultState));
-                                } else {
-                                    // Get the canonical representation of the result state
-                                    // from the state table; the canonical representation
-                                    // is equivalent to the result state, but has a unique
-                                    // state number.
-                                    State<Nonterminal, NodeType> canonicalState = addState(resultState);
-                                    nontrivialStates.add(canonicalState);
-                                }
-                            }
-                        }
-
-                        if (nontrivialStates.size() > 0) {
-                            op.addTransition(repStates, new PredicatedState<Nonterminal, NodeType>(nontrivialStates));
+                    for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
+                        if (p.acceptsDimension(arity)) {
+                            coalesceProduction(repStates, p, newStates);
                         }
                     }
-                } else {
-                    // The operator has built a transition table
-                    // based on this representer state, but we have
-                    // a novel state to add to that subtable.
-                    op.addRepresentedState(state, dim, pState);
+
+                    for (State<Nonterminal, NodeType> resultState: newStates) {
+
+                        if (!resultState.isEmpty()) {
+
+                            if (!this.states.containsKey(resultState)) {
+                                // This is a novel state to the production table as a whole;
+                                // add it to the operator and the table, and put it on the
+                                // worklist to see if it can generate additional transitions.
+                                addState(resultState);
+                                closure(resultState);
+                                workList.add(resultState);
+                                //System.out.printf("\tadding novel %s->%s to %s\n",repStates, resultState, op);
+                                op.addTransition(repStates, resultState);
+                            } else {
+                                // An equivalent state is already known to the production table;
+                                // use the previously stored state as the canonical representation.
+                                State<Nonterminal, NodeType> canonicalState = addState(resultState);
+                                //System.out.printf("\tadding canonical %s->%s to %s\n", repStates, canonicalState, op);
+                                op.addTransition(repStates, canonicalState);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -492,27 +493,50 @@ public class ProductionTable<Nonterminal, NodeType>
             cost += repStates.get(j).getCost(p.getNonterminal(j));
         }
 
-        for (int i = 0; i < newStates.size(); i++) {
-            State<Nonterminal, NodeType> candidate = newStates.get(i);
+        for (int i = 0; cost < Integer.MAX_VALUE && i < newStates.size(); i++) {
+            State<Nonterminal, NodeType> candidate =  newStates.get(i);
 
             if (p.hasPredicate()) {
 
                 if (candidate.satisfiesPredicate(p.predicate)) {
 
+                    // The candidate state already has a production
+                    // guarded by this predicate; replace that production
+                    // if this production's cost is better.
                     if (cost < candidate.getCost(p.target)) {
                         candidate.setNonClosureProduction(p,cost);
                     }
 
                 } else {
+                    // The candidate state does not have this
+                    // predicate in its predicates list; copy-create
+                    // a new state with this predicate and add it
+                    // to the permutation of predicates.
                     State<Nonterminal, NodeType> predicatedState = new State<Nonterminal, NodeType>(candidate, p.predicate);
                     newStates.add(predicatedState);
 
+                    // Even though this predicate is novel, it
+                    // may not be the best solution, so check.
+                    // (The new state is still required, because
+                    // the presence of the predicate itself is
+                    // new information).
                     if (cost < predicatedState.getCost(p.target)) {
                         predicatedState.setNonClosureProduction(p,cost);
                     }
                 }
-            } else if (cost < candidate.getCost(p.target)) {
-                candidate.setNonClosureProduction(p,cost);
+            } else {
+                // The production does not have a predicate, so
+                // its cost is the only factor to consider.
+                // TODO: This could potentially remove candidate
+                // states from the list, if an unpredicated production
+                // replaced a predicated production that was the only
+                // use of a particular predicate; leaving that predicate
+                // in the predicate maps only means that label-time logic
+                // will run a meaningless "predicate" method, and we may
+                // hope there will be relatively few such grammars.
+                if (cost < candidate.getCost(p.target)) {
+                    candidate.setNonClosureProduction(p,cost);
+                }
             }
         }
     }
@@ -630,11 +654,11 @@ public class ProductionTable<Nonterminal, NodeType>
 
         if (opsForNodeType != null) {
 
-            // FIXME: make leaf nodes fixed arity.
-            if (opsForNodeType.size() > arity /*&& opsForNodeType.get(arity).isComplete()*/) {
+            if (opsForNodeType.size() > arity && opsForNodeType.get(arity) != null && opsForNodeType.get(arity).isComplete()) {
+                // TODO: Search backwards for a variadic operator.
                 return opsForNodeType.get(arity);
 
-            } else if (opsForNodeType.get(opsForNodeType.size()-1).isComplete() && opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
+            } else if (arity >= opsForNodeType.size() && opsForNodeType.get(opsForNodeType.size()-1) != null && opsForNodeType.get(opsForNodeType.size()-1).isComplete() && opsForNodeType.get(opsForNodeType.size()-1).isVarArgs()) {
                 return opsForNodeType.get(opsForNodeType.size()-1);
             }
         }
@@ -662,6 +686,10 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
+    /**
+     * Load an operator into the operator table.
+     * @param op    the operator to be loaded.
+     */
     void loadOperator(Operator<Nonterminal, NodeType> op)
     {
         NodeType nodeType = op.nodeType;

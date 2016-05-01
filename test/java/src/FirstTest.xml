@@ -82,6 +82,27 @@
         </Node>
     </Testcase>
 
+    <Testcase name="'foo'+'bar'" type="String" expected="foobar">
+        <Node op="Add">
+            <Node op="StringLiteral" content="foo"/>
+            <Node op="StringLiteral" content="bar"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="'foo'+22" type="String" expected="foo22">
+        <Node op="Add">
+            <Node op="StringLiteral" content="foo"/>
+            <Node op="IntLiteral" content="22"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="33+'foo'" type="String" expected="33foo">
+        <Node op="Add">
+            <Node op="IntLiteral" content="33"/>
+            <Node op="StringLiteral" content="foo"/>
+        </Node>
+    </Testcase>
+
     <Testcase name="shortGuard negative" type="Int" expected="no output" expectedException=".*Unlabeled node .*">
         <Node op="Add">
             <Node op="IntLiteral" content="1"/>

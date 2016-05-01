@@ -15,7 +15,7 @@ import java.util.*;
  * State objects' hash and equality semantics are set up
  * to weed out duplicate states.
  */
-class State<Nonterminal, NodeType>
+public class State<Nonterminal, NodeType>
 {
     /**
      * The state's number. This number is set
@@ -91,21 +91,30 @@ class State<Nonterminal, NodeType>
     }
 
     /**
-     * Construct a state based on a source state, with a new predicate.
+     * Construct a state based on a source state.
      * @param source    the source state.
-     * @param predicate the predicate.
      */
-    State(State<Nonterminal, NodeType> source, Method predicate)
+    State(State<Nonterminal, NodeType> source)
     {
         this.nodeType = source.nodeType;
         this.arityKind = source.arityKind;
         this.nonClosureProductions.putAll(source.nonClosureProductions);
         this.patternCosts.putAll(source.patternCosts);
         this.closures.putAll(source.closures);
+        this.predicates.addAll(source.predicates);
+    }
+
+    /**
+     * Construct a state based on a source state, with a new predicate.
+     * @param source    the source state.
+     * @param predicate the predicate.
+     */
+    State(State<Nonterminal, NodeType> source, Method predicate)
+    {
+        this(source);
         // Add the new predicate, and sort the predicate
         // list into its canonical form by hash code.
-        assert !source.predicates.contains(predicate);
-        this.predicates.addAll(source.predicates);
+        assert !this.predicates.contains(predicate);
         this.predicates.add(predicate);
         Collections.sort(this.predicates, new MethodComparator());
     }
@@ -202,10 +211,13 @@ class State<Nonterminal, NodeType>
         } else if (closures.containsKey(goal)) {
             return closures.get(goal);
         } else {
-            throw new IllegalArgumentException(String.format("State %d cannot produce %s", number, goal));
+            throw new IllegalArgumentException(String.format("%s not produced by %s", goal, this));
         }
     }
 
+    /**
+     * Get all the non-closure (i.e., pattern match) productions.
+     */
     Collection<Production<Nonterminal>> getNonClosureProductions()
     {
         return nonClosureProductions.values();
@@ -244,6 +256,34 @@ class State<Nonterminal, NodeType>
     }
 
     /**
+     * Get all closures that depend on a given pattern-matching production.
+     * @param needle the production of interest.
+     * @return the set of closures that depend on the needle.
+     */
+    List<Closure<Nonterminal>> getClosuresTo(Production<Nonterminal> needle)
+    {
+        List<Closure<Nonterminal>> result = new ArrayList<Closure<Nonterminal>>();
+
+        for (Closure<Nonterminal> c: this.closures.values()) {
+
+            Closure<Nonterminal> current = c;
+
+            while (this.closures.containsKey(current.source)) {
+                current = this.closures.get(current.source);
+            }
+
+            Production<Nonterminal> pattern = nonClosureProductions.get(current.source);
+            assert pattern != null;
+
+            if (pattern == needle) {
+                result.add(c);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Marshal nonterminals produced by both
      * pattern matchers and closures.
      * @return the set of nonterminals produced.
@@ -271,16 +311,9 @@ class State<Nonterminal, NodeType>
     @Override
     public String toString()
     {
-        StringBuilder buffer = new StringBuilder();
-
-        buffer.append("State ");
-        buffer.append(String.valueOf(number));
-        buffer.append(" ");
-        buffer.append(this.nodeType);
+        StringBuilder buffer = new StringBuilder(String.format("State %d %s[", this.number, this.nodeType));
 
         if (nonClosureProductions.size() > 0) {
-            buffer.append("(patterns(");
-
             boolean didFirst = false;
             for (Nonterminal nt: nonClosureProductions.keySet()) {
                 Production<Nonterminal> p = nonClosureProductions.get(nt);
@@ -292,14 +325,20 @@ class State<Nonterminal, NodeType>
                 }
                 buffer.append(String.format("%s=%s", nt, p));
             }
-            buffer.append(")");
+            buffer.append("]");
+
             if (closures.size() > 0) {
+                buffer.append("..");
                 buffer.append(closures);
             }
-            buffer.append(")");
         }
 
         return buffer.toString();
+    }
+
+    public int getStateNumber()
+    {
+        return this.number;
     }
 
     /**

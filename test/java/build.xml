@@ -17,7 +17,7 @@
         <property name="calculator.xml" value="src/FirstTest.xml"/>
     </target>
 
-    <target name="cleanBuildAndTest" depends="clean,buildJar,compile,test"/>
+    <target name="cleanBuildAndTest" depends="clean,buildJar,compile,allTests"/>
 
     <target name="clean" depends="init">
         <!-- Remove VIM backup files.  -->
@@ -31,7 +31,7 @@
     <target name="help">
     <echo>
 cleanBuildAndTest - clean, build, and test
-test - run java tests
+allTests - run java tests
     </echo>
     </target>
     
@@ -54,18 +54,35 @@ test - run java tests
 		</javac>
 	</target>
 
-    <target name="test" depends="init">
+    <target name="allTests" depends="init">
         <antcall target="calculator">
             <param name="calculator.xml" value="src/FirstTest.xml"/>
         </antcall>
         <antcall target="calculator">
             <param name="calculator.xml" value="src/VariadicPatterns.xml"/>
         </antcall>
+        <antcall target="dumpLoad">
+            <param name="calculator.xml" value="src/FirstTest.xml"/>
+        </antcall>
     </target>
 
     <target name="calculator">
         <echo>Testing ${calculator.xml}</echo>
         <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="${calculator.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+    </target>
+
+    <target name="testGrammar" depends="compile">
+        <echo>Testing ${grammar.xml} and ${calculator.xml}</echo>
+        <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="-grammar"/>
+            <arg value="${grammar.xml}"/>
             <arg value="${calculator.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>

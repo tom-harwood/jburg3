@@ -33,31 +33,24 @@ class PredicatedState<Nonterminal, NodeType>
     ArityKind compositeArityKind = null;
 
     /**
+     * Construct a PredicatedState whose contents will
+     * be added via successive calls to addTransition().
+     */
+    PredicatedState()
+    {
+    }
+
+    /**
      * @param states this PredicatedState's constituent states.
      */
     PredicatedState(List<State<Nonterminal, NodeType>> states)
     {
-        // Get the union of all states' predicate methods,
-        // which is then sorted by hash code so that it can
-        // be traversed at compile time to form a list of
-        // matched predicate methods to serve as a key.
-        Set<Method> uniqueMethods = new HashSet<Method>();
-
         for (State<Nonterminal, NodeType> s: states) {
             // Each key should be unique.
             assert !this.states.containsKey(s.predicates);
-
-            if (compositeArityKind == null) {
-
-                if (s.arityKind != null) {
-                    compositeArityKind = s.arityKind;
-                }
-            } else if (s.arityKind != null && s.arityKind != compositeArityKind) {
-                compositeArityKind = ArityKind.Variadic;
-            }
-
+            addArityKind(s);
             this.states.put(s.predicates, s);
-            uniqueMethods.addAll(s.predicates);
+            addPredicates(s.predicates);
         }
 
         for (State<Nonterminal, NodeType> s: states) {
@@ -66,8 +59,70 @@ class PredicatedState<Nonterminal, NodeType>
             }
         }
 
-        this.predicates.addAll(uniqueMethods);
         Collections.sort(this.predicates, new MethodComparator());
+    }
+
+    /**
+     * Add transition entries from an input state.
+     * @param src   the state whose entries are to be coalesced.
+     */
+    void addTransition(State<Nonterminal, NodeType> src)
+    {
+        State<Nonterminal, NodeType> dst;
+
+        if (this.states.containsKey(src.predicates)) {
+            dst = this.states.get(src.predicates);
+
+            for (Production<Nonterminal> p: src.getNonClosureProductions()) {
+
+                if (src.getCost(p.target) < dst.getCost(p.target)) {
+                    dst.setNonClosureProduction(p, src.getCost(p.target));
+
+                    for (Closure<Nonterminal> c: src.getClosuresTo(p)) {
+                        dst.addClosure(c);
+                    }
+                }
+            }
+        } else {
+            dst = new State<Nonterminal, NodeType>(src);
+            dst.number = src.number;
+            this.states.put(dst.predicates, dst);
+        }
+
+        addPredicates(src.predicates);
+        Collections.sort(this.predicates, new MethodComparator());
+        addArityKind(src);
+    }
+
+    /**
+     * Combine a new State's arity kind into this
+     * PredicatedState's composite arity kind.
+     * @param s the state.
+     */
+    private void addArityKind(State<Nonterminal, NodeType> s)
+    {
+        if (compositeArityKind == null) {
+
+            if (s.arityKind != null) {
+                compositeArityKind = s.arityKind;
+            }
+        } else if (s.arityKind != null && s.arityKind != compositeArityKind) {
+            compositeArityKind = ArityKind.Variadic;
+        }
+    }
+
+    /**
+     * Coalesce a new predicate list into the
+     * list of all predicates in this predicated state.
+     * @param srcPredicates the new predicates. This list may be empty.
+     */
+    private void addPredicates(List<Method> srcPredicates)
+    {
+        for (Method m: srcPredicates) {
+            if (!this.predicates.contains(m)) {
+                this.predicates.add(m);
+            }
+        }
     }
 
     /**
@@ -75,7 +130,7 @@ class PredicatedState<Nonterminal, NodeType>
      * all available predicates and matching the resulting
      * list of satisfied methods to the available states.
      */
-    State<Nonterminal, NodeType> getState(BurgInput<NodeType> node, Object visitor)
+    State<Nonterminal, NodeType> getState(BurgInput<Nonterminal, NodeType> node, Object visitor)
     throws IllegalAccessException, InvocationTargetException
     {
         List<Method> satisfiedPredicates = new ArrayList<Method>();
@@ -116,5 +171,16 @@ class PredicatedState<Nonterminal, NodeType>
     {
         assert compositeArityKind != null;
         return compositeArityKind;
+    }
+
+    private static final List<Method> noGuard = new ArrayList<Method>();
+    @Override
+    public String toString()
+    {
+        if (states.size() == 1 && states.containsKey(noGuard)) {
+            return String.format("PredicatedState(trival) %s", states.get(noGuard));
+        } else {
+            return String.format("PredicatedState%s", states);
+        }
     }
 }

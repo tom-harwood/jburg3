@@ -16,7 +16,7 @@ package jburg;
  * match the number of child nonterminals in the pattern in
  * number and type; a future release of the BURG will check.
  */
-public interface BurgInput<NodeType>
+public interface BurgInput<Nonterminal, NodeType>
 {
     /**
      * @return a node's node type.
@@ -32,7 +32,7 @@ public interface BurgInput<NodeType>
      * @param idx   an index number in the range 0..getSubtreeCount().
      * @return the subtree at the specified index.
      */
-    public BurgInput<NodeType>  getSubtree(int idx);
+    public BurgInput<Nonterminal, NodeType>  getSubtree(int idx);
 
     /**
      * Set a node's state number.
@@ -49,4 +49,16 @@ public interface BurgInput<NodeType>
      * or -1 if no state number has been set.
      */
     public int                  getStateNumber();
+
+    /**
+     * Get a node's transition table leaf.
+     * @return the transition table leaf assigned to this node.
+     */
+    public State<Nonterminal, NodeType> getTransitionTableLeaf();
+
+    /**
+     * Set a node's transition table leaf.
+     * @param ttLeaf    the applicable transition table leaf.
+     */
+    public void setTransitionTableLeaf(State<Nonterminal, NodeType> ttleaf);
 }

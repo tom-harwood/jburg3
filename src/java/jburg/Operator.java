@@ -25,11 +25,10 @@ class Operator<Nonterminal, NodeType>
     HyperPlane<Nonterminal, NodeType> transitionTable;
 
     /**
-     * Representer states known by each dimension; a representer
-     * state only needs to be tried once in each dimension, so
-     * remembering rep states speeds up the transition computations.
+     * Representer states known by each dimension; used to
+     * create permutations of representer states.
      */
-    final List<Set<RepresenterState<Nonterminal,NodeType>>> reps;
+    List<Set<RepresenterState<Nonterminal,NodeType>>> reps;
 
     /**
      * If this State is a leaf state, it has a composite
@@ -53,7 +52,13 @@ class Operator<Nonterminal, NodeType>
      * The production table that created this operator; used to look up
      * the null pointer state, etc.
      */
-    final ProductionTable<Nonterminal, NodeType> productionTable;
+    ProductionTable<Nonterminal, NodeType> productionTable = null;
+
+    /**
+     * The compiler compile-time representation of the productions
+     * that will create the production table.
+     */
+    TransitionTableBuilder<Nonterminal, NodeType> builder;
 
     /**
      * The operator's minumum number of children.
@@ -69,9 +74,9 @@ class Operator<Nonterminal, NodeType>
         this.nodeType = nodeType;
         this.productionTable = productionTable;
         this.arity = arity;
+        this.builder = new TransitionTableBuilder<Nonterminal, NodeType>(arity);
 
         if (arity > 0) {
-            this.transitionTable = new HyperPlane<Nonterminal, NodeType>();
             this.reps = new ArrayList<Set<RepresenterState<Nonterminal,NodeType>>>();
 
             for (int i = 0; i < arity; i++) {
@@ -93,17 +98,16 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
-     * Flush build-time data structures.
+     * Build the transition table, and flush compiler-compile-time data structures.
      */
-    void flush()
+    void finishCompilation()
     {
-        if (reps != null) {
-            reps.clear();
+        assert builder != null: String.format("Operator %s has already flushed compiler compile time data");
+        if (!builder.isEmpty()) {
+            this.transitionTable = builder.buildTransitionTable();
         }
-
-        if (transitionTable != null) {
-            transitionTable.flush();
-        }
+        builder = null;
+        reps = null;
     }
 
     /**
@@ -111,11 +115,13 @@ class Operator<Nonterminal, NodeType>
      * @param node      the node.
      * @param visitor   the semantic predicate receiver.
      */
-    void setLeafState(BurgInput<NodeType> node, Object visitor)
+    void setLeafState(BurgInput<Nonterminal, NodeType> node, Object visitor)
     throws Exception
     {
         assert leafState != null;
-        node.setStateNumber(leafState.getState(node, visitor).number);
+        State<Nonterminal, NodeType> result = leafState.getState(node, visitor);
+        node.setStateNumber(result.number);
+        node.setTransitionTableLeaf(result);
     }
 
     /**
@@ -137,55 +143,38 @@ class Operator<Nonterminal, NodeType>
         assert this.reps == null;
         assert this.leafState == null;
         this.leafState = leafState;
+        this.arityKind = ArityKind.Fixed;
     }
 
     /**
      * Add an entry to this operator's transition table.
-     * @param childStates       the list of representer states that produced
-     * the transition; these representer states are its compound key.
-     * state in the compound key; states may already have mappings in the
-     * transition table, which will be extended.
-     * @param resultantState    the state produced by this transition.
+     * @param repStates the representer states that produced the
+     * transition; these representer states are its compound key.
+     * @param state     the state produced by this transition.
      */
-    void addTransition(List<RepresenterState<Nonterminal,NodeType>> childStates, PredicatedState<Nonterminal,NodeType> resultantState)
+    void addTransition(List<RepresenterState<Nonterminal,NodeType>> repStates, State<Nonterminal,NodeType> state)
     {
-        assert childStates.size() == this.size();
-        ArityKind stateArityKind = resultantState.getArityKind();
+        assert builder != null && repStates != null: "Compiler compile-time already completed";
+        assert repStates.size() == this.size();
+        ArityKind stateArityKind = state.arityKind;
 
         if (this.arityKind == null) {
             this.arityKind = stateArityKind;
         } else if (this.arityKind != stateArityKind) {
-            // TODO: Figure out if this really works right.
+            // TODO: Prove this is sound.
             this.arityKind = ArityKind.Variadic;
         }
 
-        transitionTable.addTransition(childStates, 0, resultantState);
-    }
-
-    /**
-     * We have a novel state that already has a representer state in this transition table;
-     * add a mapping so we can find that representer state.
-     * @param s         the novel state.
-     * @param dim       the dimension of the transition table affected.
-     * @param pState    a copy of the relevant representer state.
-     */
-    void addRepresentedState(State<Nonterminal, NodeType> s, int dim, RepresenterState<Nonterminal, NodeType> pState)
-    {
-        transitionTable.addRepresentedState(s, dim, pState);
+        builder.addTransition(repStates, state);
     }
 
     /**
      * Is this operator variadic?
-     * @return true if all the operator's patterns are variadic.
+     * @return true if any the operator's patterns are variadic.
      */
     boolean isVarArgs()
     {
-        // Ensure the operator's ready.
-        if (arityKind == null) {
-            throw new IllegalStateException(String.format("Operator %s is incomplete; run generateStates() and ensure all child nonterminals are feasible",this));
-        }
-
-        return arityKind == ArityKind.Variadic;
+        return arityKind != null && arityKind == ArityKind.Variadic;
     }
 
     boolean isComplete()
@@ -194,8 +183,8 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
-     * Create an iterator over permutations of this operator's representer states,
-     * with a novel representer state in one dimension.
+     * Create a permutation generator of this operator's representer
+     * states, with a novel representer state in one dimension.
      * @param pState    the novel representer state.
      * @param pStateDim the dimension of the novel state.
      * @return an iterator over permutations of this operator's rep states
@@ -308,30 +297,58 @@ class Operator<Nonterminal, NodeType>
         }
     }
 
-    void assignState(BurgInput<NodeType> node, Object visitor)
+    void assignState(BurgInput<Nonterminal, NodeType> node, Object visitor)
     throws Exception
     {
         int subtreeCount = node.getSubtreeCount();
+        boolean hasOnlyFinalDimension = arity == 1;
 
         // Start at the root of the transition table, which is keyed
         // by the input node's subtrees' state numbers; each subtree
-        // has a corresponding dimension in the transition table. If
-        // is no match then label the input node as an error.
+        // has a corresponding dimension in the transition table.
+        // If no match then label the input node as an error.
         HyperPlane<Nonterminal, NodeType> current = this.transitionTable;
 
         for (int dim = 0; dim < subtreeCount; dim++) {
-            BurgInput<NodeType> subtree = node.getSubtree(dim);
+            BurgInput<Nonterminal, NodeType> subtree = node.getSubtree(dim);
             int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
 
-            if (stateNumber < 1) {
-                node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
-                break;
+            if (current != null && stateNumber > 0) {
+                boolean isLastChild = dim == subtreeCount - 1;
+                boolean isVariadicTail = isVarArgs() && dim >= arity - 1;
 
-            } else if (dim < subtreeCount-1) {
-                current = current.getNextDimension(stateNumber);
+                if (!isLastChild) {
 
-            } else if (current != null) {
-                current.assignStateNumber(stateNumber, node, visitor);
+                    // If we're processing a variadic operator's
+                    // variadic tail, continue "traversing" the
+                    // current dimension; but check to ensure that
+                    // the child is a valid input.
+                    if (isVariadicTail) {
+
+                        if (current.isValidVariadicChild(stateNumber, hasOnlyFinalDimension)) {
+                            continue;
+                        } else {
+                            node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                            break;
+                        }
+                    } else {
+                        // A non-variadic child; traverse this dimension
+                        // of the transition table.
+                        current = current.getNextDimension(stateNumber);
+                    }
+                } else {
+                    // Assign state information from
+                    // the transition table leaf.
+                    if (isVariadicTail && !hasOnlyFinalDimension) {
+                        current = current.getNextDimension(stateNumber);
+                        if (current == null) {
+                            node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                            break;
+                        }
+                    }
+
+                    current.assignStateNumber(stateNumber, node, visitor);
+                }
             } else {
                 node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
                 break;

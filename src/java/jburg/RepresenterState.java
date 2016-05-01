@@ -113,13 +113,9 @@ class RepresenterState<Nonterminal,NodeType>
     {
         if (x instanceof RepresenterState) {
             RepresenterState<?,?> rs = (RepresenterState<?,?>)x;
-
-            if (this.nodeType != null) {
-                return this.nodeType.equals(rs.nodeType) && this.costMap.equals(rs.costMap);
-            } else {
-                return rs.nodeType == null && this.costMap.equals(rs.costMap);
-            }
+            return this.nodeType == rs.nodeType && this.costMap.equals(rs.costMap);
         } else {
+            assert false: String.format("RepresenterState.equals(%s)?", x.getClass());
             return false;
         }
     }
