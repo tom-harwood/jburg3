@@ -5,14 +5,16 @@ import java.util.Collections;
 import java.util.List;
 
 import jburg.BurgInput;
+import jburg.State;
 
-class Node implements BurgInput<NodeType>
+class Node implements BurgInput<Nonterminal, NodeType>
 {
     final NodeType      nodeType;
     final List<Node>    children;
     final Object        content;
 
     int stateNumber = -1;
+    State<Nonterminal,NodeType> transition;
 
     Node(NodeType nodeType)
     {
@@ -60,6 +62,16 @@ class Node implements BurgInput<NodeType>
     public int getStateNumber()
     {
         return this.stateNumber;
+    }
+
+    public void setTransitionTableLeaf(State<Nonterminal,NodeType> state)
+    {
+        this.transition = state;
+    }
+
+    public State<Nonterminal,NodeType> getTransitionTableLeaf()
+    {
+        return this.transition;
     }
 
     public Object getContent()
