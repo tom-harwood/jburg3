@@ -35,7 +35,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         childTypes,
         closure,
         closures,
-        constituentState,
         cost,
         costMap,
         entry,
@@ -68,7 +67,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         ChildTypes,
         Closure,
         Closures,
-        ConstituentState,
         Entry,
         FinalDimension,
         RootHyperPlane,
@@ -218,7 +216,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.TransitionTable
             );
 
-            // State table
+            // States
             productions.addVarArgsPatternMatch(
                 Load.StateTable, DumpType.stateTable,
                 builder.getPostCallback("buildStateTable", getArrayArgs(State.class)),
@@ -393,13 +391,8 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             // Predicated state
             productions.addVarArgsPatternMatch(
                 Load.PredicatedState, DumpType.predicatedState, 
-                builder.getPostCallback("parsePredicatedState", getArrayArgs(Integer.class)),
-                Load.ConstituentState
-            );
-
-            productions.addPatternMatch(
-                Load.ConstituentState, DumpType.constituentState,
-                builder.getPostCallback("parseStateNumber")
+                builder.getPostCallback("parsePredicatedState", getArrayArgs(State.class)),
+                Load.State
             );
 
             productions.generateStates();
@@ -760,15 +753,10 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return Integer.parseInt(node.get("stateNumber"));
         }
 
-        Object parsePredicatedState(Node node, Integer... states)
+        @SafeVarargs
+        final Object parsePredicatedState(Node node, State<Nonterminal, NodeType>... states)
         {
-            List<State<Nonterminal, NodeType>> stateList = new ArrayList<State<Nonterminal, NodeType>>();
-
-            for (Integer stateNumber: states) {
-                stateList.add(stateTable.get(stateNumber));
-            }
-
-            return new PredicatedState<Nonterminal, NodeType>(stateList);
+            return new PredicatedState<Nonterminal, NodeType>(Arrays.asList(states));
         }
 
         @SuppressWarnings("unchecked")

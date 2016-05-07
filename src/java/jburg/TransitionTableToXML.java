@@ -195,9 +195,7 @@ public class TransitionTableToXML<Nonterminal, NodeType>
         out.printf("<predicatedState arityKind=\"%s\">\n", ps.getArityKind());
 
         for (State<Nonterminal, NodeType> s: ps.states.values()) {
-            if (s.number >= 0) {
-                out.printf("<constituentState stateNumber=\"%d\"/>\n", s.number);
-            }
+            dumpState(s);
         }
 
         out.println("</predicatedState>");
