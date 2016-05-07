@@ -1,0 +1,85 @@
+
+<Grammar reducerClass="Calculator" nodeClass="Node">
+
+    <!-- Leaf operators -->
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="String" nodeType="StringLiteral">
+        <postCallback name="stringLiteral"/>
+    </Pattern>
+
+    <!-- Predicated leaf operators -->
+    <Pattern nonterminal="Short" nodeType="ShortLiteral">
+        <predicate name="shortGuard"/>
+        <postCallback name="shortLiteral"/>
+    </Pattern>
+
+    <!-- Unary operators -->
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <postCallback name="identity"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Subtract">
+        <child nonterminal="Int"/>
+        <postCallback name="negate"/>
+    </Pattern>
+
+    <!-- Binary operators -->
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Subtract">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="subtract"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="AddStrict">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="subtract"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Multiply">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="multiply"/>
+    </Pattern>
+
+    <!-- Add is poorly overloaded to give the BURM a little workout. -->
+    <Pattern nonterminal="String" nodeType="Add">
+        <child nonterminal="String"/>
+        <child nonterminal="String"/>
+        <postCallback name="concat"/>
+    </Pattern>
+
+    <!-- Ternary operators -->
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="addTernary"/>
+    </Pattern>
+
+    <!-- Variadic operators -->
+    <Pattern nonterminal="String" nodeType="Concat" variadic="true">
+        <child nonterminal="String"/>
+        <postCallback name="concat"/>
+    </Pattern>
+
+    <!-- Closures a.k.a. conversion operators -->
+    <Closure nonterminal="Int" sourceNonterminal="Short">
+        <postCallback name="widenShortToInt"/>
+    </Closure>
+
+    <Closure nonterminal="String" sourceNonterminal="Int">
+        <postCallback name="convertToString"/>
+    </Closure>
+
+</Grammar>
