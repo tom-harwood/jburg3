@@ -55,10 +55,14 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             nodeClass = getClass(localName, "nodeClass", atts);
         } else if (localName.equals("Pattern")) {
             startPattern(localName, atts);
+        } else if (localName.equals("Closure")) {
+            startClosure(localName, atts);
         } else if (localName.equals("child")) {
             addChild(localName, atts);
         } else if (localName.equals("postCallback")) {
             addPostCallback(localName, atts);
+        } else if (localName.equals("predicate")) {
+            addPredicate(localName, atts);
         } else {
             throw new IllegalArgumentException("Unexpected " + localName);
         }
@@ -71,6 +75,8 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             generateProductions();
         } else if (localName.equals("Pattern")) {
             finishPattern();
+        } else if (localName.equals("Closure")) {
+            finishClosure();
         }
     }
 
@@ -114,6 +120,24 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         currentPattern = null;
     }
 
+    private void startClosure(String localName, Attributes atts)
+    {
+        checkPatternState(localName, PatternPrecondition.Absent);
+        currentPattern = new PatternDesc(atts, getNonterminal(atts.getValue("sourceNonterminal")));
+    }
+
+    private void finishClosure()
+    {
+        productions.addClosure(
+            currentPattern.nonterminal,
+            currentPattern.sourceNonterminal,
+            currentPattern.cost,
+            currentPattern.postCallback
+        );
+
+        currentPattern = null;
+    }
+
     private void addChild(String localName, Attributes atts)
     {
         checkPatternState(localName, PatternPrecondition.Present);
@@ -124,6 +148,12 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     {
         checkPatternState(localName, PatternPrecondition.Present);
         currentPattern.addPostCallback(atts);
+    }
+
+    private void addPredicate(String localName, Attributes atts)
+    {
+        checkPatternState(localName, PatternPrecondition.Present);
+        currentPattern.addPredicate(atts);
     }
 
     private void checkPatternState(String localName, PatternPrecondition precondition)
@@ -147,9 +177,22 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, ntName));
     }
 
+    @SuppressWarnings("unchecked")
+    Nonterminal getNonterminal(String ntName)
+    {
+        for (Object nt: nonterminalClass.getEnumConstants()) {
+            if (nt.toString().equals(ntName)) {
+                return (Nonterminal)nt;
+            }
+        }
+
+        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
+    }
+
     private class PatternDesc
     {
         final Nonterminal           nonterminal;
+        final Nonterminal           sourceNonterminal;
         final NodeType              nodeType;
         final List<Nonterminal>     children = new ArrayList<Nonterminal>();
         final int                   cost;
@@ -161,10 +204,20 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
         PatternDesc(Attributes atts)
         {
-            this.nonterminal    = getNonterminal(atts.getValue("nonterminal"));
-            this.nodeType       = getNodeType(atts.getValue("nodeType"));
-            this.cost           = atts.getValue("cost") != null ? Integer.parseInt(atts.getValue("cost")): 1;
-            this.isVarArgs      = atts.getValue("variadic") != null ? Boolean.parseBoolean(atts.getValue("variadic")): false;
+            this.nonterminal        = getNonterminal(atts.getValue("nonterminal"));
+            this.sourceNonterminal  = null;
+            this.nodeType           = getNodeType(atts.getValue("nodeType"));
+            this.cost               = atts.getValue("cost") != null ? Integer.parseInt(atts.getValue("cost")): 1;
+            this.isVarArgs          = atts.getValue("variadic") != null ? Boolean.parseBoolean(atts.getValue("variadic")): false;
+        }
+
+        PatternDesc(Attributes atts, Nonterminal sourceNonterminal)
+        {
+            this.nonterminal        = getNonterminal(atts.getValue("nonterminal"));
+            this.sourceNonterminal  = sourceNonterminal;
+            this.nodeType           = null;
+            this.cost               = atts.getValue("cost") != null ? Integer.parseInt(atts.getValue("cost")): 1;
+            this.isVarArgs          = false;
         }
 
         void addChild(Attributes atts)
@@ -177,17 +230,50 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             this.postCallback = getCallbackMethod(atts.getValue("name"));
         }
 
+        void addPredicate(Attributes atts)
+        {
+            this.predicate = getPredicateMethod(atts.getValue("name"));
+        }
+
         Method getCallbackMethod(String methodName)
+        {
+            // Pattern matchers' nominal arity depends on their children;
+            // Closures' arity is always one. Add one to nominal arity to
+            // account for the additional Node parameter.
+            int arity = nodeType != null? children.size() + 1: 2;
+            Method candidate = getNamedMethod(methodName, arity);
+
+            if (candidate != null) {
+                return candidate;
+            } else {
+                throw new IllegalArgumentException(String.format("No callback method %s(%s, %s)", methodName, nodeClass.getName(), children));
+            }
+        }
+
+        Method getPredicateMethod(String methodName)
+        {
+            Method candidate = getNamedMethod(methodName, 1);
+
+            if (candidate != null) {
+                return candidate;
+            } else {
+                throw new IllegalArgumentException(String.format("No predicate method %s(%s)", methodName, nodeClass.getName()));
+            }
+        }
+
+        Method getNamedMethod(String methodName, int arity)
         {
             Method candidate = null;
 
             for (Method m: reducerClass.getDeclaredMethods()) {
 
                 if (m.getName().equals(methodName)) {
+
+                    boolean chatty = methodName.equals("widenShortToInt");
                     
                     Class<?>[] parameterTypes = m.getParameterTypes();
 
-                    if (parameterTypes.length == children.size() + 1 && parameterTypes[0].equals(nodeClass)) {
+                    if (parameterTypes.length == arity && parameterTypes[0].equals(nodeClass)) {
                         
                         if (candidate == null) {
                             candidate = m;
@@ -198,35 +284,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
                 }
             }
 
-            if (candidate != null) {
-                return candidate;
-            } else {
-                throw new IllegalArgumentException(String.format("No callback method %s(%s, %s)", methodName, nodeClass.getName(), children));
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        Nonterminal getNonterminal(String ntName)
-        {
-            for (Object nt: nonterminalClass.getEnumConstants()) {
-                if (nt.toString().equals(ntName)) {
-                    return (Nonterminal)nt;
-                }
-            }
-
-            throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
-        }
-
-        @SuppressWarnings("unchecked")
-        NodeType getNodeType(String ntName)
-        {
-            for (Object nt: nodeTypeClass.getEnumConstants()) {
-                if (nt.toString().equals(ntName)) {
-                    return (NodeType)nt;
-                }
-            }
-
-            throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, ntName));
+            return candidate;
         }
     }
 }
