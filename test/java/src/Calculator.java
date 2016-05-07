@@ -100,6 +100,7 @@ public class Calculator
 
                     if (tc.expected.equals(result)) {
                         System.out.printf("Succeeded: %s\n", tc.name);
+                        System.out.flush();
                     } else {
                         failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
                     }
