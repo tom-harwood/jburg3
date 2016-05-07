@@ -19,6 +19,8 @@ public class Calculator
 
         List<String>    failedTestcases = new ArrayList<String>();
 
+        boolean verbose = true;
+
         GrammarBuilder<Nonterminal,NodeType> grammarBuilder = new GrammarBuilder<Nonterminal,NodeType>(Nonterminal.class, NodeType.class);
 
         for (int i = 0; i < args.length; i++) {
@@ -29,6 +31,8 @@ public class Calculator
                 dumpFile = args[++i];
             } else if (args[i].equals("-grammar")) {
                 grammarFile = args[++i];
+            } else if (args[i].equals("-quiet")) {
+                verbose = false;
             } else if (args[i].equals("-randomize")) {
                 grammarBuilder.randomizeProductions = true;
             } else if (testcaseFile == null) {
@@ -103,14 +107,18 @@ public class Calculator
                     String result = reducer.reduce(tc.root, tc.type).toString();;
 
                     if (tc.expected.equals(result)) {
-                        System.out.printf("Succeeded: %s\n", tc.name);
-                        System.out.flush();
+                        if (verbose) {
+                            System.out.printf("Succeeded: %s\n", tc.name);
+                            System.out.flush();
+                        }
                     } else {
                         failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
                     }
                 } catch (Exception ex) {
                     if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
-                        System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                        if (verbose) {
+                            System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                        }
                     } else {
                         failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
                     }

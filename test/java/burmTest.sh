@@ -3,10 +3,10 @@ JBURG_HOME=$SCRIPT_DIR/../..
 
 usage()
 {
-    echo "Usage: burmTest -g <grammar> -t <testcase>"
+    echo "Usage: burmTest [-r] [-q] -g <grammar> -t <testcase>"
 }
 
-args=`getopt g:t:r $*`
+args=`getopt g:t:rq $*`
 if [ $? -ne 0 ]
 then
     usage;
@@ -22,6 +22,9 @@ do
         -g)
             GRAMMAR=$2;
             shift;
+            shift;;
+        -q)
+            QUIET="-quiet";
             shift;;
         -r)
             RANDOMIZE="-randomize";
@@ -42,4 +45,4 @@ then
     exit 2
 fi
 
-java -cp $JBURG_HOME/lib/jburg.jar:classes Calculator -grammar $GRAMMAR $RANDOMIZE $TESTCASE
+java -cp $JBURG_HOME/lib/jburg.jar:classes Calculator -grammar $GRAMMAR $QUIET $RANDOMIZE $TESTCASE
