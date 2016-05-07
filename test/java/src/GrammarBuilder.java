@@ -17,9 +17,11 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     Class<?> reducerClass;
     Class<?> nodeClass;
 
-    ProductionTable<Nonterminal, NodeType> productions = new ProductionTable<Nonterminal,NodeType>();
+    ProductionDesc currentPattern = null;
 
-    PatternDesc currentPattern = null;
+    List<ProductionDesc> productions = new ArrayList<ProductionDesc>();
+
+    boolean randomizeProductions = false;
 
     enum PatternPrecondition{ Present, Absent }
 
@@ -39,10 +41,52 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         xmlReader.setContentHandler(this);
         xmlReader.parse(filename);
 
-        if (productions != null) {
-            return productions;
+        ProductionTable<Nonterminal,NodeType> result = new ProductionTable<Nonterminal,NodeType>();
+
+        if (!randomizeProductions) {
+
+            for (ProductionDesc desc: productions) {
+                addProduction(desc, result);
+            }
         } else {
-            throw new IllegalStateException("no production table generated.");
+
+            // "bogo-unsort" the productions.
+            Set<Integer> finishedProductions = new HashSet<Integer>();
+            Random prng = new Random();
+
+            while (finishedProductions.size() != productions.size()) {
+                int index = prng.nextInt(productions.size());
+
+                if (finishedProductions.add(index)) {
+                    addProduction(productions.get(index), result);
+                }
+            }
+        }
+
+        result.generateStates();
+        return result;
+    }
+
+    private void addProduction(ProductionDesc desc, ProductionTable<Nonterminal,NodeType> productionTable)
+    {
+        if (desc.isPatternMatch()) {
+            productionTable.addPatternMatch(
+                desc.nonterminal,
+                desc.nodeType,
+                desc.cost,
+                desc.predicate,
+                desc.preCallback,
+                desc.postCallback,
+                desc.isVarArgs,
+                desc.children
+            );
+        } else {
+            productionTable.addClosure(
+                desc.nonterminal,
+                desc.sourceNonterminal,
+                desc.cost,
+                desc.postCallback
+            );
         }
     }
 
@@ -71,12 +115,8 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     @Override
     public void endElement(String namespaceURI, String localName, String qName)
     {
-        if (localName.equals("Grammar")) {
-            generateProductions();
-        } else if (localName.equals("Pattern")) {
-            finishPattern();
-        } else if (localName.equals("Closure")) {
-            finishClosure();
+        if (localName.equals("Pattern") || localName.equals("Closure")) {
+            finishProduction();
         }
     }
 
@@ -93,49 +133,22 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         }
     }
 
-    private void generateProductions()
-    {
-        productions.generateStates();
-    }
-
     private void startPattern(String localName, Attributes atts)
     {
         checkPatternState(localName, PatternPrecondition.Absent);
-        currentPattern = new PatternDesc(atts);
+        currentPattern = new ProductionDesc(atts);
     }
 
-    private void finishPattern()
+    private void finishProduction()
     {
-        productions.addPatternMatch(
-            currentPattern.nonterminal,
-            currentPattern.nodeType,
-            currentPattern.cost,
-            currentPattern.predicate,
-            currentPattern.preCallback,
-            currentPattern.postCallback,
-            currentPattern.isVarArgs,
-            currentPattern.children
-        );
-
+        productions.add(currentPattern);
         currentPattern = null;
     }
 
     private void startClosure(String localName, Attributes atts)
     {
         checkPatternState(localName, PatternPrecondition.Absent);
-        currentPattern = new PatternDesc(atts, getNonterminal(atts.getValue("sourceNonterminal")));
-    }
-
-    private void finishClosure()
-    {
-        productions.addClosure(
-            currentPattern.nonterminal,
-            currentPattern.sourceNonterminal,
-            currentPattern.cost,
-            currentPattern.postCallback
-        );
-
-        currentPattern = null;
+        currentPattern = new ProductionDesc(atts, getNonterminal(atts.getValue("sourceNonterminal")));
     }
 
     private void addChild(String localName, Attributes atts)
@@ -189,7 +202,10 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
     }
 
-    private class PatternDesc
+    /**
+     * Build-time description of a pattern matcher or closure.
+     */
+    private class ProductionDesc
     {
         final Nonterminal           nonterminal;
         final Nonterminal           sourceNonterminal;
@@ -202,7 +218,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         Method preCallback = null;
         Method postCallback = null;
 
-        PatternDesc(Attributes atts)
+        ProductionDesc(Attributes atts)
         {
             this.nonterminal        = getNonterminal(atts.getValue("nonterminal"));
             this.sourceNonterminal  = null;
@@ -211,7 +227,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             this.isVarArgs          = atts.getValue("variadic") != null ? Boolean.parseBoolean(atts.getValue("variadic")): false;
         }
 
-        PatternDesc(Attributes atts, Nonterminal sourceNonterminal)
+        ProductionDesc(Attributes atts, Nonterminal sourceNonterminal)
         {
             this.nonterminal        = getNonterminal(atts.getValue("nonterminal"));
             this.sourceNonterminal  = sourceNonterminal;
@@ -223,6 +239,12 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         void addChild(Attributes atts)
         {
             children.add(getNonterminal(atts.getValue("nonterminal")));
+        }
+
+        boolean isPatternMatch()
+        {
+            assert(nodeType != null || sourceNonterminal != null);
+            return nodeType != null;
         }
 
         void addPostCallback(Attributes atts)
@@ -240,7 +262,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             // Pattern matchers' nominal arity depends on their children;
             // Closures' arity is always one. Add one to nominal arity to
             // account for the additional Node parameter.
-            int arity = nodeType != null? children.size() + 1: 2;
+            int arity = isPatternMatch()? children.size() + 1: 2;
             Method candidate = getNamedMethod(methodName, arity);
 
             if (candidate != null) {

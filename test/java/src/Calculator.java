@@ -19,6 +19,8 @@ public class Calculator
 
         List<String>    failedTestcases = new ArrayList<String>();
 
+        GrammarBuilder<Nonterminal,NodeType> grammarBuilder = new GrammarBuilder<Nonterminal,NodeType>(Nonterminal.class, NodeType.class);
+
         for (int i = 0; i < args.length; i++) {
 
             if (args[i].equals("-load")) {
@@ -27,6 +29,8 @@ public class Calculator
                 dumpFile = args[++i];
             } else if (args[i].equals("-grammar")) {
                 grammarFile = args[++i];
+            } else if (args[i].equals("-randomize")) {
+                grammarBuilder.randomizeProductions = true;
             } else if (testcaseFile == null) {
                 testcaseFile = args[i];
             } else {
@@ -47,7 +51,7 @@ public class Calculator
             }
 
         } else if (grammarFile != null) {
-            productions = new GrammarBuilder<Nonterminal,NodeType>(Nonterminal.class, NodeType.class).build(NodeFactory.convertToFileURL(grammarFile));
+            productions = grammarBuilder.build(NodeFactory.convertToFileURL(grammarFile));
         } else {
             productions = new ProductionTable<Nonterminal, NodeType>();
 
@@ -177,6 +181,11 @@ public class Calculator
     public Integer divide(Node node, Integer x, Integer y)
     {
         return x / y;
+    }
+
+    public String concat(Node node, String rhs, String lhs)
+    {
+        return rhs + lhs;
     }
 
     public String concat(Node node, String... args)
