@@ -14,7 +14,7 @@
         <property name="gensrc.dir" value="./gensrc" />
         <property name="classes.dir" value="./classes" />
         <property name="junit.log.dir" value="./log" />
-        <property name="calculator.xml" value="src/FirstTest.xml"/>
+        <property name="calculator.xml" value="testcases/FirstTest.xml"/>
     </target>
 
     <target name="cleanBuildAndTest" depends="clean,buildJar,compile,allTests"/>
@@ -56,13 +56,13 @@ allTests - run java tests
 
     <target name="allTests" depends="init">
         <antcall target="calculator">
-            <param name="calculator.xml" value="src/FirstTest.xml"/>
+            <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="calculator">
             <param name="calculator.xml" value="src/VariadicPatterns.xml"/>
         </antcall>
         <antcall target="dumpLoad">
-            <param name="calculator.xml" value="src/FirstTest.xml"/>
+            <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
     </target>
 
