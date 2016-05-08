@@ -56,45 +56,15 @@ public class Calculator
 
         } else if (grammarFile != null) {
             productions = grammarBuilder.build(NodeFactory.convertToFileURL(grammarFile));
-        } else {
-            productions = new ProductionTable<Nonterminal, NodeType>();
+        }
 
-            // Leaf operators
-            productions.addPatternMatch(Nonterminal.Int, NodeType.IntLiteral, Calculator.class.getDeclaredMethod("intLiteral", Node.class));
-            productions.addPatternMatch(Nonterminal.String, NodeType.StringLiteral, Calculator.class.getDeclaredMethod("stringLiteral", Node.class));
-
-            // Predicated leaf operators
-            productions.addPatternMatch(Nonterminal.Short, NodeType.ShortLiteral, 1, Calculator.class.getDeclaredMethod("shortGuard", Node.class), null, Calculator.class.getDeclaredMethod("shortLiteral", Node.class), false);
-
-            // Unary operators
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("identity", Node.class, Integer.class), Nonterminal.Int);
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("negate", Node.class, Integer.class), Nonterminal.Int);
-
-            // Binary operators
-            // Note: this Add operator is intentionally poorly overloaded to test the production table.
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-            productions.addPatternMatch(Nonterminal.Int, NodeType.AddStrict, Calculator.class.getDeclaredMethod("add", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Multiply, Calculator.class.getDeclaredMethod("multiply", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Subtract, Calculator.class.getDeclaredMethod("subtract", Node.class, Integer.class, Integer.class), Nonterminal.Int, Nonterminal.Int);
-            productions.addPatternMatch(Nonterminal.String, NodeType.Add, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String, Nonterminal.String);
-
-            // Ternary operators
-            productions.addPatternMatch(Nonterminal.Int, NodeType.Add, Calculator.class.getDeclaredMethod("addTernary", Node.class, Integer.class,Integer.class,Integer.class), Nonterminal.Int, Nonterminal.Int, Nonterminal.Int);
-
-            // Variadic operators
-            productions.addVarArgsPatternMatch(Nonterminal.String, NodeType.Concat, 1, null, Calculator.class.getDeclaredMethod("concat", Node.class, args.getClass()), Nonterminal.String);
-
-            // Conversion operators
-            productions.addClosure(Nonterminal.Int, Nonterminal.Short, Calculator.class.getDeclaredMethod("widenShortToInt", Node.class, Short.class));
-            productions.addClosure(Nonterminal.String, Nonterminal.Int, Calculator.class.getDeclaredMethod("convertToString", Node.class, Object.class));
-
-            productions.generateStates();
+        if (productions == null) {
+            throw new IllegalArgumentException("You must specify a grammar, e.g. -grammar burmGrammar.xml, or load a production table, e.g. -load productionTable.xml.\n");
         }
 
         if (dumpFile != null) {
             productions.dump(dumpFile);
         }
-
 
         if (dumpFile == null && testcaseFile != null) {
 
