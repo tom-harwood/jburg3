@@ -60,7 +60,7 @@ allTests - run java tests
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="calculator">
-            <param name="calculator.xml" value="src/VariadicPatterns.xml"/>
+            <param name="calculator.xml" value="testcases/VariadicPatterns.xml"/>
         </antcall>
         <antcall target="dumpLoad">
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
