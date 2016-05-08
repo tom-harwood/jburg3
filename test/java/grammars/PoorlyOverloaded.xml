@@ -43,7 +43,7 @@
     <Pattern nonterminal="Int" nodeType="AddStrict">
         <child nonterminal="Int"/>
         <child nonterminal="Int"/>
-        <postCallback name="subtract"/>
+        <postCallback name="add"/>
     </Pattern>
 
     <Pattern nonterminal="Int" nodeType="Multiply">
