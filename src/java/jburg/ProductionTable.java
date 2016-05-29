@@ -3,6 +3,8 @@ package jburg;
 import java.lang.reflect.*;
 import java.util.*;
 
+import jburg.emitter.TemplateGroup;
+
 /**
  * A ProductionTable hosts the data structures that
  * describe the client's BURS system, and the logic
@@ -46,11 +48,21 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     List<State<Nonterminal, NodeType>> statesInEntryOrder = new ArrayList<State<Nonterminal, NodeType>>();
 
+    List<State<Nonterminal, NodeType>> getStateTable()
+    {
+        return statesInEntryOrder;
+    }
+
     /**
      * Operators computed from the specification, keyed by the nonterminal they produce.
      */
     Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
         new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
+
+    public Collection<List<Operator<Nonterminal,NodeType>>> getOperators()
+    {
+        return operators.values();
+    }
 
     /**
      * RepresenterStates, mapped to themselves
@@ -84,8 +96,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param postCallback  the callback run after deriving child nodes.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    @SafeVarargs
+    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, false, childTypes);
     }
@@ -97,8 +109,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param postCallback  the callback run after deriving the child nodes.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public void addPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    @SafeVarargs
+    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, 1, null, null, postCallback, false, childTypes);
     }
@@ -113,8 +125,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce;
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
-    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    @SafeVarargs
+    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, true, childTypes);
     }
@@ -128,8 +140,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce;
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
-    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    @SafeVarargs
+    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, 1, null, null, postCallback, true, childTypes);
     }
@@ -147,8 +159,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * may be used more than once to cover the "tail" of a subtree's children.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    @SuppressWarnings({"unchecked"})// TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
-    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
+    @SafeVarargs
+    final public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
         return addPatternMatch(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, Arrays.asList(childTypes));
     }
@@ -532,7 +544,7 @@ public class ProductionTable<Nonterminal, NodeType>
                 // replaced a predicated production that was the only
                 // use of a particular predicate; leaving that predicate
                 // in the predicate maps only means that label-time logic
-                // will run a meaningless "predicate" method, and we may
+                // will run a meaningless "predicate" method, and one may
                 // hope there will be relatively few such grammars.
                 if (cost < candidate.getCost(p.target)) {
                     candidate.setNonClosureProduction(p,cost);
@@ -718,7 +730,9 @@ public class ProductionTable<Nonterminal, NodeType>
 
             try {
                 java.io.PrintWriter out = new java.io.PrintWriter(dumpPath);
-                new TransitionTableToXML<Nonterminal, NodeType>(out).dumpProductionTable(this);
+                TemplateGroup tg = new TemplateGroup("templates", "xml.stg");
+                TransitionTableSerializer<Nonterminal,NodeType> serializer = new TransitionTableSerializer<Nonterminal,NodeType>(out, tg);
+                serializer.dump(this);
                 out.flush();
                 out.close();
 

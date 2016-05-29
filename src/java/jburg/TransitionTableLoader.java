@@ -37,13 +37,13 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         closures,
         cost,
         costMap,
-        entry,
         finalDimension,
+        finalDimIndexMap,
         hyperPlane,
-        mappedState,
-        mappedStates,
+        index,
+        leafState,
         method,
-        nextDimension,
+        nextDimIndexMap,
         operator,
         parameter,
         parameterTypes,
@@ -54,7 +54,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         predicatedState,
         predicates,
         state,
-        stateTable,
         transitionTable,
         variadic,
     }
@@ -67,13 +66,16 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         ChildTypes,
         Closure,
         Closures,
-        Entry,
         FinalDimension,
-        RootHyperPlane,
+        FinalDimIndexMap,
+        LeafState,
+        Index,
+        HyperPlane,
         MappedState,
         MappedStates,
         Method,
         NextDimension,
+        NextDimIndexMap,
         Operator,
         ParameterTypes,
         Parameter,
@@ -85,7 +87,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Predicates,
         ProductionTable,
         State,
-        StateTable,
         TransitionTable,
         Variadic,
     }
@@ -108,9 +109,32 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             }
         }
 
-        String get(String key)
+        private String get(String attrName)
         {
-            return this.attributes.get(key);
+            return this.attributes.get(attrName);
+        }
+
+        boolean hasAttribute(String attrName)
+        {
+            return this.attributes.containsKey(attrName);
+        }
+
+        boolean getBooleanAttr(String attrName)
+        {
+            assert hasAttribute(attrName): String.format("Attribute %s not present", attrName);
+            return Boolean.valueOf(get(attrName));
+        }
+
+        Integer getIntegerAttr(String attrName)
+        {
+            assert hasAttribute(attrName): String.format("Attribute %s not present", attrName);
+            return Integer.valueOf(get(attrName));
+        }
+
+        String getStringAttr(String attrName)
+        {
+            assert hasAttribute(attrName): String.format("Attribute %s not present", attrName);
+            return get(attrName);
         }
 
         @Override
@@ -143,7 +167,12 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         void dump(java.io.PrintStream out, int indent)
         {
             for (int i = 0; i < indent * 2;i++) out.print(" ");
-            out.printf("%s %d\n",  this.nodeType, this.stateNumber);
+            out.print(this.nodeType);
+            if (this.transitionTableLeaf != null) {
+                out.printf(" %d %s\n", this.stateNumber, this.transitionTableLeaf.getNonterminals());
+            } else {
+                out.println(" --");
+            }
             for (Node child:children) {
                 child.dump(out, indent+1);
             }
@@ -209,37 +238,33 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             ProductionTable<Load,DumpType> productions = new ProductionTable<Load,DumpType>();
 
             // Production table
-            productions.addPatternMatch(
+            productions.addVarArgsPatternMatch(
                 Load.ProductionTable, DumpType.burmDump,
-                builder.getPostCallback("buildProductionTable", getArrayArgs(State.class), getArrayArgs(Operator.class)),
-                Load.StateTable,
+                builder.getPostCallback("buildProductionTable", getArrayArgs(Operator.class)),
+                Load.Operator
+            );
+
+            // Non-leaf operator
+            productions.addPatternMatch(
+                Load.Operator, DumpType.operator,
+                builder.getPostCallback("parseNonLeafOperator", HyperPlane.class),
                 Load.TransitionTable
             );
 
-            // States
-            productions.addVarArgsPatternMatch(
-                Load.StateTable, DumpType.stateTable,
-                builder.getPostCallback("buildStateTable", getArrayArgs(State.class)),
-                Load.State
-            );
+            // Leaf operator
             productions.addPatternMatch(
-                Load.State, DumpType.state,
-                builder.getPostCallback("parseState", getArrayArgs(Method.class)),
-                Load.Predicates
-            );
-            productions.addPatternMatch(
-                Load.State, DumpType.state,
-                builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(Method.class)),
-                Load.Patterns, Load.CostMap, Load.Predicates
-            );
-            productions.addPatternMatch(
-                Load.State, DumpType.state,
-                builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(Closure.class), getArrayArgs(Method.class)),
-                Load.Patterns, Load.CostMap, Load.Closures, Load.Predicates
+                Load.Operator, DumpType.operator,
+                builder.getPostCallback("parseLeafOperator", PredicatedState.class),
+                Load.LeafState
             );
 
-            productions.addVarArgsPatternMatch(Load.Predicates, DumpType.predicates, packageVarArgs, Load.Method);
-            productions.addPatternMatch(Load.Predicates, DumpType.predicates, builder.getPostCallback("parseEmptyPredicates"));
+            // Leaf transition table is a single predicated state
+            productions.addPatternMatch(
+                Load.LeafState,
+                DumpType.leafState,
+                passthrough,
+                Load.PredicatedState
+            );
 
             // Patterns
             productions.addVarArgsPatternMatch(Load.Patterns, DumpType.patterns, packageVarArgs, Load.Pattern);
@@ -275,6 +300,20 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.ChildTypes, Load.PreCallback, Load.PostCallback
             );
 
+            // State definition with no closures
+            productions.addPatternMatch(
+                Load.State, DumpType.state,
+                builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(Method.class)),
+                Load.Patterns, Load.CostMap, Load.Predicates
+            );
+
+            // State definition with closures
+            productions.addPatternMatch(
+                Load.State, DumpType.state,
+                builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(Closure.class), getArrayArgs(Method.class)),
+                Load.Patterns, Load.CostMap, Load.Closures, Load.Predicates
+            );
+
             productions.addVarArgsPatternMatch(Load.ChildTypes, DumpType.childTypes, packageVarArgs, Load.ChildType);
             productions.addPatternMatch(Load.ChildType, DumpType.childType, builder.getPostCallback("parseNonterminal"));
 
@@ -297,96 +336,65 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             productions.addVarArgsPatternMatch(Load.ParameterTypes, DumpType.parameterTypes, packageVarArgs, Load.Parameter);
             productions.addPatternMatch(Load.Parameter, DumpType.parameter, parseClass);
 
-            // Transition table
-            productions.addVarArgsPatternMatch(
-                Load.TransitionTable, DumpType.transitionTable,
-                packageVarArgs,
-                Load.Operator
-            );
-
-            productions.addPatternMatch(
-                Load.Operator, DumpType.operator,
-                builder.getPostCallback("parseNonLeafOperator", HyperPlane.class),
-                Load.RootHyperPlane
-            );
-
-            productions.addPatternMatch(
-                Load.Operator,
-                DumpType.operator,
-                builder.getPostCallback("parseLeafOperator", PredicatedState.class),
-                Load.PredicatedState
-            );
+            // Predicates are possibly empty collections of methods
+            productions.addVarArgsPatternMatch(Load.Predicates, DumpType.predicates, packageVarArgs, Load.Method);
+            productions.addPatternMatch(Load.Predicates, DumpType.predicates, builder.getPostCallback("parseEmptyPredicates"));
 
             /*
-             * Hyper plane roots
+             * Non-leaf transition tables
              */
-            // Leaf hyperplane, non variadic
+
+            // Unary transition table
             productions.addPatternMatch(
-                Load.RootHyperPlane, DumpType.hyperPlane,
+                Load.TransitionTable, DumpType.transitionTable,
                 passthrough,
                 Load.FinalDimension
             );
 
-            // Leaf hyperplane, variadic
-            productions.addPatternMatch(
-                Load.RootHyperPlane, DumpType.hyperPlane,
-                builder.getPostCallback("parseVariadicLeafPlane", Object.class, HyperPlane.class),
-                Load.Variadic, Load.FinalDimension
-            );
-
-            // Non-leaf root hyperplane
-            productions.addPatternMatch(
-                Load.RootHyperPlane, DumpType.hyperPlane,
-                builder.getPostCallback("createRootHyperplane", getArrayArgs(HyperPlaneDesc.class)),
+            // Multi-dimensional transition table
+            productions.addVarArgsPatternMatch(
+                Load.TransitionTable, DumpType.transitionTable,
+                passthrough,
                 Load.NextDimension
             );
 
-            // Final dimension of a unary operator
+            // Final dimension
             productions.addVarArgsPatternMatch(
-                Load.FinalDimension, DumpType.finalDimension,
-                builder.getPostCallback("parseUnaryFinalDimension", getArrayArgs(Object.class)),
-                Load.Entry
+                Load.FinalDimension, DumpType.hyperPlane,
+                builder.getPostCallback("createFinalDimension", Map.class, getArrayArgs(PredicatedState.class)),
+                Load.FinalDimIndexMap, Load.PredicatedState
             );
 
-            // Final dimension of an operator of arity > 1
-            productions.addPatternMatch(
-                Load.NextDimension, DumpType.hyperPlane,
-                builder.getPostCallback("parseFinalDimension", getArrayArgs(Integer.class), HyperPlane.class),
-                Load.MappedStates, Load.FinalDimension
-            );
-
-            // Variadic final dimension of operator arity > 1
-            productions.addPatternMatch(
-                Load.NextDimension, DumpType.hyperPlane,
-                builder.getPostCallback("parseVariadicFinalDimension", getArrayArgs(Integer.class), HyperPlane.class),
-                Load.Variadic, Load.MappedStates, Load.FinalDimension
-            );
-
-            // Next dimension, only one mapping
-            productions.addPatternMatch(
-                Load.NextDimension, DumpType.hyperPlane,
-                builder.getPostCallback("createHyperplaneSingleMapping", getArrayArgs(Integer.class), getArrayArgs(HyperPlaneDesc.class)),
-                Load.MappedStates, Load.NextDimension
-            );
-
-            // Next dimension, more than one mapping
+            // Next dimension
             productions.addVarArgsPatternMatch(
-                Load.NextDimension, DumpType.nextDimension,
-                packageVarArgs,
-                Load.NextDimension
+                Load.NextDimension, DumpType.hyperPlane,
+                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(HyperPlane.class)),
+                Load.NextDimIndexMap, Load.NextDimension
             );
 
-            // Mapped states are arrays of integers.
-            productions.addVarArgsPatternMatch(Load.MappedStates, DumpType.mappedStates, packageVarArgs, Load.MappedState);
-            productions.addPatternMatch(Load.MappedState, DumpType.mappedState, builder.getPostCallback("parseStateNumber"));
+            productions.addVarArgsPatternMatch(
+                Load.NextDimension, DumpType.hyperPlane,
+                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(HyperPlane.class)),
+                Load.NextDimIndexMap, Load.FinalDimension
+            );
+
+            // Index Maps are collections of state->index entries.
+            productions.addVarArgsPatternMatch(
+                Load.FinalDimIndexMap, DumpType.finalDimIndexMap,
+                builder.getPostCallback("createIndexMap", getArrayArgs(IndexEntry.class)),
+                Load.Index
+            );
+
+            productions.addVarArgsPatternMatch(
+                Load.NextDimIndexMap, DumpType.nextDimIndexMap,
+                builder.getPostCallback("createIndexMap", getArrayArgs(IndexEntry.class)),
+                Load.Index
+            );
 
             productions.addPatternMatch(
-                Load.Entry, DumpType.entry,
-                builder.getPostCallback("parseEntry", PredicatedState.class),
-                Load.PredicatedState
+                Load.Index, DumpType.index,
+                builder.getPostCallback("createIndexEntry")
             );
-            // Variadic marker only needs to be recognized.
-            productions.addPatternMatch(Load.Variadic, DumpType.variadic, noop);
 
             // Predicated state
             productions.addVarArgsPatternMatch(
@@ -400,6 +408,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
 
         ProductionTable<Nonterminal,NodeType> result;
+
         /**
          * The caller has to provide this because Java uses type erasure for generics,
          * so we have no direct access to the Nonterminal class.
@@ -439,29 +448,15 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
     }
 
-   class HyperPlaneDesc
+    class IndexEntry
     {
-        HyperPlane<Nonterminal, NodeType>   hyperPlane;
-        Integer[]                           mappedStates;
-        boolean                             isVarArgs;
-
-        HyperPlaneDesc(HyperPlane<Nonterminal, NodeType> hyperPlane, Integer[] mappedStates, boolean isVarArgs)
-        {
-            this.hyperPlane     = hyperPlane;
-            this.mappedStates   = mappedStates;
-            this.isVarArgs      = isVarArgs;
-        }
-    }
-
-    class EntryDesc
-    {
-        PredicatedState<Nonterminal, NodeType>  state;
         Integer                                 stateNumber;
+        Integer                                 index;
 
-        EntryDesc(PredicatedState<Nonterminal, NodeType> state, Integer stateNumber)
+        IndexEntry(Integer stateNumber, Integer index)
         {
-            this.state = state;
             this.stateNumber = stateNumber;
+            this.index = index;
         }
     }
 
@@ -491,24 +486,12 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Class<?> parseClass(Node node)
         throws Exception
         {
-            return Class.forName(node.get("type"));
+            return Class.forName(node.getStringAttr("type"));
         }
 
         Object passthrough(Node node, Object arg)
         {
             return arg;
-        }
-
-        Object parseVariadicLeafPlane(Node node, Object variadicMarker, HyperPlane<Nonterminal, NodeType> finalDimension)
-        {
-            // Create state transitions back to this hyperplane for all mapped states.
-            int hyperPlaneIndex = finalDimension.nextDimension.size();
-            finalDimension.nextDimension.add(finalDimension);
-
-            for (Integer stateNumber: finalDimension.finalDimIndexMap.keySet()) {
-                finalDimension.nextDimIndexMap.put(stateNumber, hyperPlaneIndex);
-            }
-            return finalDimension;
         }
 
         Object packageVarArgs(Node node, Object... args)
@@ -529,8 +512,8 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Method parseMethod(Node node, Class<?>[] parameterTypes)
         throws Exception
         {
-            Class<?> receiverClass = Class.forName(node.get("class"));
-            Method result = receiverClass.getDeclaredMethod(node.get("name"),parameterTypes);
+            Class<?> receiverClass = Class.forName(node.getStringAttr("class"));
+            Method result = receiverClass.getDeclaredMethod(node.getStringAttr("name"),parameterTypes);
             return result;
         }
 
@@ -547,9 +530,9 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Closure<Nonterminal> parseClosureWithPreAndPost(Node node, Method preCallback, Method postCallback)
         {
             return new Closure<Nonterminal>(
-                getNonterminal(node.get("nonterminal")),
-                getNonterminal(node.get("source")),
-                Integer.parseInt(node.get("cost")),
+                getNonterminal(node.getStringAttr("nonterminal")),
+                getNonterminal(node.getStringAttr("source")),
+                node.getIntegerAttr("cost"),
                 preCallback,
                 postCallback
             );
@@ -557,20 +540,20 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
         Nonterminal parseNonterminal(Node node)
         {
-            return getNonterminal(node.get("nonterminal"));
+            return getNonterminal(node.getStringAttr("nonterminal"));
         }
 
         @SuppressWarnings("unchecked")
         PatternMatcher<Nonterminal,NodeType> parsePatternMatcher(Node node, Object childTypes, Method preCallback, Method postCallback)
         {
             return new PatternMatcher<Nonterminal,NodeType>(
-                getNonterminal(node.get("nonterminal")),
+                getNonterminal(node.getStringAttr("nonterminal")),
                 null,
-                Integer.parseInt(node.get("cost")),
+                Integer.parseInt(node.getStringAttr("cost")),
                 null,
                 preCallback,
                 postCallback,
-                Boolean.parseBoolean(node.get("variadic")), 
+                node.getBooleanAttr("variadic"), 
                 Arrays.asList((Nonterminal[])childTypes)
             );
         }
@@ -612,12 +595,9 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return states;
         }
         
-        Object buildProductionTable(Node node, State<Nonterminal, NodeType>[] stateTable, Operator<Nonterminal, NodeType>[] operatorTable)
+        @SafeVarargs
+        final Object buildProductionTable(Node node, Operator<Nonterminal, NodeType>... operatorTable)
         {
-            for (State<Nonterminal, NodeType> s: stateTable) {
-                this.productionTable.statesInEntryOrder.add(s);
-            }
-
             for (Operator<Nonterminal, NodeType> op: operatorTable) {
                 this.productionTable.loadOperator(op);
             }
@@ -661,58 +641,37 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return result;
         }
 
-        EntryDesc parseEntry(Node node, PredicatedState<Nonterminal, NodeType> state)
+        IndexEntry createIndexEntry(Node node)
         {
-            return new EntryDesc(state, Integer.valueOf(node.get("stateNumber")));
+            return new IndexEntry(Integer.valueOf(node.get("key")), Integer.valueOf(node.get("value")));
+        }
+
+        @SafeVarargs
+        final Map<Integer,Integer> createIndexMap(Node node, IndexEntry... entries)
+        {
+            Map<Integer,Integer> result = new HashMap<Integer,Integer>();
+
+            for (IndexEntry entry: entries) {
+                result.put(entry.stateNumber, entry.index);
+            }
+
+            return result;
+        }
+
+        @SafeVarargs
+        final HyperPlane<Nonterminal,NodeType> createNextDimension(Node node, Map<Integer,Integer> nextDimIndexMap, HyperPlane<Nonterminal,NodeType>... nextDimension)
+        {
+            return new HyperPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension);
+        }
+
+        @SafeVarargs
+        final HyperPlane<Nonterminal,NodeType> createFinalDimension(Node node, Map<Integer,Integer> finalDimIndexMap, PredicatedState<Nonterminal, NodeType>... finalDimension)
+        {
+            return new HyperPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension);
         }
 
         @SuppressWarnings("unchecked")
-        HyperPlane<Nonterminal, NodeType> parseUnaryFinalDimension(Node node, Object... states)
-        {
-            HyperPlane<Nonterminal, NodeType> hyperPlane = new HyperPlane<Nonterminal, NodeType>();
-
-            for (Object o: states) {
-                EntryDesc desc = (EntryDesc) o;
-                hyperPlane.loadPredicatedState(desc.stateNumber, desc.state);
-            }
-
-            return hyperPlane;
-        }
-
-        HyperPlaneDesc parseFinalDimension(Node node, Integer[] mappedStates, HyperPlane<Nonterminal, NodeType> hyperPlane)
-        {
-            return new HyperPlaneDesc(hyperPlane, mappedStates, false);
-        }
-
-        HyperPlaneDesc parseVariadicFinalDimension(Node node, Integer[] mappedStates, HyperPlane<Nonterminal, NodeType> finalDimension)
-        {
-            return new HyperPlaneDesc(finalDimension, mappedStates, true);
-        }
-
-        @SuppressWarnings("unchecked")
-        HyperPlane<Nonterminal, NodeType> createRootHyperplane(Node node, HyperPlaneDesc[] nextDimension)
-        {
-            HyperPlane<Nonterminal, NodeType> rootPlane = new HyperPlane<Nonterminal, NodeType>();
-
-            for (HyperPlaneDesc desc: nextDimension) {
-                rootPlane.loadHyperPlane(desc.hyperPlane, desc.mappedStates);
-            }
-
-            return rootPlane;
-        }
-
-        HyperPlaneDesc createHyperplaneSingleMapping(Node node, Integer[] mappedStates, HyperPlaneDesc[] nextDimension)
-        {
-            HyperPlane<Nonterminal, NodeType> thisDimension = new HyperPlane<Nonterminal, NodeType>();
-
-            for (HyperPlaneDesc desc: nextDimension) {
-                thisDimension.loadHyperPlane(desc.hyperPlane, desc.mappedStates);
-            }
-            return new HyperPlaneDesc(thisDimension, mappedStates, false);
-        }
-
-        @SuppressWarnings("unchecked")
-        State<Nonterminal, NodeType> parseState(Node node, PatternMatcher<Nonterminal, NodeType>[] patternMatchers, CostEntry[] costs, Method[] predicates)
+        final State<Nonterminal, NodeType> parseState(Node node, PatternMatcher<Nonterminal, NodeType>[] patternMatchers, CostEntry[] costs, Method[] predicates)
         {
             return parseState(node, patternMatchers, costs, new Closure[0], predicates);
         }
@@ -744,7 +703,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         {
             Operator<Nonterminal, NodeType> operator = new Operator<Nonterminal, NodeType>(getNodeType(node.get("nodeType")), Integer.parseInt(node.get("arity")), this.productionTable);
             operator.transitionTable = rootPlane;
-            operator.arityKind = rootPlane.isVarArgs()? ArityKind.Variadic:ArityKind.Fixed;
+            operator.setArityKind(node.getBooleanAttr("variadic")? ArityKind.Variadic:ArityKind.Fixed);
             return operator;
         }
 

@@ -20,14 +20,13 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     /**
      * The node type of the subtree root.
      */
-    final NodeType              nodeType;
+    public final NodeType              nodeType;
 
     /**
      * The nonterminal types the root's children must produce.
      */
-    final List<Nonterminal>     childTypes;
+    public final List<Nonterminal>     childTypes;
 
-    @SuppressWarnings({"unchecked"}) // TODO: @SafeVarargs would be a better annotation, but that would require Java 1.7 or above.
     public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
     {
         super(target, cost, isVarArgs, predicate, preCallback, postCallback);

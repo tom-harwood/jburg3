@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 public class Closure<Nonterminal> extends Production<Nonterminal>
 {
     final Nonterminal   source;
+    public Nonterminal getSource() { return source; }
+
 
     public Closure(Nonterminal target, Nonterminal source, int ownCost, Method preCallback, Method postCallback)
     {

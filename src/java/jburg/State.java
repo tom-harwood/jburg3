@@ -26,31 +26,31 @@ public class State<Nonterminal, NodeType>
 
     /** "Typedef" a map of costs by nonterminal. */
     @SuppressWarnings("serial")
-	class CostMap extends HashMap<Nonterminal,Long> {}
+	public class CostMap extends HashMap<Nonterminal,Long> {}
     /** "typedef" a map of Productions keyed by Nonterminal. */
     @SuppressWarnings("serial")
-	class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
-    /** "typedef" a multimap of Productions, keyed by cost. */
-    @SuppressWarnings("serial")
-	class ProductionMultimap extends TreeMap<Integer, List<Production<Nonterminal>>> {}
+	public class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
     /** "typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
-	class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
+	public class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
 
     /**
      * This state's non-closure productions.
      */
     ProductionMap  nonClosureProductions = new ProductionMap();
+    public ProductionMap  getPatterns() { return nonClosureProductions; }
 
     /**
      * Cost of each pattern match.
      */
     CostMap     patternCosts = new CostMap();
+    public CostMap getCostMap() { return patternCosts; }
 
     /**
      * This state's closures, i.e., nonterminal-to-nonterminal productions.
      */
     ClosureMap  closures = new ClosureMap();
+    public ClosureMap getClosures() { return closures; }
 
     /**
      * The node type of this state; used while projecting
@@ -71,6 +71,7 @@ public class State<Nonterminal, NodeType>
      * state's equivalence class satisfy all the predicates.
      */
     final List<Method> predicates = new ArrayList<Method>();
+    public List<Method> getPredicates() { return predicates; }
 
     /**
      * Construct a state that characterizes non-null nodes.

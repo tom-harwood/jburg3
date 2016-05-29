@@ -15,14 +15,19 @@ import java.util.Set;
 class Operator<Nonterminal, NodeType>
 {
     /**
-     * The operator's node type, denormalized for debugging.
+     * The operator's node type.
      */
-    final NodeType nodeType;
+    public final NodeType nodeType;
 
     /**
      * The root hyperplane of the transition table.
      */
     HyperPlane<Nonterminal, NodeType> transitionTable;
+
+    public HyperPlane<Nonterminal, NodeType> getTransitionTable()
+    {
+        return this.transitionTable;
+    }
 
     /**
      * Representer states known by each dimension; used to
@@ -97,6 +102,11 @@ class Operator<Nonterminal, NodeType>
         return arity;
     }
 
+    public int getSize()
+    {
+        return size();
+    }
+
     /**
      * Build the transition table, and flush compiler-compile-time data structures.
      */
@@ -147,6 +157,14 @@ class Operator<Nonterminal, NodeType>
     }
 
     /**
+     * @return this operator's leaf state, or null if not present.
+     */
+    public PredicatedState<Nonterminal,NodeType> getLeafState()
+    {
+        return this.leafState;
+    }
+
+    /**
      * Add an entry to this operator's transition table.
      * @param repStates the representer states that produced the
      * transition; these representer states are its compound key.
@@ -170,13 +188,30 @@ class Operator<Nonterminal, NodeType>
 
     /**
      * Is this operator variadic?
-     * @return true if any the operator's patterns are variadic.
+     * @return true if the operator's patterns are variadic.
      */
     boolean isVarArgs()
     {
         return arityKind != null && arityKind == ArityKind.Variadic;
     }
 
+    public boolean getVariadic()
+    {
+        return isVarArgs();
+    }
+
+    /**
+     * Set this operator's arity kind while loading from a dump.
+     */
+    void setArityKind(ArityKind arityKind)
+    {
+        this.arityKind = arityKind;
+    }
+
+    /**
+     * @return true if this Operator is ready
+     * for use by a Reducer.
+     */
     boolean isComplete()
     {
         return arityKind != null;
@@ -301,7 +336,6 @@ class Operator<Nonterminal, NodeType>
     throws Exception
     {
         int subtreeCount = node.getSubtreeCount();
-        boolean hasOnlyFinalDimension = arity == 1;
 
         // Start at the root of the transition table, which is keyed
         // by the input node's subtrees' state numbers; each subtree
@@ -325,7 +359,7 @@ class Operator<Nonterminal, NodeType>
                     // the child is a valid input.
                     if (isVariadicTail) {
 
-                        if (current.isValidVariadicChild(stateNumber, hasOnlyFinalDimension)) {
+                        if (current.isValidVariadicChild(stateNumber)) {
                             continue;
                         } else {
                             node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
@@ -337,16 +371,6 @@ class Operator<Nonterminal, NodeType>
                         current = current.getNextDimension(stateNumber);
                     }
                 } else {
-                    // Assign state information from
-                    // the transition table leaf.
-                    if (isVariadicTail && !hasOnlyFinalDimension) {
-                        current = current.getNextDimension(stateNumber);
-                        if (current == null) {
-                            node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
-                            break;
-                        }
-                    }
-
                     current.assignStateNumber(stateNumber, node, visitor);
                 }
             } else {

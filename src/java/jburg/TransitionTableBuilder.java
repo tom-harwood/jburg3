@@ -202,7 +202,7 @@ class TransitionTableBuilder<Nonterminal, NodeType>
                 Set<State<Nonterminal, NodeType>> pendingStates = new HashSet<State<Nonterminal, NodeType>>();
 
                 for (State<Nonterminal, NodeType> s: rsForDim.representedStates) {
-                    if (!processedStates.contains(s)) {
+                    if (!processedStates.contains(s) && !s.isEmpty()) {
                         pendingStates.add(s);
                     }
                 }

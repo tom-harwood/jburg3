@@ -18,22 +18,60 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * The next dimension of the table, if this is not the final dimension.
      */
-    final List<HyperPlane<Nonterminal, NodeType>> nextDimension = new ArrayList<HyperPlane<Nonterminal, NodeType>>();
+    final List<HyperPlane<Nonterminal, NodeType>> nextDimension;
+    public List<HyperPlane<Nonterminal, NodeType>> getNextDimension() { return nextDimension; }
 
     /**
      * State number to transition table index for the next dimension.
      */
-    final Map<Integer, Integer> nextDimIndexMap = new HashMap<Integer, Integer>();
+    final Map<Integer, Integer> nextDimIndexMap;
+    public Map<Integer, Integer> getNextDimIndexMap() { return nextDimIndexMap; }
 
     /**
      * The states in this dimension, if this is the final dimension.
      */
-    final List<PredicatedState<Nonterminal, NodeType>> finalDimension = new ArrayList<PredicatedState<Nonterminal, NodeType>>();
+    final List<PredicatedState<Nonterminal, NodeType>> finalDimension;
+    public List<PredicatedState<Nonterminal, NodeType>> getFinalDimension() { return finalDimension; }
 
     /**
      * State number to transition table index for the final dimension.
      */
-    final Map<Integer, Integer> finalDimIndexMap = new HashMap<Integer, Integer>();
+    final Map<Integer, Integer> finalDimIndexMap;
+    public Map<Integer, Integer> getFinalDimIndexMap() { return finalDimIndexMap; }
+
+    /**
+     * Construct the final dimension of a transition.
+     */
+    HyperPlane(Map<Integer,Integer> finalDimIndexMap, PredicatedState<Nonterminal,NodeType>[] finalDimension)
+    {
+        this.finalDimIndexMap = finalDimIndexMap;
+        this.finalDimension = Arrays.asList(finalDimension);
+        this.nextDimIndexMap = null;
+        this.nextDimension = null;
+    }
+
+    /**
+     * Construct the next dimension of a transition.
+     */
+    HyperPlane(Map<Integer,Integer> nextDimIndexMap, HyperPlane<Nonterminal,NodeType>[] nextDimension)
+    {
+        this.nextDimIndexMap = nextDimIndexMap;
+        this.nextDimension = Arrays.asList(nextDimension);
+        this.finalDimIndexMap = null;
+        this.finalDimension = null;
+    }
+
+    /**
+     * Construct a HyperPlane whose characteristics
+     * are not yet fully known (compiler compile time).
+     */
+    HyperPlane()
+    {
+        this.nextDimIndexMap = new HashMap<Integer,Integer>();
+        this.nextDimension = new ArrayList<HyperPlane<Nonterminal,NodeType>>();
+        this.finalDimIndexMap = new HashMap<Integer,Integer>();
+        this.finalDimension = new ArrayList<PredicatedState<Nonterminal,NodeType>>();
+    }
 
     /**
      * Is the given state number a valid state number for a variadic child?
@@ -41,42 +79,10 @@ class HyperPlane<Nonterminal, NodeType>
      * @param examineFinalDimension true if the child is the last child.
      * @return true if the state number is in the appropriate state-to-index map.
      */
-    boolean isValidVariadicChild(int stateNumber, boolean examineFinalDimension)
+    boolean isValidVariadicChild(int stateNumber)
     {
-        return examineFinalDimension?
-            finalDimIndexMap.containsKey(stateNumber):
-            nextDimIndexMap.containsKey(stateNumber);
-    }
-
-    /**
-     * Load a PredicatedState into the final dimension.
-     * @param stateNum  the state's state number.
-     * @param state     the state.
-     */
-    void loadPredicatedState(Integer sNum, PredicatedState<Nonterminal, NodeType> state)
-    {
-        int newStateIdx = finalDimension.size();
-        finalDimension.add(state);
-        finalDimIndexMap.put(sNum, newStateIdx);
-    }
-
-    /**
-     * Load a child HyperPlane into the next dimension.
-     * @param hyperPlane    the child hyperplane.
-     * @param mappedStates  the states the hyperplane is mapped to.
-     */
-    void loadHyperPlane(HyperPlane<Nonterminal, NodeType> hyperPlane, Integer[] mappedStates)
-    {
-        assert mappedStates.length > 0: "empty mapped states";
-
-        if (mappedStates.length > 0) {
-            int hyperPlaneIndex = nextDimension.size();
-            nextDimension.add(hyperPlane);
-
-            for (Integer sNum: mappedStates) {
-                nextDimIndexMap.put(sNum, hyperPlaneIndex);
-            }
-        }
+        assert finalDimIndexMap != null: "no final dimension";
+        return finalDimIndexMap.containsKey(stateNumber);
     }
 
     /**
@@ -109,6 +115,8 @@ class HyperPlane<Nonterminal, NodeType>
      */
     HyperPlane<Nonterminal, NodeType> getNextDimension(int stateNumber)
     {
+        assert nextDimIndexMap != null: "No next dimension";
+
         if (nextDimIndexMap.containsKey(stateNumber)) {
             assert nextDimIndexMap.get(stateNumber) < nextDimension.size(): String.format("state %d index %d out of range 0..%d",stateNumber, nextDimIndexMap.get(stateNumber), nextDimension.size());
             return nextDimension.get(nextDimIndexMap.get(stateNumber));

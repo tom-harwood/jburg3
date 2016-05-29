@@ -8,7 +8,7 @@ import java.util.*;
  * A PredicatedState is a composite state whose constituents
  * are permutations of a set of prerequisite predicates.
  */
-class PredicatedState<Nonterminal, NodeType>
+public class PredicatedState<Nonterminal, NodeType>
 {
     /**
      * The constituent states, keyed by the methods satisfied;
@@ -46,11 +46,13 @@ class PredicatedState<Nonterminal, NodeType>
     PredicatedState(List<State<Nonterminal, NodeType>> states)
     {
         for (State<Nonterminal, NodeType> s: states) {
-            // Each key should be unique.
-            assert !this.states.containsKey(s.predicates);
-            addArityKind(s);
-            this.states.put(s.predicates, s);
-            addPredicates(s.predicates);
+            if (!s.isEmpty()) {
+                // The predicate tuple must be a unique key.
+                assert !this.states.containsKey(s.predicates);
+                addArityKind(s);
+                this.states.put(s.predicates, s);
+                addPredicates(s.predicates);
+            }
         }
 
         for (State<Nonterminal, NodeType> s: states) {
@@ -167,7 +169,7 @@ class PredicatedState<Nonterminal, NodeType>
     /**
      * @return the states' composite ArityKind.
      */
-    ArityKind getArityKind()
+    public ArityKind getArityKind()
     {
         assert compositeArityKind != null;
         return compositeArityKind;
@@ -182,5 +184,10 @@ class PredicatedState<Nonterminal, NodeType>
         } else {
             return String.format("PredicatedState%s", states);
         }
+    }
+
+    public Collection<State<Nonterminal, NodeType>> getStates()
+    {
+        return states.values();
     }
 }

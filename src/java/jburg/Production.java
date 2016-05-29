@@ -10,12 +10,14 @@ import java.lang.reflect.Method;
  * further transforming an initial nonterminal
  * to a new nonterminal (a Closure).
  */
-abstract class Production<Nonterminal>
+public abstract class Production<Nonterminal>
 {
     /**
      * The Nonterminal "goal state" this Production produces.
      */
     final Nonterminal    target;
+    public Nonterminal getNonterminal() { return target; }
+
 
     /**
      * A figure of merit used to evaluate this Production's
@@ -25,17 +27,22 @@ abstract class Production<Nonterminal>
      * Range 0..Integer.MAX_VALUE-1.
      */
     final int            ownCost;
+    public int getCost() { return ownCost; }
 
     /**
      * Set if the production's final dimension can extend
      * to cover variadic tails of a pattern-matched subtree.
      */
     final boolean        isVarArgs;
+    public final boolean getIsVarArgs() { return isVarArgs; }
+
+
     /**
      * A semantic predicate method that guards this production,
      * or null if the production is evaluated solely by cost.
      */
     Method         predicate;
+    public Method getPredicate() { return predicate; }
 
     /**
      * A reducer method to call before deriving the subtree's
@@ -44,6 +51,7 @@ abstract class Production<Nonterminal>
      * is required.
      */
     Method         preCallback;
+    public Method getPreCallback() { return preCallback; }
 
     /**
      * A reducer method to call after deriving the subtree's
@@ -52,6 +60,7 @@ abstract class Production<Nonterminal>
      * is required.
      */
     Method         postCallback;
+    public Method getPostCallback() { return postCallback; }
 
     /**
      * Construct a production.

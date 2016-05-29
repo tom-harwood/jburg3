@@ -16,6 +16,7 @@
         <property name="junit.log.dir" value="./log" />
         <property name="grammar.xml" value="grammars/PoorlyOverloaded.xml"/>
         <property name="testcase.xml" value="testcases/FirstTest.xml"/>
+        <property name="stringtemplate.jar" value="${user.home}/tools/antlr-4.5.1-complete.jar"/>
     </target>
 
     <target name="cleanBuildAndTest" depends="clean,buildJar,compile,allTests"/>
@@ -77,6 +78,7 @@ allTests - run java tests
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
         </java>
@@ -91,6 +93,7 @@ allTests - run java tests
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
         </java>
@@ -108,6 +111,7 @@ allTests - run java tests
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
         </java>
@@ -119,6 +123,22 @@ allTests - run java tests
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+    </target>
+
+    <target name="loadTest" depends="jar,compile">
+        <echo>Loading from ${dump.xml}</echo>
+        <java classname="Calculator" fork="true" failonerror="true">
+            <arg value="-load"/>
+            <arg value="${dump.xml}"/>
+            <arg value="${testcase.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
             </classpath>
             <jvmarg value="-ea"/>
         </java>
