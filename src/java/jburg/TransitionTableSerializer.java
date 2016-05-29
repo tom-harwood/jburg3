@@ -7,6 +7,10 @@ import java.io.*;
 import org.stringtemplate.v4.*;
 import jburg.emitter.TemplateGroup;
 
+/**
+ * TransitionTableSerializer serializes a transition table
+ * using a string template group.
+ */
 public class TransitionTableSerializer<Nonterminal, NodeType>
 {
     TemplateGroup stg;
