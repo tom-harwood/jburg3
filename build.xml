@@ -51,6 +51,9 @@ test - call the test/MAT directory's build.xml
         <mkdir dir="${lib.dir}" />        
         <jar jarfile="${lib.dir}/${jar.file}">
             <fileset dir="${classes.dir}"/>
+            <fileset dir="src">
+                <include name="**/*.stg"/>
+            </fileset>
             <manifest>
                 <attribute name="Main-Class" value="jburg.burg.Main"/>
                 <attribute name="Implementation-Version" value="${distro.version}"/>
@@ -78,6 +81,9 @@ test - call the test/MAT directory's build.xml
 			>
             <compilerarg value="-Xlint:unchecked"/>
 			<src path="${jburg.dir}"/>
+            <classpath>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
 		</javac>
 	</target>
 

@@ -1,0 +1,120 @@
+delimiters "%","%"
+
+closure(c) ::= <<
+<closure nonterminal="%c.nonterminal%" source="%c.source%" cost="%c.cost%">
+    %c.preCallback:preCallback()%
+    %c.postCallback:postCallback()%
+</closure>
+>>
+
+finalDimension(f) ::= <<
+%leaf(f)%
+>>
+
+hyperPlane(p) ::= <<
+<hyperPlane>
+    %if(p.nextDimension)%
+    %indexMap(p.nextDimIndexMap,"nextDimIndexMap")%
+    %p.nextDimension:hyperPlane();separator="\n"%
+    %endif%
+    %if(p.finalDimension)%
+    %indexMap(p.finalDimIndexMap,"finalDimIndexMap")%
+    %p.finalDimension:finalDimension();separator="\n"%
+    %endif%
+</hyperPlane>
+>>
+
+indexMap(map,tag) ::= <<
+<%tag%>
+    %map.keys : {k | <index key="%k%" value="%map.(k)%"/>};separator="\n"%
+</%tag%>
+>>
+
+leaf(s) ::= <<
+<predicatedState arityKind="%s.arityKind%">
+    %s.states:stateDefinition();separator="\n"%
+</predicatedState>
+>>
+
+leafState(s) ::= <<
+<leafState>
+    %s:leaf();separator="\n"%
+</leafState>
+>>
+
+method(m) ::= <<
+<method name="%m.name%" class="%m.declaringClass.name%">
+    %if(m.parameterTypes)%
+    <parameterTypes>
+        %m.parameterTypes: { t | <parameter type="%t.name%"/> };separator="\n"%
+    </parameterTypes>
+    %endif%
+</method>
+>>
+
+operatorList(l) ::= <<
+%l:operatorDefinition();separator="\n"%
+>>
+
+operatorDefinition(op) ::= <<
+<operator nodeType="%op.nodeType%" arity="%op.size%" variadic="%op.variadic%">
+    %op.transitionTable:transitionTable();separator="\n"%
+    %op.leafState:leafState()%
+</operator>
+>>
+
+productionTable(t) ::= <<
+    %t.operators:operatorList();separator="\n"%
+>>
+
+pattern(p) ::= <<
+<pattern nodeType="%p.nodeType%" nonterminal="%p.nonterminal%" cost="%p.cost%" variadic="%p.isVarArgs%">
+    %if(!p.childTypes.empty)%
+    <childTypes>
+        %p.childTypes:{ t |<childType nonterminal="%t%"/>};separator="\n"%
+    </childTypes>
+    %endif%
+    %p.preCallback:preCallback()%
+    %p.postCallback:postCallback()%
+</pattern>
+>>
+
+postCallback(m) ::= <<
+<postCallback>
+    %m:method()%
+</postCallback>
+>>
+
+preCallback(m) ::= <<
+<preCallback>
+    %m:method()%
+</preCallback>
+>>
+
+stateDefinition(s) ::= <<
+<state number="%s.stateNumber%">
+    %if(s.patterns)%
+    <patterns>
+        %s.patterns.values:pattern();separator="\n"%
+    </patterns>
+    %endif%
+    <costMap>
+        %s.costMap.keys : { k | <cost nonterminal="%k%" cost="%s.costMap.(k)%"/> };separator="\n"%
+    </costMap>
+    %if(s.closures)%
+    <closures>
+        %s.closures.values:closure();separator="\n"%
+    </closures>
+    %endif%
+    <predicates>
+    %s.predicates:method();separator="\n"%
+    </predicates>
+    %s.postCallback:postCallback()%
+</state>
+>>
+
+transitionTable(p) ::= <<
+<transitionTable>
+    %p:hyperPlane();separator="\n"%
+</transitionTable>
+>>
