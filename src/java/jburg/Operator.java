@@ -22,9 +22,9 @@ class Operator<Nonterminal, NodeType>
     /**
      * The root hyperplane of the transition table.
      */
-    HyperPlane<Nonterminal, NodeType> transitionTable;
+    TransitionPlane<Nonterminal, NodeType> transitionTable;
 
-    public HyperPlane<Nonterminal, NodeType> getTransitionTable()
+    public TransitionPlane<Nonterminal, NodeType> getTransitionTable()
     {
         return this.transitionTable;
     }
@@ -40,7 +40,7 @@ class Operator<Nonterminal, NodeType>
      * state, with permutations of the leaf productions'
      * predicate methods (if any).
      */
-    PredicatedState<Nonterminal, NodeType> leafState = null;
+    TransitionTableLeaf<Nonterminal, NodeType> leafState = null;
 
     /**
      * This operator's arity kind: unknown, fixed-arity, or variadic.
@@ -141,14 +141,14 @@ class Operator<Nonterminal, NodeType>
      */
     void createLeafState(List<State<Nonterminal, NodeType>> states)
     {
-        setLeafState(new PredicatedState<Nonterminal, NodeType>(states));
+        setLeafState(new TransitionTableLeaf<Nonterminal, NodeType>(states));
     }
 
     /**
      * Set the leaf state.
      * @param leafState the leaf state, typically from a load operation.
      */
-    void setLeafState(PredicatedState<Nonterminal, NodeType> leafState)
+    void setLeafState(TransitionTableLeaf<Nonterminal, NodeType> leafState)
     {
         assert this.reps == null;
         assert this.leafState == null;
@@ -159,7 +159,7 @@ class Operator<Nonterminal, NodeType>
     /**
      * @return this operator's leaf state, or null if not present.
      */
-    public PredicatedState<Nonterminal,NodeType> getLeafState()
+    public TransitionTableLeaf<Nonterminal,NodeType> getLeafState()
     {
         return this.leafState;
     }
@@ -341,7 +341,7 @@ class Operator<Nonterminal, NodeType>
         // by the input node's subtrees' state numbers; each subtree
         // has a corresponding dimension in the transition table.
         // If no match then label the input node as an error.
-        HyperPlane<Nonterminal, NodeType> current = this.transitionTable;
+        TransitionPlane<Nonterminal, NodeType> current = this.transitionTable;
 
         for (int dim = 0; dim < subtreeCount; dim++) {
             BurgInput<Nonterminal, NodeType> subtree = node.getSubtree(dim);

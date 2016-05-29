@@ -92,10 +92,10 @@ public class TransitionTableSerializer<Nonterminal, NodeType>
     }
 
     /**
-     * Dump a HyperPlane.
-     * @param h     the HyperPlane to dump.
+     * Dump a TransitionPlane.
+     * @param h     the TransitionPlane to dump.
      */
-    void dump(HyperPlane<Nonterminal, NodeType> h)
+    void dump(TransitionPlane<Nonterminal, NodeType> h)
     throws java.io.IOException
     {
         out.println(
@@ -109,10 +109,10 @@ public class TransitionTableSerializer<Nonterminal, NodeType>
     }
 
     /**
-     * Dump a PredicatedState.
-     * @param ps    the PredicatedState to dump.
+     * Dump a TransitionTableLeaf.
+     * @param ps    the TransitionTableLeaf to dump.
      */
-    void dump(PredicatedState<Nonterminal, NodeType> ps)
+    void dump(TransitionTableLeaf<Nonterminal, NodeType> ps)
     throws java.io.IOException
     {
         out.println(

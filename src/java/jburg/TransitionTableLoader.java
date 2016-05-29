@@ -10,8 +10,6 @@ import org.xml.sax.helpers.*;
 
 public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 {
-    Stack<HyperPlane<Nonterminal, NodeType>> hyperplanes = new Stack<HyperPlane<Nonterminal, NodeType>>();
-
     public ProductionTable<Nonterminal, NodeType> load(String uri, Class<?> nonterminalClass, Class<?> nodeTypeClass)
     throws Exception
     {
@@ -70,7 +68,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         FinalDimIndexMap,
         LeafState,
         Index,
-        HyperPlane,
+        TransitionPlane,
         MappedState,
         MappedStates,
         Method,
@@ -83,7 +81,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         Patterns,
         PostCallback,
         PreCallback,
-        PredicatedState,
+        TransitionTableLeaf,
         Predicates,
         ProductionTable,
         State,
@@ -247,14 +245,14 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             // Non-leaf operator
             productions.addPatternMatch(
                 Load.Operator, DumpType.operator,
-                builder.getPostCallback("parseNonLeafOperator", HyperPlane.class),
+                builder.getPostCallback("parseNonLeafOperator", TransitionPlane.class),
                 Load.TransitionTable
             );
 
             // Leaf operator
             productions.addPatternMatch(
                 Load.Operator, DumpType.operator,
-                builder.getPostCallback("parseLeafOperator", PredicatedState.class),
+                builder.getPostCallback("parseLeafOperator", TransitionTableLeaf.class),
                 Load.LeafState
             );
 
@@ -263,7 +261,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.LeafState,
                 DumpType.leafState,
                 passthrough,
-                Load.PredicatedState
+                Load.TransitionTableLeaf
             );
 
             // Patterns
@@ -361,20 +359,20 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             // Final dimension
             productions.addVarArgsPatternMatch(
                 Load.FinalDimension, DumpType.hyperPlane,
-                builder.getPostCallback("createFinalDimension", Map.class, getArrayArgs(PredicatedState.class)),
-                Load.FinalDimIndexMap, Load.PredicatedState
+                builder.getPostCallback("createFinalDimension", Map.class, getArrayArgs(TransitionTableLeaf.class)),
+                Load.FinalDimIndexMap, Load.TransitionTableLeaf
             );
 
             // Next dimension
             productions.addVarArgsPatternMatch(
                 Load.NextDimension, DumpType.hyperPlane,
-                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(HyperPlane.class)),
+                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(TransitionPlane.class)),
                 Load.NextDimIndexMap, Load.NextDimension
             );
 
             productions.addVarArgsPatternMatch(
                 Load.NextDimension, DumpType.hyperPlane,
-                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(HyperPlane.class)),
+                builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(TransitionPlane.class)),
                 Load.NextDimIndexMap, Load.FinalDimension
             );
 
@@ -398,8 +396,8 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
             // Predicated state
             productions.addVarArgsPatternMatch(
-                Load.PredicatedState, DumpType.predicatedState, 
-                builder.getPostCallback("parsePredicatedState", getArrayArgs(State.class)),
+                Load.TransitionTableLeaf, DumpType.predicatedState, 
+                builder.getPostCallback("parseTransitionTableLeaf", getArrayArgs(State.class)),
                 Load.State
             );
 
@@ -659,15 +657,15 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
 
         @SafeVarargs
-        final HyperPlane<Nonterminal,NodeType> createNextDimension(Node node, Map<Integer,Integer> nextDimIndexMap, HyperPlane<Nonterminal,NodeType>... nextDimension)
+        final TransitionPlane<Nonterminal,NodeType> createNextDimension(Node node, Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>... nextDimension)
         {
-            return new HyperPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension);
+            return new TransitionPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension);
         }
 
         @SafeVarargs
-        final HyperPlane<Nonterminal,NodeType> createFinalDimension(Node node, Map<Integer,Integer> finalDimIndexMap, PredicatedState<Nonterminal, NodeType>... finalDimension)
+        final TransitionPlane<Nonterminal,NodeType> createFinalDimension(Node node, Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal, NodeType>... finalDimension)
         {
-            return new HyperPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension);
+            return new TransitionPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension);
         }
 
         @SuppressWarnings("unchecked")
@@ -692,14 +690,14 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return new Method[0];
         }
 
-        Operator<Nonterminal, NodeType> parseLeafOperator(Node node, PredicatedState<Nonterminal, NodeType> predicatedState)
+        Operator<Nonterminal, NodeType> parseLeafOperator(Node node, TransitionTableLeaf<Nonterminal, NodeType> predicatedState)
         {
             Operator<Nonterminal, NodeType> operator = new Operator<Nonterminal, NodeType>(getNodeType(node.get("nodeType")), 0, this.productionTable);
             operator.setLeafState(predicatedState);
             return operator;
         }
 
-        Operator<Nonterminal, NodeType> parseNonLeafOperator(Node node, HyperPlane<Nonterminal, NodeType> rootPlane)
+        Operator<Nonterminal, NodeType> parseNonLeafOperator(Node node, TransitionPlane<Nonterminal, NodeType> rootPlane)
         {
             Operator<Nonterminal, NodeType> operator = new Operator<Nonterminal, NodeType>(getNodeType(node.get("nodeType")), Integer.parseInt(node.get("arity")), this.productionTable);
             operator.transitionTable = rootPlane;
@@ -713,9 +711,9 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
 
         @SafeVarargs
-        final Object parsePredicatedState(Node node, State<Nonterminal, NodeType>... states)
+        final Object parseTransitionTableLeaf(Node node, State<Nonterminal, NodeType>... states)
         {
-            return new PredicatedState<Nonterminal, NodeType>(Arrays.asList(states));
+            return new TransitionTableLeaf<Nonterminal, NodeType>(Arrays.asList(states));
         }
 
         @SuppressWarnings("unchecked")

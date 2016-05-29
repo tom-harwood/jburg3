@@ -3,7 +3,7 @@ package jburg;
 import java.util.*;
 
 /**
- * A HyperPlane is a representation of one dimension
+ * A TransitionPlane is a representation of one dimension
  * of the BURM's transition table: a multi-dimensional map
  * of child state tuples to the corresponding state to be
  * assigned to the subtree root.
@@ -13,13 +13,13 @@ import java.util.*;
  * case of the final dimension, to the states which can
  * be assigned to the subtree root.
  */
-class HyperPlane<Nonterminal, NodeType>
+class TransitionPlane<Nonterminal, NodeType>
 {
     /**
      * The next dimension of the table, if this is not the final dimension.
      */
-    final List<HyperPlane<Nonterminal, NodeType>> nextDimension;
-    public List<HyperPlane<Nonterminal, NodeType>> getNextDimension() { return nextDimension; }
+    final List<TransitionPlane<Nonterminal, NodeType>> nextDimension;
+    public List<TransitionPlane<Nonterminal, NodeType>> getNextDimension() { return nextDimension; }
 
     /**
      * State number to transition table index for the next dimension.
@@ -30,8 +30,8 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * The states in this dimension, if this is the final dimension.
      */
-    final List<PredicatedState<Nonterminal, NodeType>> finalDimension;
-    public List<PredicatedState<Nonterminal, NodeType>> getFinalDimension() { return finalDimension; }
+    final List<TransitionTableLeaf<Nonterminal, NodeType>> finalDimension;
+    public List<TransitionTableLeaf<Nonterminal, NodeType>> getFinalDimension() { return finalDimension; }
 
     /**
      * State number to transition table index for the final dimension.
@@ -42,7 +42,7 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * Construct the final dimension of a transition.
      */
-    HyperPlane(Map<Integer,Integer> finalDimIndexMap, PredicatedState<Nonterminal,NodeType>[] finalDimension)
+    TransitionPlane(Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal,NodeType>[] finalDimension)
     {
         this.finalDimIndexMap = finalDimIndexMap;
         this.finalDimension = Arrays.asList(finalDimension);
@@ -53,7 +53,7 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * Construct the next dimension of a transition.
      */
-    HyperPlane(Map<Integer,Integer> nextDimIndexMap, HyperPlane<Nonterminal,NodeType>[] nextDimension)
+    TransitionPlane(Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>[] nextDimension)
     {
         this.nextDimIndexMap = nextDimIndexMap;
         this.nextDimension = Arrays.asList(nextDimension);
@@ -62,15 +62,15 @@ class HyperPlane<Nonterminal, NodeType>
     }
 
     /**
-     * Construct a HyperPlane whose characteristics
+     * Construct a TransitionPlane whose characteristics
      * are not yet fully known (compiler compile time).
      */
-    HyperPlane()
+    TransitionPlane()
     {
         this.nextDimIndexMap = new HashMap<Integer,Integer>();
-        this.nextDimension = new ArrayList<HyperPlane<Nonterminal,NodeType>>();
+        this.nextDimension = new ArrayList<TransitionPlane<Nonterminal,NodeType>>();
         this.finalDimIndexMap = new HashMap<Integer,Integer>();
-        this.finalDimension = new ArrayList<PredicatedState<Nonterminal,NodeType>>();
+        this.finalDimension = new ArrayList<TransitionTableLeaf<Nonterminal,NodeType>>();
     }
 
     /**
@@ -86,20 +86,20 @@ class HyperPlane<Nonterminal, NodeType>
     }
 
     /**
-     * Is this HyperPlane variadic?
-     * @return true if all this HyperPlane's productions,
+     * Is this TransitionPlane variadic?
+     * @return true if all this TransitionPlane's productions,
      * as well as all its descendents' productions, are variadic.
      */
     boolean isVarArgs()
     {
-        for (PredicatedState<Nonterminal, NodeType> s: finalDimension) {
+        for (TransitionTableLeaf<Nonterminal, NodeType> s: finalDimension) {
 
             if (!s.isVarArgs()) {
                 return false;
             }
         }
 
-        for (HyperPlane<Nonterminal, NodeType> child: nextDimension) {
+        for (TransitionPlane<Nonterminal, NodeType> child: nextDimension) {
             if (!(child == this || child.isVarArgs())) {
                 return false;
             }
@@ -111,9 +111,9 @@ class HyperPlane<Nonterminal, NodeType>
     /**
      * Get the next dimension of this hyperplane.
      * @param rs the RepresenterState in the next dimension.
-     * @return the corresponding HyperPlane.
+     * @return the corresponding TransitionPlane.
      */
-    HyperPlane<Nonterminal, NodeType> getNextDimension(int stateNumber)
+    TransitionPlane<Nonterminal, NodeType> getNextDimension(int stateNumber)
     {
         assert nextDimIndexMap != null: "No next dimension";
 
@@ -183,7 +183,7 @@ class HyperPlane<Nonterminal, NodeType>
             return finalDimension.toString();
 
         } else {
-            return String.format("HyperPlane{%s %s}", nextDimension, finalDimension);
+            return String.format("TransitionPlane{%s %s}", nextDimension, finalDimension);
         }
     }
 

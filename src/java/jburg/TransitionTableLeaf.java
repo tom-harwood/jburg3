@@ -5,10 +5,10 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * A PredicatedState is a composite state whose constituents
+ * A TransitionTableLeaf is a composite state whose constituents
  * are permutations of a set of prerequisite predicates.
  */
-public class PredicatedState<Nonterminal, NodeType>
+public class TransitionTableLeaf<Nonterminal, NodeType>
 {
     /**
      * The constituent states, keyed by the methods satisfied;
@@ -33,17 +33,17 @@ public class PredicatedState<Nonterminal, NodeType>
     ArityKind compositeArityKind = null;
 
     /**
-     * Construct a PredicatedState whose contents will
+     * Construct a TransitionTableLeaf whose contents will
      * be added via successive calls to addTransition().
      */
-    PredicatedState()
+    TransitionTableLeaf()
     {
     }
 
     /**
-     * @param states this PredicatedState's constituent states.
+     * @param states this TransitionTableLeaf's constituent states.
      */
-    PredicatedState(List<State<Nonterminal, NodeType>> states)
+    TransitionTableLeaf(List<State<Nonterminal, NodeType>> states)
     {
         for (State<Nonterminal, NodeType> s: states) {
             if (!s.isEmpty()) {
@@ -98,7 +98,7 @@ public class PredicatedState<Nonterminal, NodeType>
 
     /**
      * Combine a new State's arity kind into this
-     * PredicatedState's composite arity kind.
+     * TransitionTableLeaf's composite arity kind.
      * @param s the state.
      */
     private void addArityKind(State<Nonterminal, NodeType> s)
@@ -158,7 +158,7 @@ public class PredicatedState<Nonterminal, NodeType>
     }
 
     /**
-     * Is this PredicatedState variadic?
+     * Is this TransitionTableLeaf variadic?
      * @return true if the state accepts variadic inputs.
      */
     boolean isVarArgs()
@@ -180,9 +180,9 @@ public class PredicatedState<Nonterminal, NodeType>
     public String toString()
     {
         if (states.size() == 1 && states.containsKey(noGuard)) {
-            return String.format("PredicatedState(trival) %s", states.get(noGuard));
+            return String.format("TransitionTableLeaf(trival) %s", states.get(noGuard));
         } else {
-            return String.format("PredicatedState%s", states);
+            return String.format("TransitionTableLeaf%s", states);
         }
     }
 

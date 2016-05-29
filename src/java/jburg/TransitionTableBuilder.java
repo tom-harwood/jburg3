@@ -39,16 +39,16 @@ class TransitionTableBuilder<Nonterminal, NodeType>
         return transitions.isEmpty();
     }
 
-    HyperPlane<Nonterminal, NodeType> buildTransitionTable()
+    TransitionPlane<Nonterminal, NodeType> buildTransitionTable()
     {
         return buildTransitionPlane(transitions, 0);
     }
 
-    HyperPlane<Nonterminal, NodeType> buildTransitionPlane(TransitionMap transitions, int dim)
+    TransitionPlane<Nonterminal, NodeType> buildTransitionPlane(TransitionMap transitions, int dim)
     {
         boolean isFinalDimension = dim+1 == arity;
 
-        HyperPlane<Nonterminal, NodeType> result = new HyperPlane<Nonterminal, NodeType>();
+        TransitionPlane<Nonterminal, NodeType> result = new TransitionPlane<Nonterminal, NodeType>();
 
         TransitionPivot pivot = new TransitionPivot(transitions, dim);
 
@@ -77,9 +77,9 @@ class TransitionTableBuilder<Nonterminal, NodeType>
         return result;
     }
 
-    PredicatedState<Nonterminal, NodeType> createLeaf(Collection<Set<State<Nonterminal, NodeType>>> stateSets)
+    TransitionTableLeaf<Nonterminal, NodeType> createLeaf(Collection<Set<State<Nonterminal, NodeType>>> stateSets)
     {
-        PredicatedState<Nonterminal, NodeType> result = new PredicatedState<Nonterminal, NodeType>();
+        TransitionTableLeaf<Nonterminal, NodeType> result = new TransitionTableLeaf<Nonterminal, NodeType>();
 
         for (Set<State<Nonterminal,NodeType>> states: stateSets) {
 
