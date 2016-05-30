@@ -64,7 +64,9 @@ operatorDefinition(op) ::= <<
 >>
 
 productionTable(t) ::= <<
+<burmDump>
     %t.operators:operatorList();separator="\n"%
+</burmDump>
 >>
 
 pattern(p) ::= <<
