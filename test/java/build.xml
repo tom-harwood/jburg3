@@ -70,7 +70,7 @@ allTests - run java tests
 
     <target name="calculator">
         <echo>Testing ${calculator.xml}</echo>
-        <java classname="Calculator" fork="true" failonerror="true">
+        <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <!-- The default grammar -->
             <arg value="${grammar.xml}"/>
@@ -86,7 +86,7 @@ allTests - run java tests
 
     <target name="testGrammar" depends="compile">
         <echo>Testing ${grammar.xml} and ${testcase.xml}</echo>
-        <java classname="Calculator" fork="true" failonerror="true">
+        <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${grammar.xml}"/>
             <arg value="${testcase.xml}"/>
@@ -102,7 +102,7 @@ allTests - run java tests
     <target name="dumpLoad" depends="compile">
         <echo>Dumping to burmdump/dumpTest.xml</echo>
         <mkdir dir="burmdump"/>
-        <java classname="Calculator" fork="true" failonerror="true">
+        <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${grammar.xml}"/>
             <arg value="-dump"/>
@@ -116,7 +116,7 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
         <echo>Loading from burmdump/dumpTest.xml</echo>
-        <java classname="Calculator" fork="true" failonerror="true">
+        <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-load"/>
             <arg value="burmdump/dumpTest.xml"/>
             <arg value="${testcase.xml}"/>
@@ -131,7 +131,7 @@ allTests - run java tests
 
     <target name="loadTest" depends="jar,compile">
         <echo>Loading from ${dump.xml}</echo>
-        <java classname="Calculator" fork="true" failonerror="true">
+        <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-load"/>
             <arg value="${dump.xml}"/>
             <arg value="${testcase.xml}"/>
