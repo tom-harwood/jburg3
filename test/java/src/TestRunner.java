@@ -30,6 +30,8 @@ public class TestRunner
 
             if (args[i].equals("-load")) {
                 loadFile = args[++i];
+            } else if (args[i].equals("-classname")) {
+                dumpClassName = args[++i];
             } else if (args[i].equals("-dump")) {
                 dumpFile = args[++i];
             } else if (args[i].equals("-grammar")) {
