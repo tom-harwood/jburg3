@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jburg.version.JBurgVersion;
+
 import org.stringtemplate.v4.*;
 
 /**
@@ -21,6 +23,9 @@ public class TemplateGroup
             templateGroupName = directoryName + java.io.File.separator + templateGroupName;
         }
         this.templates = new STGroupFile(templateGroupName);
+
+        setDefaultAttribute("timestamp", new java.util.Date());
+        setDefaultAttribute("version", JBurgVersion.version);
     }
 
     /**
@@ -57,7 +62,11 @@ public class TemplateGroup
 
         // Emulate ST3 default attributes behavior.
         for (String key: defaultAttrs.keySet()) {
-            result.add(key, defaultAttrs.get(key));
+            try {
+                result.add(key, defaultAttrs.get(key));
+            } catch (java.lang.IllegalArgumentException noSuchAttr) {
+                // Continue.
+            }
         }
 
         if (! (attrValue.length == 0 || attrValue.length % 2 == 0) )

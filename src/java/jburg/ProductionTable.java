@@ -54,7 +54,7 @@ public class ProductionTable<Nonterminal, NodeType>
     }
 
     /**
-     * Operators computed from the specification, keyed by the nonterminal they produce.
+     * Operators computed from the specification, keyed by their node type.
      */
     Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
         new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
@@ -62,6 +62,16 @@ public class ProductionTable<Nonterminal, NodeType>
     public Collection<List<Operator<Nonterminal,NodeType>>> getOperators()
     {
         return operators.values();
+    }
+
+    public Map<NodeType, List<Operator<Nonterminal,NodeType>>> getOperatorsByNodeType()
+    {
+        return operators;
+    }
+
+    public List<Operator<Nonterminal,NodeType>> getOperators(Nonterminal nt)
+    {
+        return operators.get(nt);
     }
 
     /**
@@ -184,7 +194,7 @@ public class ProductionTable<Nonterminal, NodeType>
         nonterminals.add(nt);
         getPatternsForNodeType(nodeType).add(patternMatcher);
 
-        // Add an Operator or Operators to handle this pattern, if one is not already present.
+        // Add an Operator to handle this pattern, if one is not already present.
         if (fetchOperator(nodeType, patternMatcher.size()) == null) {
 
             if (!operators.containsKey(nodeType)) {
@@ -198,15 +208,8 @@ public class ProductionTable<Nonterminal, NodeType>
             }
 
             ops.set(patternMatcher.size(), new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size(), this));
-
-            if (patternMatcher.isVarArgs && patternMatcher.size() + 1 <= ops.size()) {
-                int limit = ops.size();
-
-                for (int i = patternMatcher.size() + 1; i <= limit; i++) {
-                    ops.add(new Operator<Nonterminal,NodeType>(nodeType, patternMatcher.size(), this));
-                }
-            }
         }
+
         return patternMatcher;
     }
 
@@ -726,13 +729,28 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public void dump(String dumpPath)
     {
+        dump(dumpPath, "xml.stg");
+    }
+
+    public void dump(String dumpPath, String templateGroup)
+    {
+        dump(dumpPath, null, templateGroup);
+    }
+
+    public void dump(String dumpPath, String className, String templateGroup)
+    {
         if (dumpPath != null) {
 
             try {
                 java.io.PrintWriter out = new java.io.PrintWriter(dumpPath);
-                TemplateGroup tg = new TemplateGroup("templates", "xml.stg");
-                TransitionTableSerializer<Nonterminal,NodeType> serializer = new TransitionTableSerializer<Nonterminal,NodeType>(out, tg);
-                serializer.dump(this);
+                TemplateGroup stg = new TemplateGroup("templates", templateGroup);
+
+                if (className != null) {
+                    out.println(stg.getTemplate("classDef", "className", className, "table", this).render());
+                } else {
+                    out.println(stg.getTemplate("productionTable", "t", this).render());
+                }
+
                 out.flush();
                 out.close();
 
