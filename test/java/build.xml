@@ -9,14 +9,17 @@
         <property name="jburg.home" value="${user.home}/projects/jburg3"/>
         <property name="lib.dir" value="${jburg.home}/lib" />
         <property name="jburg.jar" value="${lib.dir}/jburg.jar"/>
+        <property name="stringtemplate.jar" value="${user.home}/tools/antlr-4.5.1-complete.jar"/>
     
         <property name="src.dir" value="./src" />
         <property name="gensrc.dir" value="./gensrc" />
         <property name="classes.dir" value="./classes" />
+        <property name="dump.dir" value="./burmdump" />
         <property name="junit.log.dir" value="./log" />
         <property name="grammar.xml" value="grammars/PoorlyOverloaded.xml"/>
         <property name="testcase.xml" value="testcases/FirstTest.xml"/>
-        <property name="stringtemplate.jar" value="${user.home}/tools/antlr-4.5.1-complete.jar"/>
+        <property name="classname" value="Test"/>
+
     </target>
 
     <target name="cleanBuildAndTest" depends="clean,buildJar,compile,allTests"/>
@@ -66,6 +69,7 @@ allTests - run java tests
         <antcall target="dumpLoad">
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
+        <antcall target="javaGen"/>
     </target>
 
     <target name="calculator">
@@ -100,13 +104,13 @@ allTests - run java tests
     </target>
 
     <target name="dumpLoad" depends="compile">
-        <echo>Dumping to burmdump/dumpTest.xml</echo>
-        <mkdir dir="burmdump"/>
+        <echo>Dumping to ${dump.dir}/dumpTest.xml</echo>
+        <mkdir dir="${dump.dir}"/>
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${grammar.xml}"/>
             <arg value="-dump"/>
-            <arg value="burmdump/dumpTest.xml"/>
+            <arg value="${dump.dir}/dumpTest.xml"/>
             <arg value="${testcase.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
@@ -115,10 +119,10 @@ allTests - run java tests
             </classpath>
             <jvmarg value="-ea"/>
         </java>
-        <echo>Loading from burmdump/dumpTest.xml</echo>
+        <echo>Loading from ${dump.dir}/dumpTest.xml</echo>
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-load"/>
-            <arg value="burmdump/dumpTest.xml"/>
+            <arg value="${dump.dir}/dumpTest.xml"/>
             <arg value="${testcase.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
@@ -142,6 +146,38 @@ allTests - run java tests
             </classpath>
             <jvmarg value="-ea"/>
         </java>
+    </target>
+
+    <target name="javaGen" depends="jar,compile">
+        <mkdir dir="${dump.dir}"/>
+        <echo>Generating ${classname}.java from ${grammar.xml}</echo>
+        <java classname="TestRunner" fork="true" failonerror="true">
+            <arg value="-grammar"/>
+            <arg value="${grammar.xml}"/>
+            <arg value="-templates"/>
+            <arg value="java.stg"/>
+            <arg value="-classname"/>
+            <arg value="${classname}"/>
+            <arg value="-dump"/>
+            <arg value="${dump.dir}/${classname}.java"/>
+            <arg value="${testcase.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+		<javac 
+			debug="${debug.symbols}" 
+			destdir="${classes.dir}" includes="${classname}.java"
+			>
+            <classpath>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="classes"/>
+            </classpath>
+			<src path="${dump.dir}"/>
+		</javac>
     </target>
 
     <target name="jar">
