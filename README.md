@@ -4,6 +4,7 @@ JBurg3 is  extended form of the algorithm outlined in Dr. Todd Proebsting's 1992
 * Specialized "pattern matching" rules to handle null nodes.
 * Pattern matching rules can be guarded by semantic predicates.
 * Nonterminal-to-nonterminal rules can execute reduction actions.
+
 JBurg3 shares most of these capabilities with JBurg2, which uses an "iburg" type algorithm that generates rewrite machines that defer dynamic programming to compile time. JBurg3, however, does its dynamic programming at BURG initialization time. With a set of dump/load routines, this can be translated into compiler-compile time table generation.
 
 JBurg3 also differs fundamentally from most other BURGs in that it does not have a specification language; the benefits of a bespoke language have, in many deployment scenarios, been outweighed by the overhead of educating developers in the tool and integrating the tool into build processes. The first implementation of JBurg3 is a Java implementation, but a C++ port should not be difficult; the implementation uses Java reflection where C++ would more efficiently use function pointers, and the data structures make use of the hash/equality/comparison characteristics of Java containers in a straightforward way.
