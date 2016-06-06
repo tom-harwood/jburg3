@@ -48,7 +48,7 @@ class TransitionTableBuilder<Nonterminal, NodeType>
     {
         boolean isFinalDimension = dim+1 == arity;
 
-        TransitionPlane<Nonterminal, NodeType> result = new TransitionPlane<Nonterminal, NodeType>();
+        TransitionPlane<Nonterminal, NodeType> result = new TransitionPlane<Nonterminal, NodeType>(dim);
 
         TransitionPivot pivot = new TransitionPivot(transitions, dim);
 

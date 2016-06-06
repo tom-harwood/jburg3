@@ -83,7 +83,7 @@ public class TemplateGroup
     /**
      * Register a renderer; delegates to the STGroup's registerRenderer method.
      */
-    void registerRenderer(Class<? extends Object> clazz, AttributeRenderer renderer)
+    public void registerRenderer(Class<? extends Object> clazz, AttributeRenderer renderer)
     {
         this.templates.registerRenderer(clazz, renderer);
     }

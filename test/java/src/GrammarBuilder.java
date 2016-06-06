@@ -262,7 +262,18 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             // Pattern matchers' nominal arity depends on their children;
             // Closures' arity is always one. Add one to nominal arity to
             // account for the additional Node parameter.
-            int arity = isPatternMatch()? children.size() + 1: 2;
+            int arity;
+
+            if (isPatternMatch()) {
+                arity = children.size() + 1;
+
+                if (isVarArgs && children.size() > 1) {
+                    arity += 1;
+                }
+            } else {
+                arity = 2;
+            }
+
             Method candidate = getNamedMethod(methodName, arity);
 
             if (candidate != null) {
@@ -291,12 +302,10 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
                 if (m.getName().equals(methodName)) {
 
-                    boolean chatty = methodName.equals("widenShortToInt");
-                    
                     Class<?>[] parameterTypes = m.getParameterTypes();
 
                     if (parameterTypes.length == arity && parameterTypes[0].equals(nodeClass)) {
-                        
+
                         if (candidate == null) {
                             candidate = m;
                         } else {

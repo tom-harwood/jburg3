@@ -745,6 +745,10 @@ public class ProductionTable<Nonterminal, NodeType>
                 java.io.PrintWriter out = new java.io.PrintWriter(dumpPath);
                 TemplateGroup stg = new TemplateGroup("templates", templateGroup);
 
+                if ("java.stg".equals(templateGroup)) {
+                    stg.registerRenderer(Object.class, new jburg.emitter.JavaRenderer());
+                }
+
                 if (className != null) {
                     out.println(stg.getTemplate("classDef", "className", className, "table", this).render());
                 } else {

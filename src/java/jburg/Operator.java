@@ -12,7 +12,7 @@ import java.util.Set;
  * with this opcode/arity are encoded into the operator's
  * transition table.
  */
-class Operator<Nonterminal, NodeType>
+public class Operator<Nonterminal, NodeType>
 {
     /**
      * The operator's node type.
@@ -206,6 +206,11 @@ class Operator<Nonterminal, NodeType>
     void setArityKind(ArityKind arityKind)
     {
         this.arityKind = arityKind;
+    }
+
+    public ArityKind getArityKind()
+    {
+        return this.arityKind;
     }
 
     /**

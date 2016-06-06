@@ -13,7 +13,7 @@ import java.util.*;
  * case of the final dimension, to the states which can
  * be assigned to the subtree root.
  */
-class TransitionPlane<Nonterminal, NodeType>
+public class TransitionPlane<Nonterminal, NodeType>
 {
     /**
      * The next dimension of the table, if this is not the final dimension.
@@ -40,37 +40,47 @@ class TransitionPlane<Nonterminal, NodeType>
     public Map<Integer, Integer> getFinalDimIndexMap() { return finalDimIndexMap; }
 
     /**
+     * The dimension this plane occupies in the transition table;
+     * denormalized data for use by emitters.
+     */
+    final int dimension;
+    public int getDimension() { return dimension; }
+
+    /**
      * Construct the final dimension of a transition.
      */
-    TransitionPlane(Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal,NodeType>[] finalDimension)
+    TransitionPlane(Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal,NodeType>[] finalDimension, int dim)
     {
         this.finalDimIndexMap = finalDimIndexMap;
         this.finalDimension = Arrays.asList(finalDimension);
         this.nextDimIndexMap = null;
         this.nextDimension = null;
+        this.dimension = dim;
     }
 
     /**
      * Construct the next dimension of a transition.
      */
-    TransitionPlane(Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>[] nextDimension)
+    TransitionPlane(Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>[] nextDimension, int dim)
     {
         this.nextDimIndexMap = nextDimIndexMap;
         this.nextDimension = Arrays.asList(nextDimension);
         this.finalDimIndexMap = null;
         this.finalDimension = null;
+        this.dimension = dim;
     }
 
     /**
      * Construct a TransitionPlane whose characteristics
      * are not yet fully known (compiler compile time).
      */
-    TransitionPlane()
+    TransitionPlane(int dim)
     {
         this.nextDimIndexMap = new HashMap<Integer,Integer>();
         this.nextDimension = new ArrayList<TransitionPlane<Nonterminal,NodeType>>();
         this.finalDimIndexMap = new HashMap<Integer,Integer>();
         this.finalDimension = new ArrayList<TransitionTableLeaf<Nonterminal,NodeType>>();
+        this.dimension = dim;
     }
 
     /**
@@ -110,7 +120,7 @@ class TransitionPlane<Nonterminal, NodeType>
 
     /**
      * Get the next dimension of this hyperplane.
-     * @param rs the RepresenterState in the next dimension.
+     * @param stateNumber the state number of the child in this plane's dimension.
      * @return the corresponding TransitionPlane.
      */
     TransitionPlane<Nonterminal, NodeType> getNextDimension(int stateNumber)
@@ -145,6 +155,35 @@ class TransitionPlane<Nonterminal, NodeType>
         } else {
             node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
         }
+    }
+
+    Map<Integer,TransitionTableLeaf<Nonterminal,NodeType>> statesByIndex = null;
+
+    public Map<Integer,TransitionTableLeaf<Nonterminal,NodeType>> getStatesByIndex()
+    {
+        if (statesByIndex == null) {
+            statesByIndex = new HashMap<Integer,TransitionTableLeaf<Nonterminal,NodeType>>();
+
+            for (Integer idx: finalDimIndexMap.keySet()) {
+                statesByIndex.put(idx, finalDimension.get(finalDimIndexMap.get(idx)));
+            }
+        }
+
+        return statesByIndex;
+    }
+
+    Map<Integer, TransitionPlane<Nonterminal,NodeType>> nextDimensionByIndex;
+    public Map<Integer, TransitionPlane<Nonterminal,NodeType>> getNextDimensionByIndex()
+    {
+        if (nextDimensionByIndex == null) {
+            nextDimensionByIndex = new HashMap<Integer, TransitionPlane<Nonterminal,NodeType>>();
+
+            for (Integer idx: nextDimIndexMap.keySet()) {
+                nextDimensionByIndex.put(idx, getNextDimension(idx));
+            }
+        }
+
+        return nextDimensionByIndex;
     }
 
     /**

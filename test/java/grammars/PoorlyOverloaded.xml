@@ -56,7 +56,7 @@
     <Pattern nonterminal="String" nodeType="Add">
         <child nonterminal="String"/>
         <child nonterminal="String"/>
-        <postCallback name="concat"/>
+        <postCallback name="concatFixed"/>
     </Pattern>
 
     <!-- Ternary operators -->

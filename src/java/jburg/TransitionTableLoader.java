@@ -656,16 +656,19 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return result;
         }
 
+        // TODO: Maintain current dimension so loaded transition tables can generate hard-coded labelers.
+        int currentDimension = -1;
+
         @SafeVarargs
         final TransitionPlane<Nonterminal,NodeType> createNextDimension(Node node, Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>... nextDimension)
         {
-            return new TransitionPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension);
+            return new TransitionPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension, currentDimension);
         }
 
         @SafeVarargs
         final TransitionPlane<Nonterminal,NodeType> createFinalDimension(Node node, Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal, NodeType>... finalDimension)
         {
-            return new TransitionPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension);
+            return new TransitionPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension, currentDimension);
         }
 
         @SuppressWarnings("unchecked")
