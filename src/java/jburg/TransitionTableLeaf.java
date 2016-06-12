@@ -24,7 +24,9 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     Map<List<Method>, State<Nonterminal, NodeType>> states = new HashMap<List<Method>, State<Nonterminal, NodeType>>();
 
     /**
-     * @return a sorted list of method*-to-state mappings.
+     * @return a map of method*-to-state mappings.
+     * @todo This should return a topologically sorted list,
+     * so that predicates can be evaluated by if/elseif logic.
      */
     public Map<List<Method>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
 
