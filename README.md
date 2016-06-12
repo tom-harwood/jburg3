@@ -16,6 +16,8 @@ Work outstanding before beta:
 
 The author also wishes to thank former and present employers who have supported the JBurg project:
 
+* Allaire Corporation
+* Macromedia
 * [Adobe Systems](http://www.adobe.com)
 * [NuoDB](http://www.nuodb.com)
 * [Veracode](http://www.veracode.com)
