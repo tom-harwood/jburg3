@@ -206,4 +206,26 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     {
         return states.values();
     }
+
+    @Override
+    public int hashCode()
+    {
+        return  states.hashCode() * 31 +
+                predicates.hashCode() * 31 +
+                compositeArityKind.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object x)
+    {
+        if (x instanceof TransitionTableLeaf) {
+            TransitionTableLeaf<?,?> other = (TransitionTableLeaf<?,?>)x;
+
+            return  this.states.equals(other.states) &&
+                    this.predicates.equals(other.predicates) &&
+                    this.compositeArityKind.equals(other.compositeArityKind);
+        } else {
+            return false;
+        }
+    }
 }
