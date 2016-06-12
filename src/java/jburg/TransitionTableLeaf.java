@@ -208,6 +208,11 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     }
 
     @Override
+    /**
+     * The hash of a leaf is the composite hash of its components;
+     * this allows transition tables, generated host language transition
+     * tables in particular, to re-use leaves.
+     */
     public int hashCode()
     {
         return  states.hashCode() * 31 +
@@ -216,6 +221,9 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     }
 
     @Override
+    /**
+     * Two leaves are equal if their components are equal.
+     */
     public boolean equals(Object x)
     {
         if (x instanceof TransitionTableLeaf) {
