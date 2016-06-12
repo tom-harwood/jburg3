@@ -151,7 +151,7 @@ allTests - run java tests
         </java>
     </target>
 
-    <target name="javaGen" depends="jar,compile">
+    <target name="javaGen" depends="compile">
         <mkdir dir="${gensrc.dir}"/>
         <!--echo>Generating ${classname}.java from ${grammar.xml}</echo-->
         <java classname="TestRunner" fork="true" failonerror="true">
