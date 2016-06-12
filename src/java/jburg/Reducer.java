@@ -109,13 +109,14 @@ public class Reducer<Nonterminal, NodeType>
      * @throws Exception from the production's semantic action routines,
      * and a few diagnostics for unlabeled trees or mismatched parameters.
      */
+    @SuppressWarnings("unchecked")
     private Object reduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
         State<Nonterminal,NodeType> state;
 
         if (node != null) {
-            state = node.getTransitionTableLeaf();
+            state = (State<Nonterminal,NodeType>)node.getTransitionTableLeaf();
 
             if (state == null) {
                 // Debugging: uncomment to see why the first pass didn't label the node.

@@ -1,5 +1,9 @@
 delimiters "%","%"
 
+start(table) ::= <<
+%productionTable(table)%
+>>
+
 closure(c) ::= <<
 <closure nonterminal="%c.nonterminal%" source="%c.source%" cost="%c.cost%">
     %c.preCallback:preCallback()%

@@ -54,11 +54,11 @@ public interface BurgInput<Nonterminal, NodeType>
      * Get a node's transition table leaf.
      * @return the transition table leaf assigned to this node.
      */
-    public State<Nonterminal, NodeType> getTransitionTableLeaf();
+    public Object getTransitionTableLeaf();
 
     /**
      * Set a node's transition table leaf.
      * @param ttLeaf    the applicable transition table leaf.
      */
-    public void setTransitionTableLeaf(State<Nonterminal, NodeType> ttleaf);
+    public void setTransitionTableLeaf(Object ttleaf);
 }

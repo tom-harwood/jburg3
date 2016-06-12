@@ -1,4 +1,5 @@
 import java.util.*;
+import java.lang.reflect.Method;
 
 import jburg.ProductionTable;
 import jburg.Reducer;
@@ -18,7 +19,8 @@ public class TestRunner
         String testcaseFile = null;
         String dumpTemplates = "xml.stg";
         String dumpClassName = null;
-        String reducerClassName = "Calculator";
+        String visitorClassName = "Calculator";
+        String reducerClassName = null;
 
         List<String>    failedTestcases = new ArrayList<String>();
 
@@ -42,6 +44,8 @@ public class TestRunner
                 grammarBuilder.randomizeProductions = true;
             } else if (args[i].equals("-reducer")) {
                 reducerClassName = args[++i];
+            } else if (args[i].equals("-visitor")) {
+                visitorClassName = args[++i];
             } else if (args[i].equals("-templates")) {
                 dumpTemplates = args[++i];
             } else if (testcaseFile == null) {
@@ -67,23 +71,53 @@ public class TestRunner
             productions = grammarBuilder.build(NodeFactory.convertToFileURL(grammarFile));
         }
 
-        if (productions == null) {
+        if (productions == null && reducerClassName ==  null) {
             throw new IllegalArgumentException("You must specify a grammar, e.g. -grammar burmGrammar.xml, or load a production table, e.g. -load productionTable.xml.\n");
         }
 
         if (dumpFile != null) {
-            productions.dump(dumpFile, dumpClassName, dumpTemplates);
+            Map<String,String> attributes = new HashMap<String,String>();
+            attributes.put("class.name", dumpClassName);
+            attributes.put("visitor.class", visitorClassName);
+            attributes.put("node.class", "Node");
+            attributes.put("nonterminal.class", "Nonterminal");
+            attributes.put("nodeType.class", "NodeType");
+            productions.dump(dumpFile, dumpTemplates, attributes);
         }
 
         if (dumpFile == null && testcaseFile != null) {
 
-            Reducer<Nonterminal, NodeType> reducer = new Reducer<Nonterminal, NodeType>(Class.forName(reducerClassName).newInstance(), productions);
+            Reducer<Nonterminal, NodeType>  defaultReducer = null;
+            Object                          bespokeReducer = null;
+            Method                          labelMethod = null;
+            Method                          reduceMethod = null;
+            Object                          visitor = Class.forName(visitorClassName).newInstance();
+
+            if (reducerClassName == null) {
+                defaultReducer = new Reducer<Nonterminal, NodeType>(visitor, productions);
+            } else {
+                bespokeReducer = Class.forName(reducerClassName).newInstance();
+                labelMethod = bespokeReducer.getClass().getDeclaredMethod("label", visitor.getClass(), Node.class);
+                reduceMethod = bespokeReducer.getClass().getDeclaredMethod("reduce", visitor.getClass(), Node.class, Nonterminal.class);
+            }
+
             NodeFactory nf = new NodeFactory(testcaseFile);
 
             for (Testcase tc: nf.testcases) {
                 try {
-                    reducer.label(tc.root);
-                    String result = reducer.reduce(tc.root, tc.type).toString();;
+                    String result = null;
+
+                    if (bespokeReducer == null) {
+                        defaultReducer.label(tc.root);
+                        result = defaultReducer.reduce(tc.root, tc.type).toString();;
+                    } else {
+                        labelMethod.invoke(bespokeReducer, visitor, tc.root);
+                        Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type).toString();
+
+                        if (reduced != null) {
+                            result = reduced.toString();
+                        }
+                    }
 
                     if (tc.expected.equals(result)) {
                         if (verbose) {
@@ -92,6 +126,15 @@ public class TestRunner
                         }
                     } else {
                         failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
+                    }
+                } catch (java.lang.reflect.InvocationTargetException ite) {
+                    Throwable ex = ite.getCause();
+                    if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+                        if (verbose) {
+                            System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                        }
+                    } else {
+                        failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
                     }
                 } catch (Exception ex) {
                     if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {

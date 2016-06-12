@@ -289,7 +289,7 @@ public class State<Nonterminal, NodeType>
      * pattern matchers and closures.
      * @return the set of nonterminals produced.
      */
-    Set<Nonterminal> getNonterminals()
+    public Set<Nonterminal> getNonterminals()
     {
         // We could use a cheaper data structure, e.g.,
         // List<Nonterminal>, but returning a set makes

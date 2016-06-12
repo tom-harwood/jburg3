@@ -15,6 +15,7 @@
         <property name="gensrc.dir" value="./gensrc" />
         <property name="classes.dir" value="./classes" />
         <property name="dump.dir" value="./burmdump" />
+        <property name="gensrc.dir" value="./gensrc" />
         <property name="junit.log.dir" value="./log" />
         <property name="grammar.xml" value="grammars/PoorlyOverloaded.xml"/>
         <property name="testcase.xml" value="testcases/FirstTest.xml"/>
@@ -31,6 +32,8 @@
         </delete>
             
         <delete dir="${classes.dir}" />            
+        <delete dir="${dump.dir}" />            
+        <delete dir="${gensrc.dir}" />            
     </target>
 
     <target name="help">
@@ -149,8 +152,8 @@ allTests - run java tests
     </target>
 
     <target name="javaGen" depends="jar,compile">
-        <mkdir dir="${dump.dir}"/>
-        <echo>Generating ${classname}.java from ${grammar.xml}</echo>
+        <mkdir dir="${gensrc.dir}"/>
+        <!--echo>Generating ${classname}.java from ${grammar.xml}</echo-->
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${grammar.xml}"/>
@@ -159,7 +162,7 @@ allTests - run java tests
             <arg value="-classname"/>
             <arg value="${classname}"/>
             <arg value="-dump"/>
-            <arg value="${dump.dir}/${classname}.java"/>
+            <arg value="${gensrc.dir}/${classname}.java"/>
             <arg value="${testcase.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
@@ -176,8 +179,20 @@ allTests - run java tests
                 <pathelement path="${jburg.jar}"/>
                 <pathelement path="classes"/>
             </classpath>
-			<src path="${dump.dir}"/>
+			<src path="${gensrc.dir}"/>
 		</javac>
+        <echo message="Running ${classname}"/>
+        <java classname="TestRunner" fork="true" failonerror="true">
+            <arg value="-reducer"/>
+            <arg value="${classname}"/>
+            <arg value="${testcase.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
     </target>
 
     <target name="jar">

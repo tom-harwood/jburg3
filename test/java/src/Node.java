@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import jburg.State;
@@ -12,7 +13,7 @@ public class Node implements jburg.BurgInput<Nonterminal, NodeType>
     String      content;
 
     /** State stored on behalf of the BURM. */
-    State<Nonterminal, NodeType> transitionTableLeaf;
+    Object transitionTableLeaf;
 
     /** State stored on behalf of the BURM. */
     private int stateNumber = -1;
@@ -27,6 +28,12 @@ public class Node implements jburg.BurgInput<Nonterminal, NodeType>
     {
         this(type);
         this.content = content;
+    }
+
+    Node(NodeType type, Node... children)
+    {
+        this.nodeType = type;
+        this.children = Arrays.asList(children);
     }
 
     void addChild(Node n)
@@ -59,12 +66,12 @@ public class Node implements jburg.BurgInput<Nonterminal, NodeType>
         return this.stateNumber;
     }
 
-    public State<Nonterminal, NodeType> getTransitionTableLeaf()
+    public Object getTransitionTableLeaf()
     {
         return this.transitionTableLeaf;
     }
 
-    public void setTransitionTableLeaf(State<Nonterminal, NodeType> transitionTableLeaf)
+    public void setTransitionTableLeaf(Object transitionTableLeaf)
     {
         this.transitionTableLeaf = transitionTableLeaf;
     }

@@ -96,7 +96,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         final List<Node>            children = new ArrayList<Node>();
 
         int                         stateNumber;
-        State<Load, DumpType>       transitionTableLeaf;
+        Object                      transitionTableLeaf;
 
         Node(String localName, Attributes atts)
         {
@@ -146,12 +146,12 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         @Override
         public DumpType getNodeType()               { return this.nodeType; }
 
-        public State<Load, DumpType> getTransitionTableLeaf()
+        public Object getTransitionTableLeaf()
         {
             return this.transitionTableLeaf;
         }
 
-        public void setTransitionTableLeaf(State<Load, DumpType> transitionTableLeaf)
+        public void setTransitionTableLeaf(Object transitionTableLeaf)
         {
             this.transitionTableLeaf = transitionTableLeaf;
         }
@@ -162,12 +162,13 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             dump(out,0);
         }
 
+        @SuppressWarnings("unchecked")
         void dump(java.io.PrintStream out, int indent)
         {
             for (int i = 0; i < indent * 2;i++) out.print(" ");
             out.print(this.nodeType);
             if (this.transitionTableLeaf != null) {
-                out.printf(" %d %s\n", this.stateNumber, this.transitionTableLeaf.getNonterminals());
+                out.printf(" %d %s\n", this.stateNumber, ((State<Nonterminal,NodeType>)this.transitionTableLeaf).getNonterminals());
             } else {
                 out.println(" --");
             }

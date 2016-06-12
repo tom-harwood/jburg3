@@ -3,6 +3,7 @@ package jburg;
 import java.lang.reflect.*;
 import java.util.*;
 
+import jburg.emitter.JavaRenderer;
 import jburg.emitter.TemplateGroup;
 
 /**
@@ -725,19 +726,12 @@ public class ProductionTable<Nonterminal, NodeType>
 
     /**
      * Dump the production table, if a destination was provided.
-     * @param dumpPath  a pathname for the dump, or null.
+     * @param dumpPath      a pathname for the dump, or null.
+     * @param templateGroup the template group file used to render the table.
+     * @param attributes    attributes used during rendering.
+     * @todo  TODO: add descriptions of the attributes.
      */
-    public void dump(String dumpPath)
-    {
-        dump(dumpPath, "xml.stg");
-    }
-
-    public void dump(String dumpPath, String templateGroup)
-    {
-        dump(dumpPath, null, templateGroup);
-    }
-
-    public void dump(String dumpPath, String className, String templateGroup)
+    public void dump(String dumpPath, String templateGroup, Map<String,String> attributes)
     {
         if (dumpPath != null) {
 
@@ -746,15 +740,12 @@ public class ProductionTable<Nonterminal, NodeType>
                 TemplateGroup stg = new TemplateGroup("templates", templateGroup);
 
                 if ("java.stg".equals(templateGroup)) {
-                    stg.registerRenderer(Object.class, new jburg.emitter.JavaRenderer());
+                    Map<Object,Integer> uniqueStates = new HashMap<Object,Integer>();
+                    stg.setDefaultAttribute("uniqueStates", uniqueStates);
+                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
                 }
 
-                if (className != null) {
-                    out.println(stg.getTemplate("classDef", "className", className, "table", this).render());
-                } else {
-                    out.println(stg.getTemplate("productionTable", "t", this).render());
-                }
-
+                out.println(stg.getTemplate("start", "table", this).render());
                 out.flush();
                 out.close();
 

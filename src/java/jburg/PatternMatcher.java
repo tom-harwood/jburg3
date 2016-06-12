@@ -2,6 +2,7 @@ package jburg;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -72,5 +73,35 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     public String toString()
     {
         return String.format("%s%s:%s)", nodeType, childTypes, ownCost);
+    }
+
+    /**
+     * A PatternChildDescriptor is a (position,Nonterminal) pair
+     * used by the host language emitters to build method signatures.
+     */
+    public class PatternChildDescriptor
+    {
+        final int position;
+        final Nonterminal nonterminal;
+
+        PatternChildDescriptor(int position, Nonterminal nonterminal)
+        {
+            this.position = position;
+            this.nonterminal = nonterminal;
+        }
+
+        public int getPosition()            { return position; }
+        public Nonterminal getNonterminal() { return nonterminal; }
+    }
+
+    public List<PatternChildDescriptor> getChildDescriptors()
+    {
+        List<PatternChildDescriptor> result = new ArrayList<PatternChildDescriptor>();
+
+        for (int i = 0; i < childTypes.size(); i++) {
+            result.add(new PatternChildDescriptor(i, childTypes.get(i)));
+        }
+
+        return result;
     }
 }

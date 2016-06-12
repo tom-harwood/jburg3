@@ -14,7 +14,7 @@ class Node implements BurgInput<Nonterminal, NodeType>
     final Object        content;
 
     int stateNumber = -1;
-    State<Nonterminal,NodeType> transition;
+    Object transition;
 
     Node(NodeType nodeType)
     {
@@ -64,12 +64,12 @@ class Node implements BurgInput<Nonterminal, NodeType>
         return this.stateNumber;
     }
 
-    public void setTransitionTableLeaf(State<Nonterminal,NodeType> state)
+    public void setTransitionTableLeaf(Object state)
     {
         this.transition = state;
     }
 
-    public State<Nonterminal,NodeType> getTransitionTableLeaf()
+    public Object getTransitionTableLeaf()
     {
         return this.transition;
     }

@@ -16,9 +16,17 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      * present, except possibly the state with that satisfied
      * no predicates. The key lists are sorted by the methods'
      * hashCode, so that they have consistent hash and equality
-     * semantics; the ordering has no other meaning to the BURM.
+     * semantics.
+     * @see getStatesByMethod(), which returns a sorted rendering
+     * of this map, so that the methods can be called in if/elseif
+     * logic or used to build state machines for lazy evaluation.
      */
     Map<List<Method>, State<Nonterminal, NodeType>> states = new HashMap<List<Method>, State<Nonterminal, NodeType>>();
+
+    /**
+     * @return a sorted list of method*-to-state mappings.
+     */
+    public Map<List<Method>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
 
     /**
      * A sorted and de-dup'd list of all predicate methods
@@ -153,8 +161,16 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
             return this.states.get(satisfiedPredicates);
         } else {
             assert satisfiedPredicates.isEmpty();
-            return new State<Nonterminal,NodeType>();
+            return emptyState();
         }
+    }
+
+    static final State<?,?> s_emptyState = new State();
+
+    @SuppressWarnings("unchecked")
+    private State<Nonterminal,NodeType> emptyState()
+    {
+        return (State<Nonterminal,NodeType>)s_emptyState;
     }
 
     /**

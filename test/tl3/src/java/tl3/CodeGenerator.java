@@ -174,7 +174,6 @@ public class CodeGenerator
         productions.addNullPointerProduction(NullPtr, 1, null);
 
         productions.generateStates();
-        productions.dump(System.getenv("BURMDUMP"));
     }
 
     static Method getPostCallback(String methodName, Class<?>... formalTypes)
