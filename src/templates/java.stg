@@ -178,6 +178,9 @@ case %nt%: {
 >>
 
 reduction(pattern) ::= <<
+%if(pattern.preCallback)%
+visitor.%pattern.preCallback.name%(node, goalState);
+%endif%
 %pattern.childDescriptors: { c | Object result%c.position% = reducer.reduce(visitor, node.getSubtree(%c.position%), %nonterminalClass()%.%c.nonterminal%);};separator="\n"%
 %if(pattern.postCallback)%
 %if(pattern.isVarArgs)%

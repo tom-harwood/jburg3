@@ -76,6 +76,12 @@ public class Node implements jburg.BurgInput<Nonterminal, NodeType>
         this.transitionTableLeaf = transitionTableLeaf;
     }
 
+    public int intValue()
+    {
+        assert content != null;
+        return Integer.valueOf(content);
+    }
+
     @Override
     public String toString()
     {

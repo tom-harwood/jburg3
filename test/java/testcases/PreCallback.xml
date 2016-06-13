@@ -1,0 +1,21 @@
+<Test>
+
+    <Testcase name="1+2, biased" type="Int" expected="4">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <!-- (2+1) + 2(bias) + 1 + 1 (bias) -->
+    <Testcase name="1+(2+1), biased" type="Int" expected="7">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="Add">
+                <Node op="IntLiteral" content="2"/>
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+</Test>

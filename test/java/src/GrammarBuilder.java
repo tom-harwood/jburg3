@@ -105,6 +105,8 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             addChild(localName, atts);
         } else if (localName.equals("postCallback")) {
             addPostCallback(localName, atts);
+        } else if (localName.equals("preCallback")) {
+            addPreCallback(localName, atts);
         } else if (localName.equals("predicate")) {
             addPredicate(localName, atts);
         } else {
@@ -163,6 +165,12 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         currentPattern.addPostCallback(atts);
     }
 
+    private void addPreCallback(String localName, Attributes atts)
+    {
+        checkPatternState(localName, PatternPrecondition.Present);
+        currentPattern.addPreCallback(atts);
+    }
+
     private void addPredicate(String localName, Attributes atts)
     {
         checkPatternState(localName, PatternPrecondition.Present);
@@ -214,6 +222,8 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         final int                   cost;
         final boolean               isVarArgs;
 
+        final static int            ANY_ARITY = -1;
+
         Method predicate   = null;
         Method preCallback = null;
         Method postCallback = null;
@@ -249,7 +259,12 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
         void addPostCallback(Attributes atts)
         {
-            this.postCallback = getCallbackMethod(atts.getValue("name"));
+            this.postCallback = getPostCallbackMethod(atts.getValue("name"));
+        }
+
+        void addPreCallback(Attributes atts)
+        {
+            this.preCallback = getPreCallbackMethod(atts.getValue("name"));
         }
 
         void addPredicate(Attributes atts)
@@ -257,7 +272,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             this.predicate = getPredicateMethod(atts.getValue("name"));
         }
 
-        Method getCallbackMethod(String methodName)
+        Method getPostCallbackMethod(String methodName)
         {
             // Pattern matchers' nominal arity depends on their children;
             // Closures' arity is always one. Add one to nominal arity to
@@ -276,10 +291,25 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
             Method candidate = getNamedMethod(methodName, arity);
 
+            if (candidate == null) {
+                candidate = getNamedMethod(methodName, ANY_ARITY);
+            }
+
             if (candidate != null) {
                 return candidate;
             } else {
-                throw new IllegalArgumentException(String.format("No callback method %s(%s, %s)", methodName, nodeClass.getName(), children));
+                throw new IllegalArgumentException(String.format("No post-callback method %s(%s, %s)", methodName, nodeClass.getName(), children));
+            }
+        }
+
+        Method getPreCallbackMethod(String methodName)
+        {
+            Method candidate = getNamedMethod(methodName, 2);
+
+            if (candidate != null) {
+                return candidate;
+            } else {
+                throw new IllegalArgumentException(String.format("No pre-callback method %s(%s)", methodName, nodeClass.getName()));
             }
         }
 
@@ -304,7 +334,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
                     Class<?>[] parameterTypes = m.getParameterTypes();
 
-                    if (parameterTypes.length == arity && parameterTypes[0].equals(nodeClass)) {
+                    if ((parameterTypes.length == arity && parameterTypes[0].equals(nodeClass)) || arity == ANY_ARITY) {
 
                         if (candidate == null) {
                             candidate = m;

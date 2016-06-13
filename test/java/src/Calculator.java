@@ -10,15 +10,11 @@ import jburg.TransitionTableLoader;
 public class Calculator
 {
     /*
-     * ** Callback routines **
-     */
-
-    /*
      * ** Nullary Operators **
      */
     public Integer intLiteral(Node node)
     {
-        return Integer.valueOf(node.content);
+        return node.intValue();
     }
 
     public Short shortLiteral(Node node)
@@ -50,6 +46,13 @@ public class Calculator
     public Integer add(Node node, Integer x, Integer y)
     {
         return x + y;
+    }
+
+    public Integer addWithBias(Node node, Integer x, Integer y)
+    {
+        int result = x + y + this.additionBias;
+        this.additionBias--;
+        return result;
     }
 
     public Integer subtract(Node node, Integer x, Integer y)
@@ -130,9 +133,18 @@ public class Calculator
     /*
      * Predicate methods
      */
-    public Boolean shortGuard(Node n)
+    public Boolean shortGuard(Node node)
     {
-        int nodeValue = Integer.valueOf(n.content);
-        return nodeValue >= Short.MIN_VALUE && nodeValue <= Short.MAX_VALUE;
+        return node.intValue() >= Short.MIN_VALUE && node.intValue() <= Short.MAX_VALUE;
     }
+
+    /*
+     * Pre-reduction methods
+     */
+    public void biasPreCallback(Node n, Nonterminal goalState)
+    {
+        additionBias += 1;
+    }
+
+    int additionBias = 0;
 }

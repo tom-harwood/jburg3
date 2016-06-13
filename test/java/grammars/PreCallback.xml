@@ -1,0 +1,13 @@
+<Grammar reducerClass="Calculator" nodeClass="Node">
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <preCallback name="biasPreCallback"/>
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="addWithBias"/>
+    </Pattern>
+</Grammar>
