@@ -1,6 +1,7 @@
 package jburg.emitter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import java.lang.reflect.Method;
 import org.stringtemplate.v4.AttributeRenderer;
 
 import jburg.Operator;
+import jburg.PatternMatcher;
 
 public class JavaRenderer implements AttributeRenderer
 {
@@ -67,10 +69,28 @@ public class JavaRenderer implements AttributeRenderer
             }
 
             if (isVariadic) {
-                // TODO: Marshal the variadic arguments...
+                result.append(", variadicActuals");
             }
             result.append(")");
             return result.toString();
+
+        } else if ("postCallback.lastNonterminal".equals(formatString)) {
+            @SuppressWarnings("unchecked")
+            List<PatternMatcher.PatternChildDescriptor> descriptors = ((PatternMatcher)o).getChildDescriptors();
+            return descriptors.get(descriptors.size()-1).getNonterminal().toString();
+
+        } else if ("postCallback.variadicType".equals(formatString)) {
+            Method m = (Method)o;
+            assert(m.isVarArgs());
+            Class<?>[] parameterTypes = m.getParameterTypes();
+            return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
+
+        } else if ("postCallback.variadicOffset".equals(formatString)) {
+            Method m = (Method)o;
+            assert(m.isVarArgs());
+            Class<?>[] parameterTypes = m.getParameterTypes();
+            assert(parameterTypes.length > 1);
+            return Integer.valueOf(parameterTypes.length - 2).toString();
 
         } else if ("version".equals(formatString)) {
             return jburg.version.JBurgVersion.version;

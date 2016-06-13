@@ -73,6 +73,9 @@ allTests - run java tests
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="javaGen"/>
+        <antcall target="javaGen">
+            <param name="testcase.xml" value="testcases/VariadicPatterns.xml"/>
+        </antcall>
     </target>
 
     <target name="calculator">
@@ -153,7 +156,7 @@ allTests - run java tests
 
     <target name="javaGen" depends="compile">
         <mkdir dir="${gensrc.dir}"/>
-        <!--echo>Generating ${classname}.java from ${grammar.xml}</echo-->
+        <echo>Generating ${classname}.java from ${grammar.xml}</echo>
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${grammar.xml}"/>
