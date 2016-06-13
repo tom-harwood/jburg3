@@ -69,12 +69,20 @@ allTests - run java tests
         <antcall target="calculator">
             <param name="calculator.xml" value="testcases/VariadicPatterns.xml"/>
         </antcall>
+        <antcall target="calculator">
+            <param name="grammar.xml" value="grammars/PreCallback.xml"/>
+            <param name="calculator.xml" value="testcases/PreCallback.xml"/>
+        </antcall>
         <antcall target="dumpLoad">
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="javaGen"/>
         <antcall target="javaGen">
             <param name="testcase.xml" value="testcases/VariadicPatterns.xml"/>
+        </antcall>
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/PreCallback.xml"/>
+            <param name="testcase.xml" value="testcases/PreCallback.xml"/>
         </antcall>
     </target>
 
