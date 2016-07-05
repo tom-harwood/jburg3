@@ -45,28 +45,7 @@ public class Reducer<Nonterminal, NodeType>
     public void label(BurgInput<Nonterminal, NodeType> node)
     throws Exception
     {
-        // Null subtrees all share a singleton state in the production table;
-        // it's precomputed into the transition table and the operators use it
-        // when they encounter a null subtree.
-        if (node != null) {
-
-            int subtreeCount = node.getSubtreeCount();
-
-            for (int i = 0; i < subtreeCount; i++) {
-                label(node.getSubtree(i));
-            }
-
-            Operator<Nonterminal, NodeType> op = productionTable.getOperator(node.getNodeType(), node.getSubtreeCount());
-
-            if (op != null) {
-
-                if (subtreeCount > 0) {
-                    op.assignState(node, visitor);
-                } else {
-                    op.setLeafState(node, visitor);
-                }
-            }
-        } 
+        productionTable.label(node, visitor, ProductionTable.LABEL_DEEP);
     }
 
     /**

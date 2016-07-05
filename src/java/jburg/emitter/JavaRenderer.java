@@ -92,6 +92,9 @@ public class JavaRenderer implements AttributeRenderer
             assert(parameterTypes.length > 1);
             return Integer.valueOf(parameterTypes.length - 2).toString();
 
+        } else if ("timestamp".equals(formatString)) {
+            return new java.util.Date().toString();
+
         } else if ("version".equals(formatString)) {
             return jburg.version.JBurgVersion.version;
 

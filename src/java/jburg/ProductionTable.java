@@ -43,6 +43,12 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     private Map<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>> states = new HashMap<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
 
+    /** Manifest constant input the the label routine; label subtrees and the root node. */
+    public static boolean LABEL_DEEP = true;
+
+    /** Manifest constant input the the label routine; only label the root node. */
+    public static boolean LABEL_SHALLOW = false;
+
     /**
      * States in entry order, used for faster lookup by state number
      * and to emit states in their "natural" order.
@@ -225,6 +231,7 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, cost, method);
         closures.add(closure);
+        nonterminals.add(targetNt);
         return closure;
     }
 
@@ -406,6 +413,8 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
+    boolean verbose = false;
+
     /**
      * Try all permuations of an operator against a new state.
      * For each dimension of the operator, project a representer
@@ -424,8 +433,10 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     private void computeTransitions(Operator<Nonterminal,NodeType> op, State<Nonterminal,NodeType> state, Queue<State<Nonterminal, NodeType>> workList)
     {
-        //System.out.printf("\ncomputeTransitions(%s,%s)\n",op,state);
         int arity = op.size();
+
+        // verbose = op.nodeType.toString().equals("SelectionList");
+        if (verbose) System.out.printf("\ncomputeTransitions(%s,%s)\n",op,state);
 
         for (int dim = 0; dim < arity; dim++) {
 
@@ -436,7 +447,9 @@ public class ProductionTable<Nonterminal, NodeType>
                 boolean novelPState = !op.reps.get(dim).contains(pState);
 
                 if (novelPState) {
-                    //System.out.printf("\tnovel pState %s\n\t..reps[%d]=%s\n", pState, dim, op.reps.get(dim));
+                    if (verbose) System.out.printf("\tnovel pState %s\n\t..reps[%d]=%s\n", pState, dim, op.reps.get(dim));
+                } else {
+                    if (verbose) System.out.printf("\tsame old pState %s\n\t..reps[%d]=%s\n", pState, dim, op.reps.get(dim));
                 }
 
                 op.reps.get(dim).add(pState);
@@ -465,13 +478,13 @@ public class ProductionTable<Nonterminal, NodeType>
                                 addState(resultState);
                                 closure(resultState);
                                 workList.add(resultState);
-                                //System.out.printf("\tadding novel %s->%s to %s\n",repStates, resultState, op);
+                                if (verbose) System.out.printf("\tadding novel %s->%s to %s\n",repStates, resultState, op);
                                 op.addTransition(repStates, resultState);
                             } else {
                                 // An equivalent state is already known to the production table;
                                 // use the previously stored state as the canonical representation.
                                 State<Nonterminal, NodeType> canonicalState = addState(resultState);
-                                //System.out.printf("\tadding canonical %s->%s to %s\n", repStates, canonicalState, op);
+                                if (verbose) System.out.printf("\tadding canonical %s->%s to %s\n", repStates, canonicalState, op);
                                 op.addTransition(repStates, canonicalState);
                             }
                         }
@@ -574,9 +587,18 @@ public class ProductionTable<Nonterminal, NodeType>
         RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(state.nodeType);
 
         for (Nonterminal n: nonterminals) {
+            if (verbose) System.out.printf("Checking nonterminal %s\n", n);
+
             for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                if (p.usesNonterminalAt(n, i) && state.getCost(n) < candidate.getCost(n)) {
-                    candidate.setCost(n, state.getCost(n));
+                if (verbose) System.out.printf("checking against pattern %s\n", p);
+
+                if (p.usesNonterminalAt(n, i)) {
+                    if (verbose) System.out.printf("Possible winner, nt %s, dim %d\n", n,i);
+
+                    if (state.getCost(n) < candidate.getCost(n)) {
+                        if (verbose) System.out.printf("succeeded with nt %s, cost %s\n", n, state.getCost(n));
+                        candidate.setCost(n, state.getCost(n));
+                    }
                 }
             }
         }
@@ -754,4 +776,41 @@ public class ProductionTable<Nonterminal, NodeType>
             }
         }
     }
+
+    /**
+     * Label a tree; this is the first pass
+     * of the rewrite engine. After a tree
+     * is labeled, it can be analyzed by walking
+     * it with a visitor, or by directly querying
+     * the available nonterminal states of its root's
+     * transition table leaf.
+     * @param node the root of the tree to label.
+     */
+    public void label(BurgInput<Nonterminal, NodeType> node, Object visitor, boolean labelSubtrees)
+    throws Exception
+    {
+        // Null subtrees all share a singleton state in the production table;
+        // it's precomputed into the transition table and the operators use it
+        // when they encounter a null subtree.
+        if (node != null) {
+
+            int subtreeCount = node.getSubtreeCount();
+
+            for (int i = 0; labelSubtrees && i < subtreeCount; i++) {
+                label(node.getSubtree(i), visitor, labelSubtrees);
+            }
+
+            Operator<Nonterminal, NodeType> op = getOperator(node.getNodeType(), node.getSubtreeCount());
+
+            if (op != null) {
+
+                if (subtreeCount > 0) {
+                    op.assignState(node, visitor);
+                } else {
+                    op.setLeafState(node, visitor);
+                }
+            }
+        } 
+    }
+
 }

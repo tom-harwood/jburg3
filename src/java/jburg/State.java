@@ -312,9 +312,10 @@ public class State<Nonterminal, NodeType>
     @Override
     public String toString()
     {
-        StringBuilder buffer = new StringBuilder(String.format("State %d %s[", this.number, this.nodeType));
+        StringBuilder buffer = new StringBuilder(String.format("State %d %s", this.number, this.nodeType));
 
         if (nonClosureProductions.size() > 0) {
+            buffer.append("[");
             boolean didFirst = false;
             for (Nonterminal nt: nonClosureProductions.keySet()) {
                 Production<Nonterminal> p = nonClosureProductions.get(nt);
@@ -329,8 +330,9 @@ public class State<Nonterminal, NodeType>
             buffer.append("]");
 
             if (closures.size() > 0) {
-                buffer.append("..");
-                buffer.append(closures);
+                for (Nonterminal nt: closures.keySet()) {
+                    buffer.append(String.format(", %s=%s", nt, closures.get(nt).source));
+                }
             }
         }
 
