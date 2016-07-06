@@ -813,4 +813,21 @@ public class ProductionTable<Nonterminal, NodeType>
         } 
     }
 
+    public boolean canProduce(BurgInput<Nonterminal,NodeType> node, Nonterminal goal, Object visitor)
+    throws Exception
+    {
+        if (node != null) {
+            Object rawTransition = node.getTransitionTableLeaf();
+
+            if (rawTransition != null && rawTransition instanceof State) {
+                @SuppressWarnings("unchecked")
+                State<Nonterminal, NodeType> s = (State<Nonterminal, NodeType>) rawTransition;
+                return s.getCost(goal) < Integer.MAX_VALUE;
+            }
+        } else if (nullState != null) {
+            return nullState.getCost(goal) < Integer.MAX_VALUE;
+        }
+        // else
+        return false;
+    }
 }
