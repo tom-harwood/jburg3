@@ -256,6 +256,19 @@ public class State<Nonterminal, NodeType>
         return false;
     }
 
+    String getClosureRationale(Closure<Nonterminal> closure)
+    {
+        if (patternCosts.containsKey(closure.target)) {
+            return String.format("Incumbent pattern for %s", closure.target);
+        } else if (getCost(closure.source) == Integer.MAX_VALUE) {
+            return String.format("Missing antecedent %s", closure.source);
+        } else {
+            long closureCost = closure.ownCost + getCost(closure.source);
+            assert closureCost >= getCost(closure.target);
+            return String.format("Closure cost %d beat by existing %d", closureCost, getCost(closure.target));
+        }
+    }
+
     /**
      * Get all closures that depend on a given pattern-matching production.
      * @param needle the production of interest.

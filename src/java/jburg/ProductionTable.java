@@ -104,6 +104,12 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public static final int ERROR_STATE_NUM = 0;
 
+    /** Emit diagnostic information when this is set. */
+    boolean verbose = false;
+
+    /** If an operator matches this pattern (when it's set), turn on verbose mode for its state transition computations. */
+    String  verboseTrigger = null;
+
     /**
      * Add a pattern-matching production to the grammar.
      * @param nt            the nonterminal this production produces.
@@ -365,13 +371,17 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     private void closure(State<Nonterminal,NodeType> state)
     {
+        if (verbose) System.out.printf("\tclosure(%s)\n", state);
         boolean closureRecorded;
 
         do {
             closureRecorded = false;
 
             for (Closure<Nonterminal> closure: this.closures) {
-                closureRecorded = state.addClosure(closure);
+                String closureRationale = verbose? state.getClosureRationale(closure): null;
+                boolean thisClosureRecorded = state.addClosure(closure);
+                closureRecorded |= thisClosureRecorded;
+                if (verbose) System.out.printf("\t\t%s %s: %s\n", thisClosureRecorded? "<-":"--", closure, closureRationale);
             }
 
         } while (closureRecorded);
@@ -413,7 +423,16 @@ public class ProductionTable<Nonterminal, NodeType>
         }
     }
 
-    boolean verbose = false;
+    /**
+     * Set the pattern that turns on verbose mode for specific operators.
+     * @param pattern   a regex describing the Operator(s) of interest.
+     */
+    public String setVerboseTrigger(String pattern)
+    {
+        String result = verboseTrigger;
+        verboseTrigger = pattern;
+        return result;
+    }
 
     /**
      * Try all permuations of an operator against a new state.
@@ -435,7 +454,7 @@ public class ProductionTable<Nonterminal, NodeType>
     {
         int arity = op.size();
 
-        // verbose = op.nodeType.toString().equals("SelectionList");
+        verbose = verboseTrigger != null && op.toString().matches(verboseTrigger);
         if (verbose) System.out.printf("\ncomputeTransitions(%s,%s)\n",op,state);
 
         for (int dim = 0; dim < arity; dim++) {
@@ -585,21 +604,31 @@ public class ProductionTable<Nonterminal, NodeType>
     private RepresenterState<Nonterminal,NodeType> project(Operator<Nonterminal,NodeType> op, int i, State<Nonterminal,NodeType> state)
     {
         RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(state.nodeType);
+        if (verbose) System.out.printf("\tproject(%s,%d,%s)\n", op, i, state.getStateNumber());
 
         for (Nonterminal n: nonterminals) {
-            if (verbose) System.out.printf("Checking nonterminal %s\n", n);
 
-            for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
-                if (verbose) System.out.printf("checking against pattern %s\n", p);
+            if (state.getCost(n) < Integer.MAX_VALUE) {
+                if (verbose) System.out.printf("\t\tChecking nonterminal %s\n", n);
 
-                if (p.usesNonterminalAt(n, i)) {
-                    if (verbose) System.out.printf("Possible winner, nt %s, dim %d\n", n,i);
+                for (PatternMatcher<Nonterminal, NodeType> p: getPatternsForNodeType(op.nodeType)) {
+                    if (verbose) System.out.printf("\t\t\tchecking against pattern %s\n", op, i, state.getStateNumber(), p);
 
-                    if (state.getCost(n) < candidate.getCost(n)) {
-                        if (verbose) System.out.printf("succeeded with nt %s, cost %s\n", n, state.getCost(n));
-                        candidate.setCost(n, state.getCost(n));
+                    if (p.usesNonterminalAt(n, i))  {
+                        if (verbose) System.out.printf("\t\t\t\tPossible winner, nt %s, dim %d, state cost %d%s\n", n, i,
+                            state.getCost(n),
+                            candidate.getCost(n) < Integer.MAX_VALUE?  String.format(", candidate cost %d", candidate.getCost(n)): ""
+                        );
+
+                        if (state.getCost(n) < candidate.getCost(n)) {
+                            if (verbose) System.out.printf("\t\t\t\tsucceeded with nt %s, cost %s\n", n, state.getCost(n));
+                            candidate.setCost(n, state.getCost(n));
+                        }
                     }
                 }
+            } else {
+                // This is noisy.
+                //if (verbose) System.out.printf("\tNogo: nonterminal %s unfeasible? %s\n", n, state.getCost(n) == Integer.MAX_VALUE);
             }
         }
 
