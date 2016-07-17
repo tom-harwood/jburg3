@@ -42,8 +42,7 @@ do
             shift;
             shift;;
         -p)
-            TEMPLATES=$2;
-                TEMPLATES="-templates $2"
+            TEMPLATES="-templates $2"
             shift;
             shift;;
         -q)
