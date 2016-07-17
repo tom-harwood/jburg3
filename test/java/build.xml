@@ -182,6 +182,8 @@ allTests - run java tests
             </classpath>
             <jvmarg value="-ea"/>
         </java>
+        <!-- Ensure we'll recompile -->
+        <delete file="${classes.dir}/${classname}.class"/>
 		<javac 
 			debug="${debug.symbols}" 
 			destdir="${classes.dir}" includes="${classname}.java"
@@ -192,7 +194,21 @@ allTests - run java tests
             </classpath>
 			<src path="${gensrc.dir}"/>
 		</javac>
-        <echo message="Running ${classname}"/>
+        <echo message="Testing generated reducer ${classname} with ${testcase.xml}"/>
+        <java classname="TestRunner" fork="true" failonerror="true">
+            <arg value="-reducer"/>
+            <arg value="${classname}"/>
+            <arg value="${testcase.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+    </target>
+
+    <target name="javaRerun" depends="init">
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-reducer"/>
             <arg value="${classname}"/>
