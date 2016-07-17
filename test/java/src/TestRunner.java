@@ -112,7 +112,7 @@ public class TestRunner
                         result = defaultReducer.reduce(tc.root, tc.type).toString();;
                     } else {
                         labelMethod.invoke(bespokeReducer, visitor, tc.root);
-                        Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type).toString();
+                        Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type);
 
                         if (reduced != null) {
                             result = reduced.toString();
@@ -122,7 +122,6 @@ public class TestRunner
                     if (tc.expected.equals(result)) {
                         if (verbose) {
                             System.out.printf("Succeeded: %s\n", tc.name);
-                            System.out.flush();
                         }
                     } else {
                         failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
@@ -146,6 +145,13 @@ public class TestRunner
                     }
                 }
             }
+        }
+
+        if (!failedTestcases.isEmpty()) {
+            System.out.println();
+            System.out.println("---FAILURES---");
+            System.out.flush();
+            Thread.sleep(100);
         }
 
         for (String tcFail: failedTestcases) {
