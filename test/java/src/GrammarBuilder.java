@@ -259,21 +259,23 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
         void addPostCallback(Attributes atts)
         {
-            this.postCallback = getPostCallbackMethod(atts.getValue("name"));
+            this.postCallback = getPostCallbackMethod(atts);
         }
 
         void addPreCallback(Attributes atts)
         {
-            this.preCallback = getPreCallbackMethod(atts.getValue("name"));
+            this.preCallback = getPreCallbackMethod(atts);
         }
 
         void addPredicate(Attributes atts)
         {
-            this.predicate = getPredicateMethod(atts.getValue("name"));
+            this.predicate = getPredicateMethod(atts);
         }
 
-        Method getPostCallbackMethod(String methodName)
+        Method getPostCallbackMethod(Attributes atts)
         {
+            String methodName = atts.getValue("name");
+
             // Pattern matchers' nominal arity depends on their children;
             // Closures' arity is always one. Add one to nominal arity to
             // account for the additional Node parameter.
@@ -302,8 +304,9 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             }
         }
 
-        Method getPreCallbackMethod(String methodName)
+        Method getPreCallbackMethod(Attributes atts)
         {
+            String methodName = atts.getValue("name");
             Method candidate = getNamedMethod(methodName, 2);
 
             if (candidate != null) {
@@ -313,8 +316,9 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             }
         }
 
-        Method getPredicateMethod(String methodName)
+        Method getPredicateMethod(Attributes atts)
         {
+            String methodName = atts.getValue("name");
             Method candidate = getNamedMethod(methodName, 1);
 
             if (candidate != null) {
