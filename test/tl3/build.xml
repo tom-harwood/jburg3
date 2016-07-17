@@ -66,6 +66,10 @@ test - run java tests
 		</javac>
 	</target>
 
+    <target name="jar">
+        <ant dir="../.." target="jar"/>
+    </target>
+
     <target name="test" depends="init">
         <java classname="tl3.TL3" fork="true" failonerror="true">
             <classpath>
