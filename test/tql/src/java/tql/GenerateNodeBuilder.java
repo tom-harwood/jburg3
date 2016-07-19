@@ -67,7 +67,7 @@ public class GenerateNodeBuilder
         out.println("    protected Node createNode(NodeType type, Object content)");
         out.println("    {");
         out.println("        int childCount = pendingNodeCount();");
-        out.println("        assert childCount >= 0;");
+        out.println("        assert childCount >= 0: String.format(\"Negative child count: %d\", childCount);");
         out.println("        List<Node> children = new ArrayList<Node>();");
         out.println("        for (int i = 0; i < childCount; i++) {");
         out.println("            children.add(nodeStack.pop());");
@@ -75,6 +75,7 @@ public class GenerateNodeBuilder
         out.println("        Collections.reverse(children);");
         out.println("        Node result = new Node(type, children, content);");
         out.println("        nodeStack.push(result);");
+        out.println("        scopeStack.pop();");
         out.println("        return result;");
         out.println("    }");
         out.println();
@@ -85,7 +86,7 @@ public class GenerateNodeBuilder
         out.println();
         out.println("    protected Node getRoot()");
         out.println("    {");
-        out.println("        assert(nodeStack.size() == 1);");
+        out.println("        assert nodeStack.size() == 1: String.format(\"Expected 1 child found %d\", nodeStack.size());");
         out.println("        return nodeStack.peek();");
         out.println("    }");
         out.println();

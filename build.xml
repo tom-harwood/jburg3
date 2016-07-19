@@ -90,8 +90,11 @@ test - call the test/MAT directory's build.xml
 	</target>
 
     <target name="test" depends="init">
+        <echo message="Running java tests"/>
         <ant dir="test/java" target="cleanBuildAndTest" inheritAll="false"/>
+        <echo message="Running TL/3 tests"/>
         <ant dir="test/tl3" target="cleanBuildAndTest" inheritAll="false"/>
+        <echo message="Running TQL tests"/>
         <ant dir="test/tql" target="cleanBuildAndTest" inheritAll="false"/>
     </target>
 

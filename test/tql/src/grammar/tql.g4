@@ -20,9 +20,7 @@ statement:
     data_statement
   | data_change_statement
   | schema_statement
-/*
-  | index_statement
-*/
+  | tql_statement
   ;
 
 data_statement:
@@ -37,6 +35,11 @@ schema_statement:
     create_table_statement
   | drop_table_statement
   ;
+
+tql_statement:
+    var_decl
+    | assignment_stmt
+    ;
 
 create_table_statement:
     CREATE TABLE table_name 
@@ -66,6 +69,12 @@ insert_statement:
 value_list: VALUES LPAREN expression (COMMA expression)* RPAREN
     ;
 
+var_decl: VAR identifier (EQU expression)?
+    ;
+
+assignment_stmt: identifier EQU expression
+    ;
+
 query_expression:
     SELECT select_list FROM table_expression (where)?
     ;
@@ -89,29 +98,48 @@ expression: boolean_expression;
 
 boolean_expression:
     comparison_expression
-    | comparison_expression AND comparison_expression
-    | comparison_expression OR comparison_expression
+    | comparison_expression AND boolean_expression
+    | comparison_expression OR boolean_expression
+    | negated_boolean_expression
+    ;
+
+negated_boolean_expression:
+    NOT boolean_expression
     ;
 
 comparison_expression:
     arithmetic_expression (comparator arithmetic_expression)?
     ;
 
-comparator: EQU | LSS | LTE | GTE | GTR
+comparator: EQU | NEQ | LSS | LTE | GTE | GTR
     ;
 
 arithmetic_expression:
-    primary
+term ((PLUS | MINUS) term)?
+    ;
+
+term: factor ((STAR | SLASH) term)?
+    ;
+
+factor: unary_operator | postfix_operator | primary
+    ;
+
+unary_operator: (PLUS | MINUS) primary
+    ;
+
+postfix_operator: primary PLUSPLUS
     ;
 
 primary:
     literal
     | identifier
+    | LPAREN expression RPAREN
     ;
 
 literal:
     unsigned_literal
     | signed_literal
+    | general_literal
     ;
 
 
@@ -247,15 +275,9 @@ nonreserved_keywords:
   | VARCHAR
   ;
 
-EQU:    '=';
-GTR:    '>';
-GTE:    '>=';
-LSS:    '<';
-LTE:    '<=';
 
 unsigned_literal:
     unsigned_numeric_literal
-  | general_literal
   ;
 
 unsigned_numeric_literal: INT_LITERAL;
@@ -293,6 +315,14 @@ boolean_literal:
 INT_LITERAL: [0-9]+;
 
 WS : [ \t\r\n]+ -> skip ;
+
+SINGLE_LINE_COMMENT:
+    '--' ~[\r\n]* -> channel(HIDDEN)
+    ;
+
+MULTILINE_COMMENT:
+    '/*' .*? ( '*/' | EOF ) -> channel(HIDDEN)
+    ;
 
 StringLiteral
     :   '\'' StringCharacters? '\''
@@ -394,6 +424,7 @@ TRIM: T R I M;
 TO: T O;
 UNKNOWN: U N K N O W N;
 VALUES: V A L U E S ;
+VAR: V A R;
 VAR_POP: V A R UNDERSCORE P O P;
 VAR_SAMP: V A R UNDERSCORE S A M P;
 VARYING: V A R Y I N G ;
@@ -441,6 +472,7 @@ CREATE: C R E A T E ;
 FALSE:  F A L S E;
 FROM:   F R O M ;
 INTO:   I N T O ;
+NOT:    N O T;
 OR:     O R;
 SELECT: S E L E C T ;
 TABLE:  T A B L E ;
@@ -477,12 +509,24 @@ fragment Z:('z'|'Z');
 fragment UNDERSCORE:'_';
 
 COMMA:      ',';
+EQU:        '=';
+GTR:        '>';
+GTE:        '>=';
 LPAREN:     '(';
+LSS:        '<';
+LTE:        '<=';
 MINUS:      '-';
+NEQ:        '<>';
 PLUS:       '+';
+PLUSPLUS:   '+';
 RPAREN:     ')';
 SEMI_COLON: ';';
+SLASH:      '/';
 STAR:       '*';
 
-
+// This pattern must appear after
+// the keywords and fragments, so
+// that they are recognized as
+// specific language elements, not
+// as identifiers.
 ID_TOKEN : [a-zA-Z_][a-zA-Z0-9_]*;
