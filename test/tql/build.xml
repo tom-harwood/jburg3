@@ -71,7 +71,7 @@ test - run java tests
         
 		<javac 
 			debug="${debug.symbols}" 
-			destdir="${classes.dir}" includes="**/GenerateNodeBuilder.java,**/Node.java"
+			destdir="${classes.dir}" includes="**/Node.java"
 			>
             <classpath>
                 <pathelement path="${jburg.jar}"/>
@@ -83,7 +83,7 @@ test - run java tests
 
         <mkdir  dir="${gensrc.dir}"/>
         <mkdir  dir="${gensrc.dir}/tql"/>
-        <java classname="tql.GenerateNodeBuilder" fork="true" failonerror="true">
+        <java classname="jburg.util.GenerateNodeBuilder" fork="true" failonerror="true">
             <arg value="tql.tqlListener"/>
             <arg value="tql"/>
             <arg value="BaseNodeBuilder"/>

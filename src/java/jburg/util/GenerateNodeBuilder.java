@@ -1,4 +1,4 @@
-package tql;
+package jburg.util;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -9,14 +9,14 @@ public class GenerateNodeBuilder
     public static void main(String[] args)
     throws Exception
     {
-        Class<?> clazz = Class.forName(args[0]);
+        Class<?> antlrVisitor = Class.forName(args[0]);
 
         PrintWriter out = new PrintWriter(new FileWriter(args[3]));
 
         List<Method> entryMethods = new ArrayList<Method>();
         List<Method> exitMethods = new ArrayList<Method>();
 
-        for (Method m: clazz.getDeclaredMethods()) {
+        for (Method m: antlrVisitor.getDeclaredMethods()) {
             String name = m.getName();
             if (name.indexOf("enter") == 0) {
                 entryMethods.add(m);
@@ -40,7 +40,7 @@ public class GenerateNodeBuilder
         out.println();
         // FIXME: Parameterize so this is not necessary
         out.println("@SuppressWarnings(\"unchecked\")");
-        out.printf("\npublic class %s<NodeType> implements %s\n\n{\n", args[2], clazz.getName());
+        out.printf("\npublic class %s<NodeType> implements %s\n\n{\n", args[2], antlrVisitor.getName());
         out.println("    protected Stack<Node> nodeStack  = new Stack<Node>();");
         out.println("    protected Stack<Integer>   scopeStack = new Stack<Integer>();");
         out.println();
