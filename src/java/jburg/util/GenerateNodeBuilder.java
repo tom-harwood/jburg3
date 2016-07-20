@@ -4,14 +4,33 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.io.*;
 
+/**
+ * GenerateNodeBuilder generates an adapter base class with infrastructure
+ * to build abstract syntax trees from ANTLR's concrete syntax trees.
+ * A client class extends the target class and overrides the exit listener
+ * methods for the nodes that correspond to abstracted syntax elements;
+ * the createNode() method creates a new node, with a list of child nodes
+ * consisting of unparented nodes created since the corresponding enter callback.
+ */
 public class GenerateNodeBuilder
 {
     public static void main(String[] args)
     throws Exception
     {
-        Class<?> antlrVisitor = Class.forName(args[0]);
+        if (args.length != 5) {
+            System.err.println("Usage: GenerateNodeBuilder <ANTLR listener class> <target package> <target class> <node class> <output path>");
+            System.exit(1);
+        }
 
-        PrintWriter out = new PrintWriter(new FileWriter(args[3]));
+        String antlrListenerClass   = args[0];
+        String targetPackage        = args[1];
+        String targetClass          = args[2];
+        String nodeClass            = args[3];
+        String outputPath           = args[4];
+
+        Class<?> antlrVisitor = Class.forName(antlrListenerClass);
+
+        PrintWriter out = new PrintWriter(new FileWriter(outputPath));
 
         List<Method> entryMethods = new ArrayList<Method>();
         List<Method> exitMethods = new ArrayList<Method>();
@@ -27,21 +46,17 @@ public class GenerateNodeBuilder
             }
         }
 
-        out.printf("package %s;\n\n", args[1]);
+        out.printf("package %s;\n\n", targetPackage);
         out.println("import java.util.ArrayList;");
         out.println("import java.util.Collections;");
         out.println("import java.util.List;");
         out.println("import java.util.Stack;");
-        // FIXME: Parameterize
-        out.println("import tql.Node;");
         out.println("import org.antlr.v4.runtime.ParserRuleContext;");
         out.println("import org.antlr.v4.runtime.tree.ErrorNode;");
         out.println("import org.antlr.v4.runtime.tree.TerminalNode;");
         out.println();
-        // FIXME: Parameterize so this is not necessary
-        out.println("@SuppressWarnings(\"unchecked\")");
-        out.printf("\npublic class %s<NodeType> implements %s\n\n{\n", args[2], antlrVisitor.getName());
-        out.println("    protected Stack<Node> nodeStack  = new Stack<Node>();");
+        out.printf("\npublic class %s<NodeType> implements %s\n\n{\n", targetClass, antlrVisitor.getName());
+        out.printf ("    protected Stack<%s> nodeStack  = new Stack<%s>();", nodeClass, nodeClass);
         out.println("    protected Stack<Integer>   scopeStack = new Stack<Integer>();");
         out.println();
 
@@ -64,27 +79,27 @@ public class GenerateNodeBuilder
         out.println("        return nodeStack.size() - scopeStack.peek();");
         out.println("    }");
         out.println();
-        out.println("    protected Node createNode(NodeType type, Object content)");
+        out.printf ("    protected %s createNode(NodeType type, Object content)", nodeClass);
         out.println("    {");
         out.println("        int childCount = pendingNodeCount();");
         out.println("        assert childCount >= 0: String.format(\"Negative child count: %d\", childCount);");
-        out.println("        List<Node> children = new ArrayList<Node>();");
+        out.printf ("        List<%s> children = new ArrayList<%s>();", nodeClass, nodeClass);
         out.println("        for (int i = 0; i < childCount; i++) {");
         out.println("            children.add(nodeStack.pop());");
         out.println("        }");
         out.println("        Collections.reverse(children);");
-        out.println("        Node result = new Node(type, children, content);");
+        out.printf ("        %s result = new %s(type, children, content);", nodeClass, nodeClass);
         out.println("        nodeStack.push(result);");
         out.println("        scopeStack.pop();");
         out.println("        return result;");
         out.println("    }");
         out.println();
-        out.println("    protected Node createNode(NodeType type)");
+        out.printf ("    protected %s createNode(NodeType type)", nodeClass);
         out.println("    {");
         out.println("        return createNode(type, null);");
         out.println("    }");
         out.println();
-        out.println("    protected Node getRoot()");
+        out.printf ("    protected %s getRoot()", nodeClass);
         out.println("    {");
         out.println("        assert nodeStack.size() == 1: String.format(\"Expected 1 child found %d\", nodeStack.size());");
         out.println("        return nodeStack.peek();");
