@@ -2,7 +2,7 @@
 
     <target name="init">
         <property file="${user.home}/ant.properties" />
-        <property file="../..build.properties" />
+        <property file="../../build.properties" />
 
         <property name="debug.symbols" value="yes"/>
 
@@ -87,6 +87,7 @@ test - run java tests
             <arg value="tql.tqlListener"/>
             <arg value="tql"/>
             <arg value="BaseNodeBuilder"/>
+            <arg value="Node"/>
             <arg value="${gensrc.dir}/tql/BaseNodeBuilder.java"/>
             <classpath>
                 <pathelement path="${jburg.jar}"/>
