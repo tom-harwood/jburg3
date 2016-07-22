@@ -20,7 +20,7 @@ public class TemplateGroup
     public TemplateGroup(String directoryName, String templateGroupName)
     {
         if (directoryName != null) {
-            templateGroupName = directoryName + java.io.File.separator + templateGroupName;
+            templateGroupName = directoryName + "/" + templateGroupName;
         }
         this.templates = new STGroupFile(templateGroupName);
 
