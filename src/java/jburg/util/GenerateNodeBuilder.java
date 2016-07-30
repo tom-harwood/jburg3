@@ -88,7 +88,8 @@ public class GenerateNodeBuilder
         out.println("            children.add(nodeStack.pop());");
         out.println("        }");
         out.println("        Collections.reverse(children);");
-        out.printf ("        %s result = new %s(type, children, content);", nodeClass, nodeClass);
+        out.println("        @SuppressWarnings(\"unchecked\")");
+        out.printf ("        %s result = new %s(type, children, content);\n", nodeClass, nodeClass);
         out.println("        nodeStack.push(result);");
         out.println("        scopeStack.pop();");
         out.println("        return result;");
