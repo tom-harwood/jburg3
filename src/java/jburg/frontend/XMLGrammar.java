@@ -1,3 +1,5 @@
+package jburg.frontend;
+
 import javax.xml.parsers.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
@@ -9,9 +11,9 @@ import jburg.ProductionTable;
 import jburg.BURMSemantics;
 
 /**
- * A GrammarBuilder builds a BURM from an XML specification.
+ * A XMLGrammar instance builds a ProductionTable from an XML specification.
  */
-class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
+public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 {
     Class<?> nonterminalClass;
     Class<?> nodeTypeClass;
@@ -20,21 +22,29 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
     ProductionDesc currentPattern = null;
 
-    BURMSemantics semantics = null;
+    BURMSemantics<Nonterminal> semantics = null;
 
     List<ProductionDesc> productions = new ArrayList<ProductionDesc>();
 
+    /**
+     * Set this to add productions to the table in a random order.
+     */
     boolean randomizeProductions = false;
 
     enum PatternPrecondition{ Present, Absent }
 
-    public GrammarBuilder(Class<?> nonterminalClass, Class<?> nodeTypeClass)
+    public XMLGrammar(Class<?> nonterminalClass, Class<?> nodeTypeClass)
     {
         this.nonterminalClass = nonterminalClass;
         this.nodeTypeClass = nodeTypeClass;
     }
 
-    ProductionTable<Nonterminal,NodeType> build(String filename)
+    public void setRandomized(boolean randomize)
+    {
+        this.randomizeProductions = randomize;
+    }
+
+    public ProductionTable<Nonterminal,NodeType> build(String filename)
     throws Exception
     {
         SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -160,7 +170,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     {
         if (this.semantics == null) {
             try {
-                this.semantics = new BURMSemantics(reducerClass, nodeClass, nonterminalClass);
+                this.semantics = new BURMSemantics<Nonterminal>(reducerClass, nodeClass, nonterminalClass);
             } catch (Exception nogood) {
                 throw new IllegalArgumentException(nogood);
             }
@@ -319,6 +329,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             this.predicate = getPredicateMethod(atts);
         }
 
+        @SuppressWarnings("unchecked")
         Method getPostCallbackMethod(Attributes atts)
         throws NoSuchMethodException
         {
@@ -326,7 +337,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
             String methodName = atts.getValue("name");
 
             if (isPatternMatch()) {
-                return semantics.getPostCallback(methodName, this.isVarArgs, this.nonterminal, this.children.toArray());
+                return semantics.getPostCallback(methodName, this.isVarArgs, this.nonterminal, (Nonterminal[])this.children.toArray());
             } else {
                 return semantics.getPostCallback(methodName, false, this.nonterminal, this.sourceNonterminal);
             }
@@ -349,7 +360,7 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
 
         void checkSemantics()
         {
-            if (GrammarBuilder.this.semantics == null) {
+            if (XMLGrammar.this.semantics == null) {
                 throw new IllegalStateException("Specify <Semantics> before rules");
             }
         }
