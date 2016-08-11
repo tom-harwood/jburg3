@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import jburg.ProductionTable;
 import jburg.Reducer;
 import jburg.TransitionTableLoader;
+import jburg.frontend.XMLGrammar;
 
 /**
  * Run a test as specified by command-line options.
@@ -26,7 +27,7 @@ public class TestRunner
 
         boolean verbose = true;
 
-        GrammarBuilder<Nonterminal,NodeType> grammarBuilder = new GrammarBuilder<Nonterminal,NodeType>(Nonterminal.class, NodeType.class);
+        XMLGrammar<Nonterminal,NodeType> grammarBuilder = new XMLGrammar<Nonterminal,NodeType>(Nonterminal.class, NodeType.class);
 
         for (int i = 0; i < args.length; i++) {
 
@@ -41,7 +42,7 @@ public class TestRunner
             } else if (args[i].equals("-quiet")) {
                 verbose = false;
             } else if (args[i].equals("-randomize")) {
-                grammarBuilder.randomizeProductions = true;
+                grammarBuilder.setRandomized(true);
             } else if (args[i].equals("-reducer")) {
                 reducerClassName = args[++i];
             } else if (args[i].equals("-visitor")) {
