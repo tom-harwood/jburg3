@@ -1,5 +1,8 @@
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
 
-<Grammar reducerClass="Calculator" nodeClass="Node">
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+    </Semantics>
 
     <Pattern nonterminal="Int" nodeType="Add">
         <child nonterminal="Int"/>

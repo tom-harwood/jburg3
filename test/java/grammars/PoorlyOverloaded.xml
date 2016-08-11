@@ -1,5 +1,10 @@
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
 
-<Grammar reducerClass="Calculator" nodeClass="Node">
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="Short" class="java.lang.Short"/>
+        <Nonterminal nonterminal="String" class="java.lang.String"/>
+    </Semantics>
 
     <!-- Leaf operators -->
     <Pattern nonterminal="Int" nodeType="IntLiteral">
