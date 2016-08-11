@@ -6,6 +6,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import jburg.ProductionTable;
+import jburg.BURMSemantics;
 
 /**
  * A GrammarBuilder builds a BURM from an XML specification.
@@ -18,6 +19,8 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     Class<?> nodeClass;
 
     ProductionDesc currentPattern = null;
+
+    BURMSemantics semantics = null;
 
     List<ProductionDesc> productions = new ArrayList<ProductionDesc>();
 
@@ -94,23 +97,40 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
     throws SAXException
     {
+        try {
         if (localName.equals("Grammar")) {
             reducerClass = getClass(localName, "reducerClass", atts);
             nodeClass = getClass(localName, "nodeClass", atts);
+
         } else if (localName.equals("Pattern")) {
             startPattern(localName, atts);
+
+        } else if (localName.equals("Semantics")) {
+            startSemantics(localName, atts);
+
+        } else if (localName.equals("Nonterminal")) {
+            addNonterminal(localName, atts);
+
         } else if (localName.equals("Closure")) {
             startClosure(localName, atts);
+
         } else if (localName.equals("child")) {
             addChild(localName, atts);
+
         } else if (localName.equals("postCallback")) {
             addPostCallback(localName, atts);
+
         } else if (localName.equals("preCallback")) {
             addPreCallback(localName, atts);
+
         } else if (localName.equals("predicate")) {
             addPredicate(localName, atts);
+
         } else {
             throw new IllegalArgumentException("Unexpected " + localName);
+        }
+        } catch (NoSuchMethodException badCallback) {
+            throw new IllegalArgumentException(badCallback);
         }
     }
 
@@ -133,6 +153,27 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         } catch (Exception ex) {
             throw new IllegalArgumentException("unable to get class " + atts.getValue(attributeName));
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void startSemantics(String localName, Attributes atts)
+    {
+        if (this.semantics == null) {
+            try {
+                this.semantics = new BURMSemantics(reducerClass, nodeClass, nonterminalClass);
+            } catch (Exception nogood) {
+                throw new IllegalArgumentException(nogood);
+            }
+        }
+    }
+
+    private void addNonterminal(String localName, Attributes atts)
+    {
+        if (this.semantics == null) {
+            throw new IllegalStateException("Nonterminal elements must be inside Semantics elements");
+        }
+
+        this.semantics.setNonterminalClass(getNonterminal(atts.getValue("nonterminal")), getClass(localName, "class", atts));
     }
 
     private void startPattern(String localName, Attributes atts)
@@ -160,18 +201,21 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
     }
 
     private void addPostCallback(String localName, Attributes atts)
+    throws NoSuchMethodException
     {
         checkPatternState(localName, PatternPrecondition.Present);
         currentPattern.addPostCallback(atts);
     }
 
     private void addPreCallback(String localName, Attributes atts)
+    throws NoSuchMethodException
     {
         checkPatternState(localName, PatternPrecondition.Present);
         currentPattern.addPreCallback(atts);
     }
 
     private void addPredicate(String localName, Attributes atts)
+    throws NoSuchMethodException
     {
         checkPatternState(localName, PatternPrecondition.Present);
         currentPattern.addPredicate(atts);
@@ -258,98 +302,57 @@ class GrammarBuilder<Nonterminal, NodeType> extends DefaultHandler
         }
 
         void addPostCallback(Attributes atts)
+        throws NoSuchMethodException
         {
             this.postCallback = getPostCallbackMethod(atts);
         }
 
         void addPreCallback(Attributes atts)
+        throws NoSuchMethodException
         {
             this.preCallback = getPreCallbackMethod(atts);
         }
 
         void addPredicate(Attributes atts)
+        throws NoSuchMethodException
         {
             this.predicate = getPredicateMethod(atts);
         }
 
         Method getPostCallbackMethod(Attributes atts)
+        throws NoSuchMethodException
         {
+            checkSemantics();
             String methodName = atts.getValue("name");
 
-            // Pattern matchers' nominal arity depends on their children;
-            // Closures' arity is always one. Add one to nominal arity to
-            // account for the additional Node parameter.
-            int arity;
-
             if (isPatternMatch()) {
-                arity = children.size() + 1;
-
-                if (isVarArgs && children.size() > 1) {
-                    arity += 1;
-                }
+                return semantics.getPostCallback(methodName, this.isVarArgs, this.nonterminal, this.children.toArray());
             } else {
-                arity = 2;
-            }
-
-            Method candidate = getNamedMethod(methodName, arity);
-
-            if (candidate == null) {
-                candidate = getNamedMethod(methodName, ANY_ARITY);
-            }
-
-            if (candidate != null) {
-                return candidate;
-            } else {
-                throw new IllegalArgumentException(String.format("No post-callback method %s(%s, %s)", methodName, nodeClass.getName(), children));
+                return semantics.getPostCallback(methodName, false, this.nonterminal, this.sourceNonterminal);
             }
         }
 
         Method getPreCallbackMethod(Attributes atts)
+        throws NoSuchMethodException
         {
+            checkSemantics();
             String methodName = atts.getValue("name");
-            Method candidate = getNamedMethod(methodName, 2);
-
-            if (candidate != null) {
-                return candidate;
-            } else {
-                throw new IllegalArgumentException(String.format("No pre-callback method %s(%s)", methodName, nodeClass.getName()));
-            }
+            return semantics.getPreCallback(methodName);
         }
 
         Method getPredicateMethod(Attributes atts)
+        throws NoSuchMethodException
         {
             String methodName = atts.getValue("name");
-            Method candidate = getNamedMethod(methodName, 1);
-
-            if (candidate != null) {
-                return candidate;
-            } else {
-                throw new IllegalArgumentException(String.format("No predicate method %s(%s)", methodName, nodeClass.getName()));
-            }
+            return semantics.getPredicate(methodName);
         }
 
-        Method getNamedMethod(String methodName, int arity)
+        void checkSemantics()
         {
-            Method candidate = null;
-
-            for (Method m: reducerClass.getDeclaredMethods()) {
-
-                if (m.getName().equals(methodName)) {
-
-                    Class<?>[] parameterTypes = m.getParameterTypes();
-
-                    if ((parameterTypes.length == arity && parameterTypes[0].equals(nodeClass)) || arity == ANY_ARITY) {
-
-                        if (candidate == null) {
-                            candidate = m;
-                        } else {
-                            throw new IllegalArgumentException(String.format("unable to disambiguate %s and %s", candidate, m));
-                        }
-                    }
-                }
+            if (GrammarBuilder.this.semantics == null) {
+                throw new IllegalStateException("Specify <Semantics> before rules");
             }
-
-            return candidate;
         }
+
     }
 }
