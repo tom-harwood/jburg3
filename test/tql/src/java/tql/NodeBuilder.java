@@ -1,8 +1,10 @@
 package tql;
 
 import java.util.List;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
 import static tql.TQLNodeType.*;
 
 class NodeBuilder extends BaseNodeBuilder
@@ -114,7 +116,7 @@ class NodeBuilder extends BaseNodeBuilder
 
  
     @Override
-    public void exitUnary_operator(tql.tqlParser.Unary_operatorContext context)
+    public void exitUnary_expression(tql.tqlParser.Unary_expressionContext context)
     {
         unop(context);
     }
@@ -184,7 +186,7 @@ class NodeBuilder extends BaseNodeBuilder
             case 3: {
                 candidateOp = context.getChild(1).getText();
 
-                if ("=".equals(candidateOp)) {
+                if (binop_Equal.matches(context.getChild(1))) {
                     return Equal;
                 } else if ("<>".equals(candidateOp)) {
                     return NotEqual;
@@ -206,8 +208,6 @@ class NodeBuilder extends BaseNodeBuilder
                     return And;
                 } else if ("OR".equalsIgnoreCase(candidateOp)) {
                     return Or;
-                } else if ("NOT".equalsIgnoreCase(candidateOp)) {
-                    return Not;
                 }
 
                 break;
@@ -218,5 +218,37 @@ class NodeBuilder extends BaseNodeBuilder
         }
 
         throw new IllegalStateException(String.format("No translation for candidateOp %s (%s)", candidateOp, tokenStream.getText(context)));
+    }
+
+    static ParseTreePattern binop_And;
+    static ParseTreePattern binop_Equal;
+    static ParseTreePattern binop_Greater;
+    static ParseTreePattern binop_GreaterEqual;
+    static ParseTreePattern binop_Less;
+    static ParseTreePattern binop_LessEqual;
+    static ParseTreePattern binop_Minus;
+    static ParseTreePattern binop_NotEqual;
+    static ParseTreePattern binop_Or;
+    static ParseTreePattern binop_Plus;
+    static ParseTreePattern binop_Star;
+
+    static ParseTreePattern unop_Minus;
+    static ParseTreePattern unop_Not;
+    static ParseTreePattern unop_Plus;
+
+    static
+    {
+        tqlLexer lexer = new tqlLexer(new ANTLRInputStream());
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        tqlParser parser = new tqlParser(tokens);
+
+         binop_And          = parser.compileParseTreePattern("<AND>", tqlParser.RULE_boolean_connector);
+         binop_Equal        = parser.compileParseTreePattern("<EQU>", tqlParser.RULE_comparator);
+         binop_Greater      = parser.compileParseTreePattern("<GTR>", tqlParser.RULE_comparator);
+         binop_GreaterEqual = parser.compileParseTreePattern("<GTE>", tqlParser.RULE_comparator);
+         binop_Less         = parser.compileParseTreePattern("<LSS>", tqlParser.RULE_comparator);
+         binop_LessEqual    = parser.compileParseTreePattern("<LTE>", tqlParser.RULE_comparator);
+         binop_Minus        = parser.compileParseTreePattern("<MINUS>", tqlParser.RULE_unary_operator);
+         binop_Or           = parser.compileParseTreePattern("<OR>", tqlParser.RULE_boolean_connector);
     }
 }

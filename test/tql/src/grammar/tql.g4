@@ -98,14 +98,18 @@ expression: boolean_expression;
 
 boolean_expression:
     comparison_expression
-    | comparison_expression AND boolean_expression
-    | comparison_expression OR boolean_expression
+    | comparison_expression boolean_connector boolean_expression
     | negated_boolean_expression
+    ;
+
+boolean_connector : AND | OR
     ;
 
 negated_boolean_expression:
     NOT boolean_expression
     ;
+
+
 
 comparison_expression:
     arithmetic_expression (comparator arithmetic_expression)?
@@ -121,10 +125,13 @@ term ((PLUS | MINUS) term)?
 term: factor ((STAR | SLASH) term)?
     ;
 
-factor: unary_operator | postfix_operator | primary
+factor: unary_expression | postfix_operator | primary
     ;
 
-unary_operator: (PLUS | MINUS) primary
+unary_expression: unary_operator primary
+    ;
+
+unary_operator: PLUS | MINUS
     ;
 
 postfix_operator: primary PLUSPLUS
