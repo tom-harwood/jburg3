@@ -38,7 +38,7 @@
 
    <xs:complexType name = "Pattern">
       <xs:choice maxOccurs="unbounded">
-         <xs:element name = "predicate" type = "Callback" minOccurs='0' maxOccurs='unbounded'/>
+         <xs:element name = "predicate" type = "Callback" minOccurs='0' maxOccurs='1'/>
          <xs:element name = "preCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
          <xs:element name = "postCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
          <xs:element name = "child" type = "Child" minOccurs='0' maxOccurs='unbounded'/>
