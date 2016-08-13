@@ -1,0 +1,28 @@
+<!-- A single node type (QualifiedLiteral) with guarded productions. -->
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="Short" class="java.lang.Short"/>
+    </Semantics>
+
+    <Pattern nonterminal="Int" nodeType="QualifiedLiteral">
+        <predicate name="isQualifiedInt"/>
+        <postCallback name="qualifiedIntLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Short" nodeType="QualifiedLiteral">
+        <predicate name="isQualifiedShort"/>
+        <postCallback name="qualifiedShortLiteral"/>
+    </Pattern>
+
+    <Closure nonterminal="Int" sourceNonterminal="Short">
+        <postCallback name="widenShortToInt"/>
+    </Closure>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+</Grammar>

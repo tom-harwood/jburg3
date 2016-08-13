@@ -17,9 +17,19 @@ public class Calculator
         return node.intValue();
     }
 
+    public Integer qualifiedIntLiteral(Node node)
+    {
+        return Integer.valueOf(node.content.substring(4));
+    }
+
     public Short shortLiteral(Node node)
     {
         return Short.valueOf(node.content);
+    }
+
+    public Short qualifiedShortLiteral(Node node)
+    {
+        return Short.valueOf(node.content.substring(6));
     }
 
     public String stringLiteral(Node node)
@@ -136,6 +146,21 @@ public class Calculator
     public Boolean shortGuard(Node node)
     {
         return node.intValue() >= Short.MIN_VALUE && node.intValue() <= Short.MAX_VALUE;
+    }
+
+    protected Boolean isQualifiedType(Node node, String qualifier)
+    {
+        return node.content != null && node.content.startsWith(qualifier);
+    }
+
+    public Boolean isQualifiedInt(Node node)
+    {
+        return isQualifiedType(node, "int:");
+    }
+
+    public Boolean isQualifiedShort(Node node)
+    {
+        return isQualifiedType(node, "short:");
     }
 
     /*

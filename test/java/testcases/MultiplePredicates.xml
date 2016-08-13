@@ -1,0 +1,10 @@
+<Test>
+
+    <Testcase name="1+2" type="Int" expected="3">
+        <Node op="Add">
+            <Node op="QualifiedLiteral" content="short:1"/>
+            <Node op="QualifiedLiteral" content="int:2"/>
+        </Node>
+    </Testcase>
+
+</Test>
