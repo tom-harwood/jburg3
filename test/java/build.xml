@@ -73,6 +73,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/PreCallback.xml"/>
             <param name="calculator.xml" value="testcases/PreCallback.xml"/>
         </antcall>
+        <antcall target="calculator">
+            <param name="grammar.xml" value="grammars/MultiplePredicates.xml"/>
+            <param name="calculator.xml" value="testcases/MultiplePredicates.xml"/>
+        </antcall>
         <antcall target="dumpLoad">
             <param name="calculator.xml" value="testcases/FirstTest.xml"/>
         </antcall>
