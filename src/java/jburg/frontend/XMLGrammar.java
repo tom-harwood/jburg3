@@ -1,12 +1,18 @@
 package jburg.frontend;
 
-import javax.xml.parsers.*;
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
-
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import javax.xml.parsers.*;
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
+
 import jburg.ProductionTable;
 import jburg.BURMSemantics;
 
@@ -47,6 +53,11 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     public ProductionTable<Nonterminal,NodeType> build(String filename)
     throws Exception
     {
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(getClass().getClassLoader().getResource("xsd/JBurg3.xsd"));
+        Validator validator = schema.newValidator();
+        validator.validate(new StreamSource(filename));
+
         SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
         SAXParser saxParser = spf.newSAXParser();

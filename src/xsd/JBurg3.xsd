@@ -1,0 +1,59 @@
+<?xml version = "1.0"?>
+<xs:schema xmlns:xs = "http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name = 'Grammar'>
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element name = 'Semantics' type = 'Semantics' minOccurs = '1' maxOccurs = '1'/>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name = 'Pattern' type = 'Pattern' minOccurs = '0' maxOccurs = 'unbounded'/>
+                <xs:element name = 'Closure' type = 'Closure' minOccurs = '0' maxOccurs = 'unbounded'/>
+             </xs:choice>
+         </xs:sequence>
+          <xs:attribute name = 'nodeClass' type = 'xs:string'/>
+          <xs:attribute name = 'nonterminalClass' type = 'xs:string'/>
+          <xs:attribute name = 'reducerClass' type = 'xs:string'/>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:complexType name = "Semantics">
+      <xs:sequence>
+         <xs:element name = "Nonterminal" type = "SemanticsEntry" minOccurs='1' maxOccurs='unbounded'/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name = "SemanticsEntry">
+      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+      <xs:attribute name = 'class' type = 'xs:string'/>
+   </xs:complexType>
+
+   <xs:complexType name = "Closure">
+      <xs:choice maxOccurs="unbounded">
+         <xs:element name = "preCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
+         <xs:element name = "postCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
+      </xs:choice>
+      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+      <xs:attribute name = 'sourceNonterminal' type = 'xs:string'/>
+   </xs:complexType>
+
+   <xs:complexType name = "Pattern">
+      <xs:choice maxOccurs="unbounded">
+         <xs:element name = "predicate" type = "Callback" minOccurs='0' maxOccurs='unbounded'/>
+         <xs:element name = "preCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
+         <xs:element name = "postCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
+         <xs:element name = "child" type = "Child" minOccurs='0' maxOccurs='unbounded'/>
+      </xs:choice>
+      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+      <xs:attribute name = 'nodeType' type = 'xs:string'/>
+      <xs:attribute name = 'variadic' type = 'xs:string' use='optional'/>
+   </xs:complexType>
+
+   <xs:complexType name = "Callback">
+      <xs:attribute name = 'name' type = 'xs:string'/>
+   </xs:complexType>
+
+   <xs:complexType name = "Child">
+      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+   </xs:complexType>
+
+</xs:schema>
