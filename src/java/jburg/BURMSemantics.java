@@ -112,6 +112,32 @@ public class BURMSemantics<Nonterminal>
     }
 
     /**
+     * Get a fixed-arity post-order callback method, by name.
+     * @param methodName    the callback method's name.
+     * @param producesNt    the nonterminal callback's production produces.
+     * @param nonterminals  the nonterminals of the callback's production's children.
+     */
+    @SafeVarargs
+    final public Method getFixedArityPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
+    throws NoSuchMethodException
+    {
+        return getPostCallback(methodName, false, producesNt, nonterminals);
+    }
+
+    /**
+     * Get a variadic post-order callback method, by name.
+     * @param methodName    the callback method's name.
+     * @param producesNt    the nonterminal callback's production produces.
+     * @param nonterminals  the nonterminals of the callback's production's children.
+     */
+    @SafeVarargs
+    final public Method getVariadicPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
+    throws NoSuchMethodException
+    {
+        return getPostCallback(methodName, true, producesNt, nonterminals);
+    }
+
+    /**
      * Find a method by name.
      * Limited support for overloading is provided; if a method cannot be found
      * with the exact signature requested, but there is one and only one method
