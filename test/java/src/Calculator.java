@@ -172,4 +172,12 @@ public class Calculator
     }
 
     int additionBias = 0;
+
+    /*
+     * Error handling methods
+     */
+    public String onError(Node n, Nonterminal goalState)
+    {
+        return String.format("No rule labels %s",n);
+    }
 }

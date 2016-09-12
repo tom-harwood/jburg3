@@ -43,6 +43,7 @@ public abstract class Production<Nonterminal>
      */
     Method         predicate;
     public Method getPredicate() { return predicate; }
+    public final static Method NO_PREDICATE = null;
 
     /**
      * A reducer method to call before deriving the subtree's
@@ -52,6 +53,7 @@ public abstract class Production<Nonterminal>
      */
     Method         preCallback;
     public Method getPreCallback() { return preCallback; }
+    public final static Method NO_PRECALLBACK = null;
 
     /**
      * A reducer method to call after deriving the subtree's
@@ -61,6 +63,7 @@ public abstract class Production<Nonterminal>
      */
     Method         postCallback;
     public Method getPostCallback() { return postCallback; }
+    public final static Method NO_POSTCALLBACK = null;
 
     /**
      * Construct a production.

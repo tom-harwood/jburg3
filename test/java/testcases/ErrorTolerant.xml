@@ -1,0 +1,27 @@
+<Test>
+
+    <Testcase name="1+2" type="Int" expected="3">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="1-2 (error handler)" type="Error" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]">
+        <Node op="Subtract">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="(2-1)+1 (error handler)" type="String" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
+        <Node op="Concat">
+            <Node op="Subtract">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="IntLiteral" content="2"/>
+            </Node>
+            <Node op="IntLiteral" content="123"/>
+        </Node>
+    </Testcase>
+
+</Test>

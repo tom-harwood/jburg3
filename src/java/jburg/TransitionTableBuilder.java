@@ -16,11 +16,13 @@ import java.util.Set;
 class TransitionTableBuilder<Nonterminal, NodeType>
 {
     final int arity;
+    ProductionTable<Nonterminal,NodeType> productionTable;
 
     TransitionMap transitions = new TransitionMap();
 
-    TransitionTableBuilder(int arity)
+    TransitionTableBuilder(ProductionTable<Nonterminal,NodeType> productionTable, int arity)
     {
+        this.productionTable = productionTable;
         this.arity = arity;
     }
 
@@ -48,7 +50,7 @@ class TransitionTableBuilder<Nonterminal, NodeType>
     {
         boolean isFinalDimension = dim+1 == arity;
 
-        TransitionPlane<Nonterminal, NodeType> result = new TransitionPlane<Nonterminal, NodeType>(dim);
+        TransitionPlane<Nonterminal, NodeType> result = new TransitionPlane<Nonterminal, NodeType>(productionTable, dim);
 
         TransitionPivot pivot = new TransitionPivot(transitions, dim);
 

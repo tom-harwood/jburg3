@@ -106,6 +106,12 @@ public class Reducer<Nonterminal, NodeType>
             state = productionTable.getNullPointerState();
         }
 
+        // If this is an error case, the only thing to do
+        // is to run the error handler, if present.
+        if (state instanceof ErrorState) {
+            return handleError(node, goal, pendingProductions);
+        }
+
         // Run pre-callbacks on any closures to get to the pattern matcher.
         Production<Nonterminal> current = state.getProduction(goal);
 
@@ -200,22 +206,46 @@ public class Reducer<Nonterminal, NodeType>
                 throw new IllegalStateException(String.format("Method %s expected %d actuals, received %d", current.postCallback, formalCount, actualCount));
             }
         } else {
+            result = null;
 
-                if (node != null) {
-
+            if (node != null) {
+                // Reduce the children; there may be side effects.
                 assert current instanceof PatternMatcher: String.format("Expected PatternMatcher, got %s\n", current);
                 @SuppressWarnings("unchecked")
                 PatternMatcher<Nonterminal, NodeType> patternMatcher = (PatternMatcher<Nonterminal, NodeType>)current;
 
-
-                // Reduce the children, there may be side effects.
                 for (int i = 0; i < node.getSubtreeCount(); i++) {
                     reduce(node.getSubtree(i), patternMatcher.getNonterminal(i));
                 }
             }
-
-            result = null;
         }
+
+        while (!pendingProductions.isEmpty()) {
+            Production<Nonterminal> closure = pendingProductions.pop();
+            if (closure.postCallback != null) {
+                result = closure.postCallback.invoke(visitor, node, result);
+            }
+        }
+
+        return result;
+    }
+
+    Object handleError(BurgInput<Nonterminal, NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
+    throws Exception
+    {
+        Production<Nonterminal> current = productionTable.getErrorState().getProduction(goal);
+
+        while(current instanceof Closure) {
+            if (current.preCallback != null) {
+                current.preCallback.invoke(visitor, node, goal);
+            }
+            pendingProductions.push(current);
+            current = productionTable.getErrorState().getProduction(((Closure<Nonterminal>)current).source);
+        }
+
+        Object result = current.preCallback != null?
+            current.preCallback.invoke(visitor,node,goal):
+            null;
 
         while (!pendingProductions.isEmpty()) {
             Production<Nonterminal> closure = pendingProductions.pop();

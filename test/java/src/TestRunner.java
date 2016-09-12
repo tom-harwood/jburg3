@@ -129,7 +129,9 @@ public class TestRunner
                     }
                 } catch (java.lang.reflect.InvocationTargetException ite) {
                     Throwable ex = ite.getCause();
+
                     if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+
                         if (verbose) {
                             System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
                         }
@@ -142,7 +144,15 @@ public class TestRunner
                             System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
                         }
                     } else {
-                        failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
+                        if (tc.expectedException == null) {
+
+                            if (verbose) {
+                                ex.printStackTrace();
+                            }
+                            failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
+                        } else {
+                            failedTestcases.add(String.format("FAILED: %s: expected exception %s, got %s", tc.name, tc.expectedException, ex));
+                        }
                     }
                 }
             }

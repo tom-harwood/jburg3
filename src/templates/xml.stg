@@ -11,6 +11,23 @@ closure(c) ::= <<
 </closure>
 >>
 
+errorProduction(p) ::= <<
+<method name="%p.preCallback.name%" class=""/>
+>>
+
+errorState(s) ::= <<
+<errorHandler nonterminal="%s.nonterminal%">
+%if(s.errorHandler.preCallback)%
+    %method(s.errorHandler.preCallback)%
+%endif%
+%if(s.closures)%
+<closures>
+    %s.closures.values:closure();separator="\n"%
+</closures>
+%endif%
+</errorHandler>
+>>
+
 finalDimension(f) ::= <<
 %leaf(f)%
 >>
@@ -69,6 +86,9 @@ operatorDefinition(op) ::= <<
 
 productionTable(t) ::= <<
 <burmDump>
+    %if(t.errorState)%
+    %errorState(t.errorState)%
+    %endif%
     %t.operators:operatorList();separator="\n"%
 </burmDump>
 >>

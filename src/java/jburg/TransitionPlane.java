@@ -47,10 +47,16 @@ public class TransitionPlane<Nonterminal, NodeType>
     public int getDimension() { return dimension; }
 
     /**
+     * The parent ProductionTable.
+     */
+    ProductionTable<Nonterminal,NodeType> productionTable;
+
+    /**
      * Construct the final dimension of a transition.
      */
-    TransitionPlane(Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal,NodeType>[] finalDimension, int dim)
+    TransitionPlane(ProductionTable<Nonterminal,NodeType> productionTable, Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal,NodeType>[] finalDimension, int dim)
     {
+        this.productionTable = productionTable;
         this.finalDimIndexMap = finalDimIndexMap;
         this.finalDimension = Arrays.asList(finalDimension);
         this.nextDimIndexMap = null;
@@ -61,8 +67,9 @@ public class TransitionPlane<Nonterminal, NodeType>
     /**
      * Construct the next dimension of a transition.
      */
-    TransitionPlane(Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>[] nextDimension, int dim)
+    TransitionPlane(ProductionTable<Nonterminal,NodeType> productionTable, Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>[] nextDimension, int dim)
     {
+        this.productionTable = productionTable;
         this.nextDimIndexMap = nextDimIndexMap;
         this.nextDimension = Arrays.asList(nextDimension);
         this.finalDimIndexMap = null;
@@ -74,8 +81,9 @@ public class TransitionPlane<Nonterminal, NodeType>
      * Construct a TransitionPlane whose characteristics
      * are not yet fully known (compiler compile time).
      */
-    TransitionPlane(int dim)
+    TransitionPlane(ProductionTable<Nonterminal,NodeType> productionTable, int dim)
     {
+        this.productionTable = productionTable;
         this.nextDimIndexMap = new HashMap<Integer,Integer>();
         this.nextDimension = new ArrayList<TransitionPlane<Nonterminal,NodeType>>();
         this.finalDimIndexMap = new HashMap<Integer,Integer>();
@@ -154,6 +162,7 @@ public class TransitionPlane<Nonterminal, NodeType>
             node.setTransitionTableLeaf(result);
         } else {
             node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+            node.setTransitionTableLeaf(productionTable.errorState);
         }
     }
 

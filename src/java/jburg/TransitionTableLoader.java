@@ -35,6 +35,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         closures,
         cost,
         costMap,
+        errorHandler,
         finalDimension,
         finalDimIndexMap,
         hyperPlane,
@@ -64,6 +65,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         ChildTypes,
         Closure,
         Closures,
+        ErrorHandler,
         FinalDimension,
         FinalDimIndexMap,
         LeafState,
@@ -243,6 +245,26 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.Operator
             );
 
+            // Trivial error handler
+            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noop);
+
+            // Error handler with no callback but with closures
+            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noop, Load.Closures);
+
+            // Error handler with callback, no closures
+            productions.addPatternMatch(
+                Load.Operator, DumpType.errorHandler,
+                builder.getPostCallback("parseErrorHandler", Method.class),
+                Load.Method
+            );
+
+            // Error handler with callback and closures
+            productions.addPatternMatch(
+                Load.Operator, DumpType.errorHandler,
+                builder.getPostCallback("parseErrorHandler", Method.class, getArrayArgs(Closure.class)),
+                Load.Method, Load.Closures
+            );
+
             // Non-leaf operator
             productions.addPatternMatch(
                 Load.Operator, DumpType.operator,
@@ -322,6 +344,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
             // Closures
             productions.addVarArgsPatternMatch(Load.Closures, DumpType.closures, packageVarArgs, Load.Closure);
+            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithNoCallback"));
             productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPost", Method.class), Load.PostCallback);
             productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPre", Method.class), Load.PreCallback);
             productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPreAndPost", Method.class, Method.class), Load.PreCallback, Load.PostCallback);
@@ -521,6 +544,11 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return parseClosureWithPreAndPost(node, preCallback, null);
         }
 
+        Closure<Nonterminal> parseClosureWithNoCallback(Node node)
+        {
+            return parseClosureWithPreAndPost(node, null, null);
+        }
+
         Closure<Nonterminal> parseClosureWithPost(Node node, Method postCallback)
         {
             return parseClosureWithPreAndPost(node, null, postCallback);
@@ -598,12 +626,16 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         final Object buildProductionTable(Node node, Operator<Nonterminal, NodeType>... operatorTable)
         {
             for (Operator<Nonterminal, NodeType> op: operatorTable) {
-                this.productionTable.loadOperator(op);
+                // TODO: Ugly hack for error handler; add semantics
+                // to this visitor so it can use the semantics'
+                // production-loading capabilities.
+                if (op != null) {
+                    this.productionTable.loadOperator(op);
+                }
             }
 
             return this.productionTable;
         }
-
 
         State<Nonterminal, NodeType> parseState(Node node, PatternMatcher<Nonterminal, NodeType>[] patternMatchers, CostEntry[] costs, Closure<Nonterminal>[] closures, Method[] predicates)
         {
@@ -663,13 +695,13 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         @SafeVarargs
         final TransitionPlane<Nonterminal,NodeType> createNextDimension(Node node, Map<Integer,Integer> nextDimIndexMap, TransitionPlane<Nonterminal,NodeType>... nextDimension)
         {
-            return new TransitionPlane<Nonterminal, NodeType>(nextDimIndexMap, nextDimension, currentDimension);
+            return new TransitionPlane<Nonterminal, NodeType>(productionTable, nextDimIndexMap, nextDimension, currentDimension);
         }
 
         @SafeVarargs
         final TransitionPlane<Nonterminal,NodeType> createFinalDimension(Node node, Map<Integer,Integer> finalDimIndexMap, TransitionTableLeaf<Nonterminal, NodeType>... finalDimension)
         {
-            return new TransitionPlane<Nonterminal,NodeType>(finalDimIndexMap, finalDimension, currentDimension);
+            return new TransitionPlane<Nonterminal,NodeType>(productionTable, finalDimIndexMap, finalDimension, currentDimension);
         }
 
         @SuppressWarnings("unchecked")
@@ -744,6 +776,23 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, ntName));
         }
 
+        @SuppressWarnings("unchecked")
+        Object parseErrorHandler(Node node, Method callback)
+        {
+            return parseErrorHandler(node, callback, new Closure[0]);
+        }
+
+        Object parseErrorHandler(Node node, Method callback, Closure<Nonterminal>[] closures)
+        {
+            Nonterminal errorNonterminal = getNonterminal(node.getStringAttr("nonterminal"));
+            productionTable.addErrorHandler(errorNonterminal, callback);
+
+            for (Closure<Nonterminal> c: closures) {
+                productionTable.getErrorState().addClosure(c);
+            }
+            return null;
+        }
+
         Method getPostCallback(String methodName, Class<?>... formalTypes)
         {
             Class<?>[] formalsWithNode = new Class<?>[formalTypes.length+1];
@@ -754,6 +803,18 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
             try {
                 return TTBuilder.class.getDeclaredMethod(methodName, formalsWithNode);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new IllegalStateException(ex);
+            }
+        }
+
+        Method getPreCallback(String methodName)
+        {
+            Class<?>[] formals = { Node.class, Object.class };
+
+            try {
+                return TTBuilder.class.getDeclaredMethod(methodName, formals);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new IllegalStateException(ex);

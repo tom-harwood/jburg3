@@ -6,7 +6,7 @@ usage()
     echo "Usage: burmTest [-r] [-q] -g <grammar> -t <testcase> [-d <dumpfile>] [-p <templates>]"
 }
 
-args=`getopt c:d:g:m:p:t:rq $*`
+args=`getopt c:d:g:m:p:t:rqv $*`
 if [ $? -ne 0 ]
 then
     usage;
@@ -55,9 +55,12 @@ do
             TESTCASE=$2;
             shift;
             shift;;
+        -v)
+            VERBOSE="-verbose";
+            shift;;
         --)
             break;;
     esac
 done
 
-java -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS
+java -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS

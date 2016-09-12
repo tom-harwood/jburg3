@@ -79,7 +79,7 @@ public class Operator<Nonterminal, NodeType>
         this.nodeType = nodeType;
         this.productionTable = productionTable;
         this.arity = arity;
-        this.builder = new TransitionTableBuilder<Nonterminal, NodeType>(arity);
+        this.builder = new TransitionTableBuilder<Nonterminal, NodeType>(productionTable, arity);
 
         if (arity > 0) {
             this.reps = new ArrayList<Set<RepresenterState<Nonterminal,NodeType>>>();
@@ -352,7 +352,7 @@ public class Operator<Nonterminal, NodeType>
             BurgInput<Nonterminal, NodeType> subtree = node.getSubtree(dim);
             int stateNumber = subtree != null? subtree.getStateNumber(): productionTable.getNullPointerState().number;
 
-            if (current != null && stateNumber > 0) {
+            if (current != null) {
                 boolean isLastChild = dim == subtreeCount - 1;
                 boolean isVariadicTail = isVarArgs() && dim >= arity - 1;
 
@@ -368,6 +368,7 @@ public class Operator<Nonterminal, NodeType>
                             continue;
                         } else {
                             node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                            node.setTransitionTableLeaf(productionTable.errorState);
                             break;
                         }
                     } else {
@@ -380,6 +381,7 @@ public class Operator<Nonterminal, NodeType>
                 }
             } else {
                 node.setStateNumber(ProductionTable.ERROR_STATE_NUM);
+                node.setTransitionTableLeaf(productionTable.errorState);
                 break;
             }
         }

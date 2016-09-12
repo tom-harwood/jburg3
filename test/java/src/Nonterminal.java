@@ -1,1 +1,6 @@
-public enum Nonterminal { Int, Short, String };
+public enum Nonterminal {
+    Error,
+    Int,
+    Short,
+    String,
+};
