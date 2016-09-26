@@ -48,6 +48,9 @@ public class %className()%
 
             switch(node.getNodeType()) {
                 %productionTable(table)%
+                default:
+                    node.setStateNumber(jburg.ProductionTable.ERROR_STATE_NUM);
+                    break;
             }
         }
     }
@@ -57,10 +60,9 @@ public class %className()%
     {
         if (node.getTransitionTableLeaf() != null) {
             TransitionEntry ti = (TransitionEntry)(node.getTransitionTableLeaf());
-
             return ti.reduce(this, visitor, node, goalState);
         } else {
-            throw new IllegalArgumentException("Unlabeled %nodeClass()% " + node.toString());
+            return errorHandler.reduce(visitor, node, goalState);
         }
     }
 
@@ -73,7 +75,38 @@ public class %className()%
     }
 
     %uniqueStates:leafDefinition();separator="\n"%
+
+    %errorState(table.errorState)%
 }
+>>
+
+errorClosure(c) ::= <<
+case %c.nonterminal%: {
+        Object result = reduce(visitor, node, %nonterminalClass()%.%c.source%);
+        %if(c.postCallback)%
+        result = visitor.%c.postCallback;format="closurePostCallback"%;
+        %endif%
+        return result;
+    }
+>>
+
+errorState(s) ::= <<
+static class ErrorHandler
+{
+    public Object reduce(%visitorClass()% visitor, %nodeClass()% node, %nonterminalClass()% goalState)
+    {
+        %if(s.nonterminal)%
+        switch(goalState) {
+        case %s.nonterminal%:
+            return visitor.%s.patterns.(s.nonterminal).preCallback.name%(node, goalState);
+        %s.closures.values:errorClosure();separator="\n"%
+        }
+        %endif%
+        throw new IllegalArgumentException(String.format("No error handler produces \%s", goalState));
+    }
+}
+
+static final ErrorHandler errorHandler = new ErrorHandler();
 >>
 
 labelRoutine(op) ::= <<

@@ -86,7 +86,7 @@ operatorDefinition(op) ::= <<
 
 productionTable(t) ::= <<
 <burmDump>
-    %if(t.errorState)%
+    %if(t.hasErrorHandler)%
     %errorState(t.errorState)%
     %endif%
     %t.operators:operatorList();separator="\n"%

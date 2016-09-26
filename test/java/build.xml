@@ -88,6 +88,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/PreCallback.xml"/>
             <param name="testcase.xml" value="testcases/PreCallback.xml"/>
         </antcall>
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/ErrorTolerant.xml"/>
+            <param name="testcase.xml" value="testcases/ErrorTolerant.xml"/>
+        </antcall>
     </target>
 
     <target name="calculator">

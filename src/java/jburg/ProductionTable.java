@@ -289,6 +289,14 @@ public class ProductionTable<Nonterminal, NodeType>
     }
 
     /**
+     * @return true if any error handling productions are present.
+     */
+    public boolean hasErrorHandler()
+    {
+        return this.errorState.size() > 0;
+    }
+
+    /**
      * Generate the states and transition tables for a grammar.
      * <ul>
      * <li> Begin by computing states for all leaf operators;

@@ -16,7 +16,7 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
     ErrorState()
     {
         super();
-        super.number = 0;
+        super.number = ProductionTable.ERROR_STATE_NUM;
     }
 
     /**
