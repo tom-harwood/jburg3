@@ -20,14 +20,14 @@
         </Node>
     </Testcase>
 
-    <Testcase name="1-2 (error handler)" type="Error" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]">
+    <Testcase name="1-2 (error handler)" type="Error" expected="Error handled: Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]">
         <Node op="Subtract">
             <Node op="IntLiteral" content="1"/>
             <Node op="IntLiteral" content="2"/>
         </Node>
     </Testcase>
 
-    <Testcase name="(1-2)||'123' (error handler)" type="String" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
+    <Testcase name="(1-2)||'123' (error handler)" type="String" expected="Error handled: Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
         <Node op="Concat">
             <Node op="Subtract">
                 <Node op="IntLiteral" content="1"/>
@@ -37,7 +37,7 @@
         </Node>
     </Testcase>
 
-    <Testcase name="(12+43)||(1-2)||'123' (error handler)" type="String" expected="55No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
+    <Testcase name="(12+43)||(1-2)||'123' (error handler)" type="String" expected="55Error handled: Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
         <Node op="Concat">
             <Node op="Add">
                 <Node op="IntLiteral" content="12"/>

@@ -178,6 +178,6 @@ public class Calculator
      */
     public String onError(Node n, Nonterminal goalState)
     {
-        return String.format("No rule labels %s",n);
+        return String.format("Error handled: %s",n);
     }
 }
