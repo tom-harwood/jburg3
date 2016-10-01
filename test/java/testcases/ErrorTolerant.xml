@@ -7,6 +7,19 @@
         </Node>
     </Testcase>
 
+    <Testcase name="1+2||3+4" type="String" expected="37">
+        <Node op="Concat">
+            <Node op="Add">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="IntLiteral" content="2"/>
+            </Node>
+            <Node op="Add">
+                <Node op="IntLiteral" content="3"/>
+                <Node op="IntLiteral" content="4"/>
+            </Node>
+        </Node>
+    </Testcase>
+
     <Testcase name="1-2 (error handler)" type="Error" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]">
         <Node op="Subtract">
             <Node op="IntLiteral" content="1"/>
@@ -14,13 +27,29 @@
         </Node>
     </Testcase>
 
-    <Testcase name="(2-1)+1 (error handler)" type="String" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
+    <Testcase name="(1-2)||'123' (error handler)" type="String" expected="No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
         <Node op="Concat">
             <Node op="Subtract">
                 <Node op="IntLiteral" content="1"/>
                 <Node op="IntLiteral" content="2"/>
             </Node>
             <Node op="IntLiteral" content="123"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="(12+43)||(1-2)||'123' (error handler)" type="String" expected="55No rule labels Subtract{0} [IntLiteral{2}(1) [], IntLiteral{2}(2) []]123">
+        <Node op="Concat">
+            <Node op="Add">
+                <Node op="IntLiteral" content="12"/>
+                <Node op="IntLiteral" content="43"/>
+            </Node>
+            <Node op="Concat">
+                <Node op="Subtract">
+                    <Node op="IntLiteral" content="1"/>
+                    <Node op="IntLiteral" content="2"/>
+                </Node>
+                <Node op="IntLiteral" content="123"/>
+            </Node>
         </Node>
     </Testcase>
 
