@@ -4,7 +4,7 @@ package jburg;
  * A ProductionTable has one ErrorState, at predefined index zero.
  * The ProductionTable assigns the ErrorState to inputs that don't
  * match any entry in the transition table. An ErrorState may have
- * productions associated with it via the ProductionTable's
+ * a production and closures associated with it via the ProductionTable's
  * addErrorProduction API.
  */
 public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeType>
@@ -35,6 +35,9 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
         }
     }
 
+    /**
+     * @return the nonterminal state the error handler's production produces.
+     */
     public Nonterminal getNonterminal()
     {
         assert nonClosureProductions.size() <= 1: String.format("expected zero or one production(s), found %d", nonClosureProductions.size());
@@ -45,6 +48,9 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
         return null;
     }
 
+    /**
+     * @return the error-handling &quot;pattern matcher.&quot;
+     */
     public Production getErrorHandler()
     {
         assert nonClosureProductions.size() <= 1: String.format("expected zero or one production(s), found %d", nonClosureProductions.size());
