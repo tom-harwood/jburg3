@@ -116,6 +116,11 @@ public class Operator<Nonterminal, NodeType>
         if (!builder.isEmpty()) {
             this.transitionTable = builder.buildTransitionTable();
         }
+
+        if (this.transitionTable == null && this.leafState == null) {
+            throw new IllegalStateException(String.format("Operator %s is not a leaf or non-leaf -- probably because there is a child nonterminal with no productions.", this));
+        }
+
         builder = null;
         reps = null;
     }

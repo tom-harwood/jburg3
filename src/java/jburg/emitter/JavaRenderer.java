@@ -34,10 +34,9 @@ public class JavaRenderer implements AttributeRenderer
         } else if ("leafState".equals(formatString)) {
 
             if (!leafStates.containsKey(o)) {
-                leafStates.put(o, leafStates.size());
+                throw new IllegalStateException(String.format("Leaf state %s not in unique states table",o));
             }
             return String.format("leafState%s", leafStates.get(o));
-
 
         } else if ("closurePostCallback".equals(formatString)) {
             Method m = (Method)o;

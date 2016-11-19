@@ -3,8 +3,7 @@ package jburg;
 import java.lang.reflect.*;
 import java.util.*;
 
-import jburg.emitter.JavaRenderer;
-import jburg.emitter.TemplateGroup;
+import jburg.emitter.*;
 
 /**
  * A ProductionTable hosts the data structures that
@@ -815,9 +814,10 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param dumpPath      a pathname for the dump, or null.
      * @param templateGroup the template group file used to render the table.
      * @param attributes    attributes used during rendering.
+     * @param defaults      default attributes.
      * @todo  TODO: add descriptions of the attributes.
      */
-    public void dump(String dumpPath, String templateGroup, Map<String,String> attributes)
+    public boolean dump(String dumpPath, String templateGroup, Map<String,String> attributes, Map<String,Object> defaultAttributes)
     {
         if (dumpPath != null) {
 
@@ -825,10 +825,21 @@ public class ProductionTable<Nonterminal, NodeType>
                 java.io.PrintWriter out = new java.io.PrintWriter(dumpPath);
                 TemplateGroup stg = new TemplateGroup("templates", templateGroup);
 
+                Map<Object,Integer> uniqueStates = findUniqueStates();
+                stg.setDefaultAttribute("uniqueStates", uniqueStates);
+
+                for (String defaultKey: defaultAttributes.keySet()) {
+                    stg.setDefaultAttribute(defaultKey, defaultAttributes.get(defaultKey));
+                }
+
                 if ("java.stg".equals(templateGroup)) {
-                    Map<Object,Integer> uniqueStates = new HashMap<Object,Integer>();
-                    stg.setDefaultAttribute("uniqueStates", uniqueStates);
                     stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
+                } else if ("cppHeader.stg".equals(templateGroup) || "cppDefinition.stg".equals(templateGroup)) {
+                    stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes));
+                } else if ("xml.stg".equals(templateGroup)) {
+                    // No rendering required
+                } else {
+                    throw new IllegalArgumentException(String.format("Unknown emitter \"%s\"", templateGroup));
                 }
 
                 out.println(stg.getTemplate("start", "table", this).render());
@@ -837,6 +848,60 @@ public class ProductionTable<Nonterminal, NodeType>
 
             } catch (java.io.IOException cannotDump) {
                 cannotDump.printStackTrace();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Map<Object,Integer> findUniqueStates()
+    {
+        Map<Object,Integer> result = new HashMap<Object,Integer>();
+
+        for (List<Operator<Nonterminal,NodeType>> operators: getOperators()) {
+
+            for(Operator<Nonterminal,NodeType> operator: operators) {
+
+                if (operator != null) {
+
+                    if (operator.getTransitionTable() == null) {
+                        if (operator.leafState == null) {
+                            System.out.printf("Funky operator: %s\n", operator);
+                        }
+                        findUniqueStates(result, operator.leafState);
+                    } else {
+                        findUniqueStates(result, operator.getTransitionTable());
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    void findUniqueStates(Map<Object,Integer> uniqueLeaves, TransitionTableLeaf<Nonterminal, NodeType> leaf)
+    {
+        if (leaf == null) {
+            throw new IllegalStateException("Expected non-null leaf");
+        }
+
+        if (!uniqueLeaves.containsKey(leaf)) {
+            uniqueLeaves.put(leaf,uniqueLeaves.size());
+        }
+    }
+
+    void findUniqueStates(Map<Object,Integer> uniqueLeaves, TransitionPlane<Nonterminal,NodeType> plane)
+    {
+        if (plane.getNextDimension().isEmpty()) {
+
+            for (TransitionTableLeaf<Nonterminal, NodeType> leaf: plane.getFinalDimension()) {
+                findUniqueStates(uniqueLeaves, leaf);
+            }
+        } else {
+
+            for (TransitionPlane<Nonterminal, NodeType> nextDimension: plane.getNextDimension()) {
+                findUniqueStates(uniqueLeaves, nextDimension);
             }
         }
     }

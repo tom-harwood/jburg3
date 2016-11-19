@@ -83,7 +83,9 @@ public class TestRunner
             attributes.put("node.class", "Node");
             attributes.put("nonterminal.class", "Nonterminal");
             attributes.put("nodeType.class", "NodeType");
-            productions.dump(dumpFile, dumpTemplates, attributes);
+
+            Map<String,Object> defaults = new HashMap<String, Object>();
+            productions.dump(dumpFile, dumpTemplates, attributes, defaults);
         }
 
         if (dumpFile == null && testcaseFile != null) {

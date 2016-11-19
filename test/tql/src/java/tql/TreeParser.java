@@ -89,7 +89,6 @@ class TreeParser
 
         //productions.setVerboseTrigger(".*");
         productions.generateStates();
-        productions.dump("/tmp/tqlTable.xml", "xml.stg", new HashMap<String,String>());
+        productions.dump("/tmp/tqlTable.xml", "xml.stg", new HashMap<String,String>(), new HashMap<String,Object>());
     }
-
 }
