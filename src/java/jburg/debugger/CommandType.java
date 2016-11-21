@@ -3,13 +3,15 @@ package jburg.debugger;
 enum CommandType
 {
     Analyze("Analyze an ad-hoc tree"),
+    Echo("Echo a property"),
     Error,
     Execute("Execute dump-generating program"),
     Exit("Exit the debugger"),
     Help("Display help -- help <command name> for details"),
     PrintStackTrace("Print stack trace of most recent exception"),
     PrintState("PrintState <state number> -- display information about a state"),
-    Reload("Reload the BURS tables")
+    Reload("Reload the BURS tables"),
+    Set("Set a property")
     ;
 
     final String shortHelpText;

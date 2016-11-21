@@ -3,7 +3,7 @@ package jburg.debugger;
 import org.w3c.dom.*;
 
 import java.awt.*;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -20,6 +20,7 @@ class DumpAnalyzer extends JPanel
         JTree tree = new JTree(new DomToTreeModelAdapter());
 
         tree.setCellRenderer(new NodeTreeCellRenderer());
+        tree.addMouseListener(new TreePopupListener(tree));
 
         this.setLayout(new BorderLayout());
         this.add("Center", new JScrollPane(tree));
@@ -166,5 +167,59 @@ class DumpAnalyzer extends JPanel
 
             return this;
         }
+    }
+
+    class TreePopupListener implements MouseListener
+    {
+        final JTree tree;
+
+        final static String PRINT_STATE = "Display state";
+
+        JPopupMenu treePopup;
+
+        TreePopupListener(JTree tree)
+        {
+            this.tree = tree;
+
+            ActionListener menuListener = new ActionListener() {
+              public void actionPerformed(ActionEvent event) {
+                String command = event.getActionCommand();
+
+                if (command.equals(PRINT_STATE)) {
+                    JFrame popupFrame = new JFrame("State");
+                    popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    JTextArea area = new JTextArea();
+                    area.setText(TreePopupListener.this.tree.getLeadSelectionPath().toString());
+                    popupFrame.add(area);
+                    popupFrame.pack();
+                    // TODO: Reposition this dingus.
+                    popupFrame.setVisible(true);
+                }
+              }
+            };
+
+            treePopup = new JPopupMenu();
+            JMenuItem item = new JMenuItem(PRINT_STATE);
+            treePopup.add(item);
+            item.addActionListener(menuListener);
+
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+
+            if (SwingUtilities.isRightMouseButton(e)) {
+
+                int row = tree.getClosestRowForLocation(e.getX(), e.getY());
+                System.out.printf("Selecting row %d\n", row);
+                tree.setSelectionRow(row);
+                treePopup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        }
+
+        public void mouseEntered(MouseEvent e) { /* Ignore. */  }
+        public void mouseExited(MouseEvent e) { /* Ignore. */  }
+        public void mousePressed(MouseEvent e) { /* Ignore. */  }
+        public void mouseReleased(MouseEvent e) { /* Ignore. */  }
     }
 }

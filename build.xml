@@ -90,6 +90,15 @@ test - call the test/MAT directory's build.xml
 		</javac>
 	</target>
 
+    <target name="debugger" depends="jar">
+        <java classname="jburg.debugger.Debugger" fork="true">
+            <arg value="test/java/burmdump/dumpTest.xml"/>
+            <classpath>
+                <pathelement path="${lib.dir}/${jar.file}"/>
+            </classpath>
+        </java>
+    </target>
+
     <target name="test" depends="init">
         <echo message="Running java tests"/>
         <ant dir="test/java" target="cleanBuildAndTest" inheritAll="false" useNativeBasedir="true"/>

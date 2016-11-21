@@ -1,6 +1,6 @@
 package jburg.debugger;
 
-import javax.xml.parsers.DocumentBuilder; 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import javax.xml.xpath.XPathConstants;
@@ -8,11 +8,14 @@ import javax.xml.xpath.XPathFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -22,9 +25,11 @@ import jburg.util.PrintState;
 
 public class Debugger implements Console.AbstractExecutive
 {
-    final Console   console;
-    String          burmDumpFilename;
-    Document        burmDump;
+    final Console       console;
+    final Properties    properties;
+    String              burmDumpFilename;
+    Document            burmDump;
+    final static String propertiesFileName = "jburgDebugger.properties";
 
     public static void main(String[] args)
     {
@@ -33,6 +38,14 @@ public class Debugger implements Console.AbstractExecutive
 
     Debugger(String[] args)
     {
+        properties = new Properties();
+
+        try {
+            properties.load(new FileInputStream(propertiesFileName));
+        } catch (Exception cannotLoad) {
+            // Ignore.
+        }
+
         console = new Console(this);
         console.display("Debugger");
 
@@ -68,7 +81,7 @@ public class Debugger implements Console.AbstractExecutive
     public boolean executeCommand(String command)
     {
         try {
-            String[] tokens = command.split("\\s+");
+            String[] tokens = tokenize(command);
 
             if (tokens.length > 0) {
                 CommandType ctype = CommandType.getCommandType(tokens[0]);
@@ -78,6 +91,13 @@ public class Debugger implements Console.AbstractExecutive
 
                         case Analyze:
                             analyze(command.substring(tokens[0].length()));
+                            break;
+
+                        case Echo: {
+                                String propertyName = tokens[1];
+                                String propertyValue = properties.getProperty(propertyName);
+                                println("%s = %s", propertyName, propertyValue);
+                            }
                             break;
 
                         case Exit:
@@ -114,9 +134,14 @@ public class Debugger implements Console.AbstractExecutive
                                 }
                             }
                             break;
-                            
+
                         case Reload:
                             load();
+                            break;
+                        case Set: {
+                                String propertyName = tokens[1];
+                                set(propertyName, allTextAfter(command, propertyName));
+                            }
                             break;
 
                         default:
@@ -134,6 +159,25 @@ public class Debugger implements Console.AbstractExecutive
         return true;
     }
 
+    private String[] tokenize(String tokenSource)
+    {
+        return tokenSource.split("\\s+");
+    }
+
+    private void set(String propertyName, String propertyValue)
+    throws Exception
+    {
+        // Strip optional =
+        propertyValue = propertyValue.replaceAll("^\\s+=\\s*", "");
+        properties.setProperty(propertyName, propertyValue);
+        properties.store(new FileOutputStream(propertiesFileName), "JBurg3 debugger properties");
+    }
+
+    private String allTextAfter(String command, String lastTokenUsed)
+    {
+        return command.substring(command.indexOf(lastTokenUsed) + lastTokenUsed.length());
+    }
+
     private Exception mostRecentException = null;
 
     private void analyze(String xml)
@@ -147,6 +191,14 @@ public class Debugger implements Console.AbstractExecutive
     private void execute(String execCommand)
     throws Exception
     {
+        // If there's a stored execCommand, substitute into it.
+        String storedCommand = properties.getProperty("execCommand");
+
+        if (storedCommand != null) {
+            execCommand = storedCommand.replaceAll("\\$\\*", execCommand);
+            println("Executing %s", execCommand);
+        }
+
         Process proc = Runtime.getRuntime().exec(execCommand);
 
         // Capture stderr and stdout.
@@ -154,6 +206,7 @@ public class Debugger implements Console.AbstractExecutive
         String stdout = readAll(proc.getInputStream());
         int exitVal = proc.waitFor();
 
+        println("result = %s", stdout);
         analyze(stdout);
     }
 
