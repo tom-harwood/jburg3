@@ -12,10 +12,13 @@ import javax.swing.event.*;
 
 class DumpAnalyzer extends JPanel
 {
-    AdapterNode root;
+    final AdapterNode   root;
+    final Debugger      debugger;
 
-    DumpAnalyzer(Node root)
+    DumpAnalyzer(Debugger debugger, Node root)
     {
+        this.debugger = debugger;
+
         this.root = new AdapterNode(root);
         JTree tree = new JTree(new DomToTreeModelAdapter());
 
@@ -189,7 +192,13 @@ class DumpAnalyzer extends JPanel
                     JFrame popupFrame = new JFrame("State");
                     popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     JTextArea area = new JTextArea();
-                    area.setText(TreePopupListener.this.tree.getLeadSelectionPath().toString());
+                    AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
+
+                    try {
+                        area.setText(debugger.getStateInformation(String.valueOf(node.stateNumber)));
+                    } catch (Exception ex) {
+                        area.setText(ex.toString());
+                    }
                     popupFrame.add(area);
                     popupFrame.pack();
                     // TODO: Reposition this dingus.
@@ -211,7 +220,6 @@ class DumpAnalyzer extends JPanel
             if (SwingUtilities.isRightMouseButton(e)) {
 
                 int row = tree.getClosestRowForLocation(e.getX(), e.getY());
-                System.out.printf("Selecting row %d\n", row);
                 tree.setSelectionRow(row);
                 treePopup.show(e.getComponent(), e.getX(), e.getY());
             }

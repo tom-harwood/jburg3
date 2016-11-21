@@ -14,7 +14,9 @@ import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.w3c.dom.Document;
@@ -61,6 +63,7 @@ public class Debugger implements Console.AbstractExecutive
     throws Exception
     {
         this.burmDump = parseXML(new FileInputStream(burmDumpFilename));
+        cachedStateInfo.clear();
     }
 
     private Document parseXML(InputStream is)
@@ -129,9 +132,7 @@ public class Debugger implements Console.AbstractExecutive
                             break;
 
                         case PrintState: {
-                                for (PrintState.Finding finding: PrintState.analyzeState(burmDump, tokens[1])) {
-                                    println(finding.toString());
-                                }
+                                println(getStateInformation(tokens[1]));
                             }
                             break;
 
@@ -185,7 +186,7 @@ public class Debugger implements Console.AbstractExecutive
     {
         @SuppressWarnings("deprecation")
         Document parsedXML = parseXML(new java.io.StringBufferInputStream(xml));
-        new DumpAnalyzer(parsedXML.getFirstChild());
+        new DumpAnalyzer(this, parsedXML.getFirstChild());
     }
 
     private void execute(String execCommand)
@@ -220,6 +221,24 @@ public class Debugger implements Console.AbstractExecutive
             result.append(line);
 
         return result.toString();
+    }
+
+    Map<String,String> cachedStateInfo = new HashMap<String,String>();
+
+    String getStateInformation(String stateNumber)
+    throws Exception
+    {
+        if (!cachedStateInfo.containsKey(stateNumber)) {
+            StringBuilder result = new StringBuilder();
+
+            for (PrintState.Finding finding: PrintState.analyzeState(burmDump, stateNumber)) {
+                result.append(finding.toString());
+                result.append("\n");
+            }
+            cachedStateInfo.put(stateNumber, result.toString());
+        }
+
+        return cachedStateInfo.get(stateNumber);
     }
 
     private void status(String format, Object... args)
