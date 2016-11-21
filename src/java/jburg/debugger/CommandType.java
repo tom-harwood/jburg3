@@ -4,6 +4,7 @@ enum CommandType
 {
     Analyze("Analyze an ad-hoc tree"),
     Error,
+    Execute("Execute dump-generating program"),
     Exit("Exit the debugger"),
     Help("Display help -- help <command name> for details"),
     PrintStackTrace("Print stack trace of most recent exception"),

@@ -6,8 +6,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +84,10 @@ public class Debugger implements Console.AbstractExecutive
                             // TODO: Clean up, exit more gracefully
                             System.exit(0);
 
+                        case Execute:
+                            execute(command.substring(tokens[0].length()));
+                            break;
+
                         case Help:
 
                             if (tokens.length == 2) {
@@ -136,6 +142,31 @@ public class Debugger implements Console.AbstractExecutive
         @SuppressWarnings("deprecation")
         Document parsedXML = parseXML(new java.io.StringBufferInputStream(xml));
         new DumpAnalyzer(parsedXML.getFirstChild());
+    }
+
+    private void execute(String execCommand)
+    throws Exception
+    {
+        Process proc = Runtime.getRuntime().exec(execCommand);
+
+        // Capture stderr and stdout.
+        String errorOutput = readAll(proc.getErrorStream());
+        String stdout = readAll(proc.getInputStream());
+        int exitVal = proc.waitFor();
+
+        analyze(stdout);
+    }
+
+    String readAll(InputStream stream)
+    throws Exception
+    {
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+        StringBuilder result = new StringBuilder();
+        String line = null;
+        while ( (line = br.readLine()) != null)
+            result.append(line);
+
+        return result.toString();
     }
 
     private void status(String format, Object... args)
