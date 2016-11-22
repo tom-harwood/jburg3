@@ -32,21 +32,8 @@ public class Console extends JPanel
     {
         this.executive = executive;
 
-        commandLine.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                output.addElement(commandLine.getText());
-                updateStatus("");
-                executive.executeCommand(commandLine.getText());
-                history.add(0, commandLine.getText());
-                historyPos = -1;
-                commandLine.setText("");
-            }
-        });
 
         commandLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, commandLine.getPreferredSize().height));
-
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), downArrow);
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("UP"), upArrow);
 
@@ -62,7 +49,27 @@ public class Console extends JPanel
             }
         });
 
-        JScrollPane outputPane = new JScrollPane(new JList<String>(output));
+        JList<String> outputList = new JList<String>(output);
+        final JScrollPane outputPane = new JScrollPane(outputList);
+
+        commandLine.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                output.addElement(commandLine.getText());
+                updateStatus("");
+                executive.executeCommand(commandLine.getText());
+                history.add(0, commandLine.getText());
+                historyPos = -1;
+                commandLine.setText("");
+
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        outputPane.getVerticalScrollBar().setValue(outputPane.getVerticalScrollBar().getMaximum());
+                    }
+                });
+            }
+        });
 
         GroupLayout layout = new GroupLayout(this);
         layout.setAutoCreateGaps(true);

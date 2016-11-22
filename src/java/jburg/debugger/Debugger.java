@@ -132,7 +132,9 @@ public class Debugger implements Console.AbstractExecutive
                             break;
 
                         case PrintState: {
-                                println(getStateInformation(tokens[1]));
+                                for (PrintState.Finding finding: PrintState.analyzeState(burmDump, tokens[1])) {
+                                    println(finding.toString());
+                                }
                             }
                             break;
 
@@ -206,8 +208,6 @@ public class Debugger implements Console.AbstractExecutive
         String errorOutput = readAll(proc.getErrorStream());
         String stdout = readAll(proc.getInputStream());
         int exitVal = proc.waitFor();
-
-        println("result = %s", stdout);
         analyze(stdout);
     }
 
