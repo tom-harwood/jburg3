@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -89,6 +90,33 @@ public class Console extends JPanel
         );
 
         setLayout(layout);
+    }
+
+    void extractHistory(Properties properties)
+    {
+        int i = 0;
+        String key = historyKey(i++);
+
+        while (properties.containsKey(key)) {
+            if (history.size() < i) {
+                history.add(properties.getProperty(key));
+            } else {
+                history.set(i, properties.getProperty(key));
+            }
+            key = historyKey(i++);
+        }
+    }
+
+    String historyKey(int i)
+    {
+        return "Console.history." + String.valueOf(i);
+    }
+
+    void saveHistory(Properties properties)
+    {
+        for (int i = 0; i < history.size(); i++) {
+            properties.setProperty(historyKey(i), history.get(i));
+        }
     }
 
     void updateStatus(String format, Object... args)

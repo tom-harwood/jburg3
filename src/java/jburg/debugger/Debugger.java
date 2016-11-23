@@ -49,6 +49,7 @@ public class Debugger implements Console.AbstractExecutive
         }
 
         console = new Console(this);
+        console.extractHistory(properties);
         console.display("Debugger");
 
         try {
@@ -83,6 +84,10 @@ public class Debugger implements Console.AbstractExecutive
 
     public boolean executeCommand(String command)
     {
+        if (command.length() == 0 || command.startsWith("#")) {
+            return false;
+        }
+
         try {
             String[] tokens = tokenize(command);
 
@@ -90,6 +95,7 @@ public class Debugger implements Console.AbstractExecutive
                 CommandType ctype = CommandType.getCommandType(tokens[0]);
 
                 if (ctype != CommandType.Error) {
+
                     switch (ctype) {
 
                         case Analyze:
@@ -104,6 +110,14 @@ public class Debugger implements Console.AbstractExecutive
                             break;
 
                         case Exit:
+                            console.saveHistory(properties);
+
+                            try {
+                                properties.store(new FileOutputStream(propertiesFileName), "JBurg3 debugger properties");
+                            } catch (Exception cannotStore) {
+                                // Bummer.
+                            }
+
                             // TODO: Clean up, exit more gracefully
                             System.exit(0);
 
@@ -152,7 +166,7 @@ public class Debugger implements Console.AbstractExecutive
                             break;
                     }
                 } else {
-                    status("Unknown command %s -- try help",ctype);
+                    status("Unknown command %s -- try help", command);
                 }
             }
         } catch (Exception commandProblem) {
@@ -194,21 +208,22 @@ public class Debugger implements Console.AbstractExecutive
     private void execute(String execCommand)
     throws Exception
     {
-        // If there's a stored execCommand, substitute into it.
-        String storedCommand = properties.getProperty("execCommand");
-
-        if (storedCommand != null) {
-            execCommand = storedCommand.replaceAll("\\$\\*", execCommand);
-            println("Executing %s", execCommand);
-        }
-
         Process proc = Runtime.getRuntime().exec(execCommand);
 
         // Capture stderr and stdout.
         String errorOutput = readAll(proc.getErrorStream());
         String stdout = readAll(proc.getInputStream());
         int exitVal = proc.waitFor();
-        analyze(stdout);
+
+        if (stdout.length() > 0) {
+            analyze(stdout);
+        } else if (errorOutput.length() > 0) {
+            for (String line: errorOutput.split("\\n")) {
+                println(line);
+            }
+        } else {
+            println("Command %s produced no output.", execCommand);
+        }
     }
 
     String readAll(InputStream stream)
