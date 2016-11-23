@@ -227,6 +227,11 @@ for (int i = 0; i < node->getSubtreeCount() - %pattern.postCallback;format="post
 }
 %endif%
 result=visitor.%pattern.postCallback;format="postCallback"%;
+%else
+%if(pattern.isVarArgs)%
+for (int i = 0; i < node->getSubtreeCount(); i++) {
+    reducer.reduce(visitor, node->getSubtree(i), %nonterminalClass()%::%pattern;format="postCallback.lastNonterminal"%);
+}
 %endif%
 >>
 
