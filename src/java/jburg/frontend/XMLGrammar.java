@@ -205,11 +205,16 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
     private void addNonterminal(String localName, Attributes atts)
     {
+        String nonterminalValue = atts.getValue("nonterminal");
         if (this.semantics == null) {
             throw new IllegalStateException("Nonterminal elements must be inside Semantics elements");
         }
 
-        this.semantics.setNonterminalClass(getNonterminal(atts.getValue("nonterminal")), getClass(localName, "class", atts));
+        if ("*".equals(nonterminalValue)) {
+            this.semantics.setDefaultNonterminalClass(getClass(localName, "class", atts));
+        } else {
+            this.semantics.setNonterminalClass(getNonterminal(nonterminalValue), getClass(localName, "class", atts));
+        }
     }
 
     private void startPattern(String localName, Attributes atts)

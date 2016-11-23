@@ -40,6 +40,11 @@ public class BURMSemantics<Nonterminal>
     private final Map<Nonterminal,Class<?>> nonterminalClasses = new HashMap<Nonterminal,Class<?>>();
 
     /**
+     * Default class to be assigned to nonterminals with no explicit class.
+     */
+    private Class<?> defaultClass = null;
+
+    /**
      * Diagnostics emitted during processing, e.g., return type mismatches.
      */
     private final List<String> diagnostics = new ArrayList<String>();
@@ -62,6 +67,16 @@ public class BURMSemantics<Nonterminal>
             throw new IllegalArgumentException(String.format("Nonterminal %s already mapped to %s", nt, clazz.getName()));
         } else {
             nonterminalClasses.put(nt,clazz);
+        }
+    }
+    public void setDefaultNonterminalClass(Class<?> defaultClass)
+    {
+        if (this.defaultClass == null) {
+            this.defaultClass = defaultClass;
+        } else if (defaultClass.equals(this.defaultClass)) {
+            // noop.
+        } else {
+            throw new IllegalStateException(String.format("Default nonterminal class already set to %s", this.defaultClass.getName()));
         }
     }
 
@@ -228,28 +243,36 @@ public class BURMSemantics<Nonterminal>
      */
     private Class<?> getClassFor(Nonterminal nt, boolean isVarArgs)
     {
+        // First find the class mapped to the nonterminal.
+        Class<?> baseClass;
+
         if (nonterminalClasses.containsKey(nt)) {
-            Class<?> baseClass = nonterminalClasses.get(nt);
-            Class<?> result;
+            baseClass = nonterminalClasses.get(nt);
 
-            if (isVarArgs) {
+        } else if (defaultClass != null) {
+            baseClass = defaultClass;
 
-                try {
-                    result = Array.newInstance(baseClass, 0).getClass();
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException(
-                        String.format("Unable to translate variadic NT %s to %s[] due to %s",
-                        nt, baseClass, ex.getMessage()
-                    ));
-                }
-
-            } else {
-                result = baseClass;
-            }
-
-            return result;
         } else {
             throw new IllegalArgumentException(String.format("Nonterminal %s has no mapping", nt));
         }
+
+        // If the argument is variadic, the result class must reflect that.
+        Class<?> result;
+        if (isVarArgs) {
+
+            try {
+                result = Array.newInstance(baseClass, 0).getClass();
+            } catch (Exception ex) {
+                throw new IllegalArgumentException(
+                    String.format("Unable to translate variadic NT %s to %s[] due to %s",
+                    nt, baseClass, ex.getMessage()
+                ));
+            }
+
+        } else {
+            result = baseClass;
+        }
+
+        return result;
     }
 }
