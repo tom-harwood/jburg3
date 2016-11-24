@@ -73,11 +73,6 @@ public class JavaRenderer implements AttributeRenderer
             result.append(")");
             return result.toString();
 
-        } else if ("postCallback.lastNonterminal".equals(formatString)) {
-            @SuppressWarnings("unchecked")
-            List<PatternMatcher.PatternChildDescriptor> descriptors = ((PatternMatcher)o).getChildDescriptors();
-            return descriptors.get(descriptors.size()-1).getNonterminal().toString();
-
         } else if ("postCallback.variadicType".equals(formatString)) {
             Method m = (Method)o;
             assert(m.isVarArgs());

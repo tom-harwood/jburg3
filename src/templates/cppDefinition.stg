@@ -218,21 +218,15 @@ reduction(pattern) ::= <<
 %if(pattern.preCallback)%
 visitor.%pattern.preCallback.name%(node, goalState);
 %endif%
-%pattern.childDescriptors: { c | %resultType()% result%c.position% = reducer.reduce(visitor, node->getSubtree(%c.position%), %nonterminalClass()%::%c.nonterminal%);};separator="\n"%
-%if(pattern.postCallback)%
+%pattern.nonVariadicChildDescriptors: { c | %resultType()% result%c.position% = reducer.reduce(visitor, node->getSubtree(%c.position%), %nonterminalClass()%::%c.nonterminal%);};separator="\n"%
 %if(pattern.isVarArgs)%
 std::vector<%resultType()%> variadicActuals;
-for (int i = 0; i < node->getSubtreeCount() - %pattern.postCallback;format="postCallback.variadicOffset"%; i++) {
-    variadicActuals.push_back(reducer.reduce(visitor, node->getSubtree(i + %pattern.postCallback;format="postCallback.variadicOffset"%), %nonterminalClass()%::%pattern;format="postCallback.lastNonterminal"%));
+for (int i = 0; i < node->getSubtreeCount() - %pattern;format="postCallback.variadicOffset"%; i++) {
+    variadicActuals.push_back(reducer.reduce(visitor, node->getSubtree(i + %pattern;format="postCallback.variadicOffset"%), %nonterminalClass()%::%pattern.variadicNonterminal%));
 }
 %endif%
+%if(pattern.postCallback)%
 result=visitor.%pattern.postCallback;format="postCallback"%;
-%else%
-%if(pattern.isVarArgs)%
-for (int i = 0; i < node->getSubtreeCount(); i++) {
-    reducer.reduce(visitor, node->getSubtree(i), %nonterminalClass()%::%pattern;format="postCallback.lastNonterminal"%);
-}
-%endif%
 %endif%
 >>
 

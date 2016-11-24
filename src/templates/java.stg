@@ -214,12 +214,12 @@ reduction(pattern) ::= <<
 %if(pattern.preCallback)%
 visitor.%pattern.preCallback.name%(node, goalState);
 %endif%
-%pattern.childDescriptors: { c | Object result%c.position% = reducer.reduce(visitor, node.getSubtree(%c.position%), %nonterminalClass()%.%c.nonterminal%);};separator="\n"%
+%pattern.nonVariadicChildDescriptors: { c | Object result%c.position% = reducer.reduce(visitor, node.getSubtree(%c.position%), %nonterminalClass()%.%c.nonterminal%);};separator="\n"%
 %if(pattern.postCallback)%
 %if(pattern.isVarArgs)%
 %pattern.postCallback;format="postCallback.variadicType"%[] variadicActuals = new %pattern.postCallback;format="postCallback.variadicType"%[node.getSubtreeCount() - %pattern.postCallback;format="postCallback.variadicOffset"%];
 for (int i = 0; i < node.getSubtreeCount() - %pattern.postCallback;format="postCallback.variadicOffset"%; i++) {
-    variadicActuals[i] = (%pattern.postCallback;format="postCallback.variadicType"%)reducer.reduce(visitor, node.getSubtree(i + %pattern.postCallback;format="postCallback.variadicOffset"%), %nonterminalClass()%.%pattern;format="postCallback.lastNonterminal"%);
+    variadicActuals[i] = (%pattern.postCallback;format="postCallback.variadicType"%)reducer.reduce(visitor, node.getSubtree(i + %pattern.postCallback;format="postCallback.variadicOffset"%), %nonterminalClass()%.%pattern.variadicNonterminal%);
 }
 %endif%
 result=visitor.%pattern.postCallback;format="postCallback"%;

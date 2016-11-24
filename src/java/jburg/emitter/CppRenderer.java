@@ -84,11 +84,6 @@ public class CppRenderer implements AttributeRenderer
             result.append(")");
             return result.toString();
 
-        } else if ("postCallback.lastNonterminal".equals(formatString)) {
-            @SuppressWarnings("unchecked")
-            List<PatternMatcher.PatternChildDescriptor> descriptors = ((PatternMatcher)o).getChildDescriptors();
-            return descriptors.get(descriptors.size()-1).getNonterminal().toString();
-
         } else if ("postCallback.variadicType".equals(formatString)) {
             Method m = (Method)o;
             assert(m.isVarArgs());
@@ -96,11 +91,9 @@ public class CppRenderer implements AttributeRenderer
             return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
 
         } else if ("postCallback.variadicOffset".equals(formatString)) {
-            Method m = (Method)o;
-            assert(m.isVarArgs());
-            Class<?>[] parameterTypes = m.getParameterTypes();
-            assert(parameterTypes.length > 1);
-            return Integer.valueOf(parameterTypes.length - 2).toString();
+            PatternMatcher pattern = (PatternMatcher)o;
+            assert(pattern.getIsVarArgs());
+            return Integer.valueOf(pattern.getNonVariadicChildDescriptors().size()).toString();
 
         } else if ("timestamp".equals(formatString)) {
             return new java.util.Date().toString();

@@ -94,14 +94,21 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
         public Nonterminal getNonterminal() { return nonterminal; }
     }
 
-    public List<PatternChildDescriptor> getChildDescriptors()
+    public List<PatternChildDescriptor> getNonVariadicChildDescriptors()
     {
         List<PatternChildDescriptor> result = new ArrayList<PatternChildDescriptor>();
+        int limit = isVarArgs? childTypes.size() -1: childTypes.size();
 
-        for (int i = 0; i < childTypes.size(); i++) {
+        for (int i = 0; i < limit; i++) {
             result.add(new PatternChildDescriptor(i, childTypes.get(i)));
         }
 
         return result;
+    }
+
+    public Nonterminal getVariadicNonterminal()
+    {
+        assert isVarArgs;
+        return childTypes.get(childTypes.size()-1);
     }
 }
