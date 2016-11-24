@@ -14,14 +14,15 @@ class DumpAnalyzer extends JPanel
 {
     final AdapterNode   root;
     final Debugger      debugger;
+    final JTree         tree;
 
     DumpAnalyzer(Debugger debugger, Node root)
     {
         this.debugger = debugger;
 
         this.root = new AdapterNode(root);
-        JTree tree = new JTree(new DomToTreeModelAdapter());
 
+        this.tree = new JTree(new DomToTreeModelAdapter());
         tree.setCellRenderer(new NodeTreeCellRenderer());
         tree.addMouseListener(new TreePopupListener(tree));
 
@@ -30,8 +31,31 @@ class DumpAnalyzer extends JPanel
         JFrame frame = new JFrame("Dump Analyzer");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().add("Center", this);
+        expandNonViable();
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private void expandNonViable()
+    {
+        java.util.List<AdapterNode> nodes = new ArrayList<AdapterNode>();
+        nodes.add(root);
+        expandNonViable(nodes);
+    }
+
+    private void expandNonViable(java.util.List<AdapterNode> path)
+    {
+        AdapterNode last = path.get(path.size()-1);
+
+        if (last.stateNumber == 0) {
+            tree.expandPath(new TreePath(path.toArray(new Object[0])));
+        }
+
+        for (AdapterNode child: last.childNodes) {
+            path.add(child);
+            expandNonViable(path);
+            path.remove(path.size()-1);
+        }
     }
 
     class AdapterNode 
@@ -175,43 +199,42 @@ class DumpAnalyzer extends JPanel
     class TreePopupListener implements MouseListener
     {
         final JTree tree;
-
+        final JPopupMenu treePopup;
         final static String PRINT_STATE = "Display state";
-
-        JPopupMenu treePopup;
 
         TreePopupListener(JTree tree)
         {
             this.tree = tree;
+            treePopup = new JPopupMenu();
 
             ActionListener menuListener = new ActionListener() {
               public void actionPerformed(ActionEvent event) {
                 String command = event.getActionCommand();
 
                 if (command.equals(PRINT_STATE)) {
-                    JFrame popupFrame = new JFrame("State");
+                    AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
+                    String stateNumber = String.valueOf(node.stateNumber);
+                    JFrame popupFrame = new JFrame("State " + stateNumber);
                     popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     JTextArea area = new JTextArea();
-                    AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
 
                     try {
-                        area.setText(debugger.getStateInformation(String.valueOf(node.stateNumber)));
+                        area.setText(debugger.getStateInformation(stateNumber));
                     } catch (Exception ex) {
                         area.setText(ex.toString());
                     }
+
                     popupFrame.add(area);
                     popupFrame.pack();
-                    // TODO: Reposition this dingus.
+                    popupFrame.setLocation(treePopup.getLocation(null));
                     popupFrame.setVisible(true);
                 }
               }
             };
 
-            treePopup = new JPopupMenu();
             JMenuItem item = new JMenuItem(PRINT_STATE);
             treePopup.add(item);
             item.addActionListener(menuListener);
-
         }
 
         @Override
