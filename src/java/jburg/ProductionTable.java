@@ -69,7 +69,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * Operators computed from the specification, keyed by their node type.
      */
     Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
-        new TreeMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
+        new HashMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
     public Collection<List<Operator<Nonterminal,NodeType>>> getOperators()
     {
@@ -102,7 +102,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * the variadic tail.
      */
     private Map<NodeType, List<PatternMatcher<Nonterminal,NodeType>>> patternMatchersByNodeType =
-        new TreeMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
+        new HashMap<NodeType, List<PatternMatcher<Nonterminal, NodeType>>>();
 
     /**
      * The predetermined state number of the error state.
