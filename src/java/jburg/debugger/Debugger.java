@@ -23,6 +23,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXParseException;
+
 import jburg.util.PrintState;
 
 public class Debugger implements Console.AbstractExecutive
@@ -79,6 +82,8 @@ public class Debugger implements Console.AbstractExecutive
         dbf.setExpandEntityReferences(false);
 
         DocumentBuilder db = dbf.newDocumentBuilder();
+
+        db.setErrorHandler(new NilErrorHandler());
         return db.parse(is);
     }
 
@@ -271,4 +276,16 @@ public class Debugger implements Console.AbstractExecutive
         console.getAbstractConsole().exception(String.format(formatString, args), exception);
         mostRecentException = exception;
     }
+
+    /**
+     * These exceptions are reported as necessary via the more
+     * general throws/catch wrapper around executeCommand().
+     */
+    private class NilErrorHandler implements ErrorHandler
+    {
+        public void	error(SAXParseException exception) {}
+        public void	fatalError(SAXParseException exception) {}
+        public void	warning(SAXParseException exception) {}
+    }
+
 }
