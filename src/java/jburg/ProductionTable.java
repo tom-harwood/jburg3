@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.*;
+import jburg.semantics.HostRoutine;
 import java.util.*;
 
 import jburg.emitter.*;
@@ -125,7 +125,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SafeVarargs
-    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine preCallback, HostRoutine postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, false, childTypes);
     }
@@ -138,7 +138,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SafeVarargs
-    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, HostRoutine postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, 1, null, null, postCallback, false, childTypes);
     }
@@ -154,7 +154,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
     @SafeVarargs
-    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method preCallback, Method postCallback, Nonterminal... childTypes)
+    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine preCallback, HostRoutine postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, true, childTypes);
     }
@@ -169,7 +169,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
     @SafeVarargs
-    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, Method postCallback, Nonterminal... childTypes)
+    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, HostRoutine postCallback, Nonterminal... childTypes)
     {
         addPatternMatch(nt, nodeType, 1, null, null, postCallback, true, childTypes);
     }
@@ -188,7 +188,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
     @SafeVarargs
-    final public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, Nonterminal... childTypes)
+    final public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, Nonterminal... childTypes)
     {
         return addPatternMatch(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, Arrays.asList(childTypes));
     }
@@ -206,7 +206,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * may be used more than once to cover the "tail" of a subtree's children.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
+    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
     {
         PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, childTypes);
         nonterminals.add(nt);
@@ -238,7 +238,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param cost          the closure's cost metric.
      * @param postCallback  the callback method run after the method that produces the source nonterminal completes.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost, Method method)
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost, HostRoutine method)
     {
         Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, cost, method);
         closures.add(closure);
@@ -263,7 +263,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param sourceNt      the nonterminal that must be produced before this closure runs.
      * @param postCallback  the callback method run after the method that produces the source nonterminal completes.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, Method method)
+    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, HostRoutine method)
     {
         return addClosure(targetNt, sourceNt, 1, method);
     }
@@ -281,7 +281,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param targetNt      the nonterminal this error handler produces.
      * @param errorCallback the error-handling callback method.
      */
-    public void addErrorHandler(Nonterminal targetNt, Method errorCallback)
+    public void addErrorHandler(Nonterminal targetNt, HostRoutine errorCallback)
     {
         nonterminals.add(targetNt);
         this.errorState.setNonClosureProduction(new ErrorHandlerProduction<Nonterminal>(targetNt, errorCallback), 1);
@@ -362,7 +362,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param cost          the cost of this production.
      * @param postCallback  the callback run by this production.
      */
-    public Production<Nonterminal> addNullPointerProduction(Nonterminal nt, int cost, Method postCallback)
+    public Production<Nonterminal> addNullPointerProduction(Nonterminal nt, int cost, HostRoutine postCallback)
     {
         NullPointerProduction<Nonterminal> np = new NullPointerProduction<Nonterminal>(nt, cost, postCallback);
         nullProductions.add(np);

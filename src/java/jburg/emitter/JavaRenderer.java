@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 
 import org.stringtemplate.v4.AttributeRenderer;
 
@@ -39,7 +39,7 @@ public class JavaRenderer implements AttributeRenderer
             return String.format("leafState%s", leafStates.get(o));
 
         } else if ("closurePostCallback".equals(formatString)) {
-            Method m = (Method)o;
+            HostRoutine m = (HostRoutine)o;
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
             result.append("node, ");
@@ -51,7 +51,7 @@ public class JavaRenderer implements AttributeRenderer
             return result.toString();
 
         } else if ("postCallback".equals(formatString)) {
-            Method m = (Method)o;
+            HostRoutine m = (HostRoutine)o;
 
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
@@ -74,13 +74,13 @@ public class JavaRenderer implements AttributeRenderer
             return result.toString();
 
         } else if ("postCallback.variadicType".equals(formatString)) {
-            Method m = (Method)o;
+            HostRoutine m = (HostRoutine)o;
             assert(m.isVarArgs());
             Class<?>[] parameterTypes = m.getParameterTypes();
             return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
 
         } else if ("postCallback.variadicOffset".equals(formatString)) {
-            Method m = (Method)o;
+            HostRoutine m = (HostRoutine)o;
             assert(m.isVarArgs());
             Class<?>[] parameterTypes = m.getParameterTypes();
             assert(parameterTypes.length > 1);

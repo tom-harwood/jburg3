@@ -14,6 +14,8 @@
           <xs:attribute name = 'nodeClass' type = 'xs:string'/>
           <xs:attribute name = 'nonterminalClass' type = 'xs:string'/>
           <xs:attribute name = 'reducerClass' type = 'xs:string'/>
+          <xs:attribute name = 'generatedNonterminals' type = 'xs:string'/>
+          <xs:attribute name = 'language' type = 'xs:string'/>
       </xs:complexType>
    </xs:element>
 

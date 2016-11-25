@@ -3,6 +3,7 @@ package tql;
 import java.util.HashMap;
 import jburg.Reducer;
 import jburg.ProductionTable;
+import jburg.semantics.HostRoutine;
 
 class TreeParser
 {
@@ -28,7 +29,7 @@ class TreeParser
 
     static final ProductionTable<SemanticLabel,TQLNodeType> productions = new ProductionTable<SemanticLabel,TQLNodeType>();
 
-    static final java.lang.reflect.Method noCallback = null;
+    static final HostRoutine noCallback = null;
 
     static
     {

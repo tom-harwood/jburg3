@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 
 /**
  * A ErrorHandlerProduction represents a
@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
  */
 public class ErrorHandlerProduction<Nonterminal> extends Production<Nonterminal>
 {
-    public ErrorHandlerProduction(Nonterminal target, Method errorHandler)
+    public ErrorHandlerProduction(Nonterminal target, HostRoutine errorHandler)
     {
         super(target, 1, false, null, errorHandler, null);
     }

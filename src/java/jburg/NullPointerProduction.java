@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 
 /**
  * A NullPointerProduction represents a
@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
  */
 public class NullPointerProduction<Nonterminal> extends Production<Nonterminal>
 {
-    public NullPointerProduction(Nonterminal target, int cost, Method postCallback)
+    public NullPointerProduction(Nonterminal target, int cost, HostRoutine postCallback)
     {
         super(target, cost, false, null, null, postCallback);
     }

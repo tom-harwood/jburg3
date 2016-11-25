@@ -1,7 +1,7 @@
 package jburg;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 import java.util.*;
 
 /**
@@ -21,21 +21,21 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      * of this map, so that the methods can be called in if/elseif
      * logic or used to build state machines for lazy evaluation.
      */
-    Map<List<Method>, State<Nonterminal, NodeType>> states = new HashMap<List<Method>, State<Nonterminal, NodeType>>();
+    Map<List<HostRoutine>, State<Nonterminal, NodeType>> states = new HashMap<List<HostRoutine>, State<Nonterminal, NodeType>>();
 
     /**
      * @return a map of method*-to-state mappings.
      * @todo This should return a topologically sorted list,
      * so that predicates can be evaluated by if/elseif logic.
      */
-    public Map<List<Method>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
+    public Map<List<HostRoutine>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
 
     /**
      * A sorted and de-dup'd list of all predicate methods
      * found in the constituent states. Used to create
      * search keys for to-be-labeled nodes.
      */
-    List<Method> predicates = new ArrayList<Method>();
+    List<HostRoutine> predicates = new ArrayList<HostRoutine>();
 
     /**
      * The arity kind of the constituent states.
@@ -128,9 +128,9 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      * list of all predicates in this predicated state.
      * @param srcPredicates the new predicates. This list may be empty.
      */
-    private void addPredicates(List<Method> srcPredicates)
+    private void addPredicates(List<HostRoutine> srcPredicates)
     {
-        for (Method m: srcPredicates) {
+        for (HostRoutine m: srcPredicates) {
             if (!this.predicates.contains(m)) {
                 this.predicates.add(m);
             }
@@ -145,9 +145,9 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     State<Nonterminal, NodeType> getState(BurgInput<Nonterminal, NodeType> node, Object visitor)
     throws IllegalAccessException, InvocationTargetException
     {
-        List<Method> satisfiedPredicates = new ArrayList<Method>();
+        List<HostRoutine> satisfiedPredicates = new ArrayList<HostRoutine>();
 
-        for (Method m: this.predicates) {
+        for (HostRoutine m: this.predicates) {
             Boolean success = (Boolean)m.invoke(visitor, node);
 
             if (success) {
@@ -193,7 +193,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
         return compositeArityKind;
     }
 
-    private static final List<Method> noGuard = new ArrayList<Method>();
+    private static final List<HostRoutine> noGuard = new ArrayList<HostRoutine>();
     @Override
     public String toString()
     {

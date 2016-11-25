@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 import java.util.*;
 
 /**
@@ -70,8 +70,8 @@ public class State<Nonterminal, NodeType>
      * This state's predicate methods. Nodes belonging to this
      * state's equivalence class satisfy all the predicates.
      */
-    final List<Method> predicates = new ArrayList<Method>();
-    public List<Method> getPredicates() { return predicates; }
+    final List<HostRoutine> predicates = new ArrayList<HostRoutine>();
+    public List<HostRoutine> getPredicates() { return predicates; }
 
     /**
      * Construct a state that characterizes non-null nodes.
@@ -110,7 +110,7 @@ public class State<Nonterminal, NodeType>
      * @param source    the source state.
      * @param predicate the predicate.
      */
-    State(State<Nonterminal, NodeType> source, Method predicate)
+    State(State<Nonterminal, NodeType> source, HostRoutine predicate)
     {
         this(source);
         // Add the new predicate, and sort the predicate
@@ -165,7 +165,7 @@ public class State<Nonterminal, NodeType>
      * @return true if a node labeled with this state is
      * known to satisfy the given predicate.
      */
-    boolean satisfiesPredicate(Method predicate)
+    boolean satisfiesPredicate(HostRoutine predicate)
     {
         return this.predicates.contains(predicate);
     }

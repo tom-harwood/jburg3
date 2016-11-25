@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
      */
     public final List<Nonterminal>     childTypes;
 
-    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, Method predicate, Method preCallback, Method postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
+    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
     {
         super(target, cost, isVarArgs, predicate, preCallback, postCallback);
 

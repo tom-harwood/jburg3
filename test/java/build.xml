@@ -18,6 +18,7 @@
         <property name="gensrc.dir" value="./gensrc" />
         <property name="junit.log.dir" value="./log" />
         <property name="grammar.xml" value="grammars/PoorlyOverloaded.xml"/>
+        <property name="cppgrammar.xml" value="grammars/CppOverloaded.xml"/>
         <property name="testcase.xml" value="testcases/FirstTest.xml"/>
         <property name="classname" value="Test"/>
         <property name="cppclassname" value="CppTestReducer"/>
@@ -236,10 +237,10 @@ allTests - run java tests
 
     <target name="cppGen" depends="compile">
         <mkdir dir="${gensrc.dir}"/>
-        <echo>Generating ${cppclassname}.h from ${grammar.xml}</echo>
+        <echo>Generating ${cppclassname}.h from ${cppgrammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
-            <arg value="${grammar.xml}"/>
+            <arg value="${cppgrammar.xml}"/>
             <arg value="-classname"/>
             <arg value="${cppclassname}"/>
             <arg value="-nodeClass"/>
@@ -264,10 +265,10 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating ${cppclassname}.cpp from ${grammar.xml}</echo>
+        <echo>Generating ${cppclassname}.cpp from ${cppgrammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
-            <arg value="${grammar.xml}"/>
+            <arg value="${cppgrammar.xml}"/>
             <arg value="-templateGroup"/>
             <arg value="cppDefinition.stg"/>
             <arg value="-classname"/>

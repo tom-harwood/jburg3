@@ -1,4 +1,4 @@
-package jburg;
+package jburg.semantics;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -84,7 +84,7 @@ public class BURMSemantics<Nonterminal>
      * Get a pre-order callback method, by name.
      * @param methodName    the callback method's name.
      */
-    public Method getPreCallback(String methodName)
+    public HostRoutine getPreCallback(String methodName)
     throws NoSuchMethodException
     {
         Class<?>[] parameterTypes = {nodeClass, nonterminalClass};
@@ -95,7 +95,7 @@ public class BURMSemantics<Nonterminal>
      * Get a predicate method, by name.
      * @param methodName    the predicate method's name.
      */
-    public Method getPredicate(String methodName)
+    public HostRoutine getPredicate(String methodName)
     throws NoSuchMethodException
     {
         Class<?>[] parameterTypes = {nodeClass};
@@ -110,7 +110,7 @@ public class BURMSemantics<Nonterminal>
      * @param nonterminals  the nonterminals of the callback's production's children.
      */
     @SafeVarargs
-    final public Method getPostCallback(String methodName, boolean isVariadic, Nonterminal producesNt, Nonterminal ... nonterminals)
+    final public HostRoutine getPostCallback(String methodName, boolean isVariadic, Nonterminal producesNt, Nonterminal ... nonterminals)
     throws NoSuchMethodException
     {
         Class<?> returnType         = getClassFor(producesNt, false);
@@ -133,7 +133,7 @@ public class BURMSemantics<Nonterminal>
      * @param nonterminals  the nonterminals of the callback's production's children.
      */
     @SafeVarargs
-    final public Method getFixedArityPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
+    final public HostRoutine getFixedArityPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
     throws NoSuchMethodException
     {
         return getPostCallback(methodName, false, producesNt, nonterminals);
@@ -146,7 +146,7 @@ public class BURMSemantics<Nonterminal>
      * @param nonterminals  the nonterminals of the callback's production's children.
      */
     @SafeVarargs
-    final public Method getVariadicPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
+    final public HostRoutine getVariadicPostCallback(String methodName, Nonterminal producesNt, Nonterminal ... nonterminals)
     throws NoSuchMethodException
     {
         return getPostCallback(methodName, true, producesNt, nonterminals);
@@ -163,7 +163,7 @@ public class BURMSemantics<Nonterminal>
      * @param   parameterTypes  the types of the parameters; as noted above, limited
      * support for overloading is provided.
      */
-    private Method findMethod(String methodName, Class<?> returnType, Class<?>[] parameterTypes)
+    private HostRoutine findMethod(String methodName, Class<?> returnType, Class<?>[] parameterTypes)
     throws NoSuchMethodException
     {
         Method result = null;
@@ -198,7 +198,7 @@ public class BURMSemantics<Nonterminal>
             diagnostics.add(String.format("Method %s produces %s, expected %s", methodName, result.getReturnType(), returnType));
         }
 
-        return result;
+        return HostRoutine.getHostRoutine(result);
     }
 
     /**

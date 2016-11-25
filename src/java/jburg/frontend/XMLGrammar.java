@@ -14,7 +14,8 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
 import jburg.ProductionTable;
-import jburg.BURMSemantics;
+import jburg.semantics.BURMSemantics;
+import jburg.semantics.HostRoutine;
 
 /**
  * A XMLGrammar instance builds a ProductionTable from an XML specification.
@@ -25,6 +26,10 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     Class<?> nodeTypeClass;
     Class<?> reducerClass;
     Class<?> nodeClass;
+
+    String  language = "java";
+
+    Map<String,String> adHocNonterminals = new HashMap<String,String>();
 
     ProductionDesc currentProduction = null;
 
@@ -129,8 +134,22 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     {
         try {
         if (localName.equals("Grammar")) {
-            reducerClass = getClass(localName, "reducerClass", atts);
+            if (atts.getValue("language") != null) {
+                this.language = atts.getValue("language");
+            }
+
+            // TODO: Read these from a .h file.
             nodeClass = getClass(localName, "nodeClass", atts);
+
+            if (language.equals("java")) {
+                reducerClass = getClass(localName, "reducerClass", atts);
+            } else {
+                // Dummy reducer class.
+                // TODO: Have to abstract the method signatures;
+                // that would be good for Java, too, so we don't
+                // have to play javac.
+                reducerClass = Object.class;
+            }
 
         } else if (localName.equals("Pattern")) {
             startPattern(localName, atts);
@@ -212,8 +231,10 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
         if ("*".equals(nonterminalValue)) {
             this.semantics.setDefaultNonterminalClass(getClass(localName, "class", atts));
-        } else {
+        } else if (language.equals("java")) {
             this.semantics.setNonterminalClass(getNonterminal(nonterminalValue), getClass(localName, "class", atts));
+        } else {
+            this.adHocNonterminals.put(nonterminalValue, atts.getValue("class"));
         }
     }
 
@@ -297,9 +318,9 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         final int                   cost;
         final boolean               isVarArgs;
 
-        Method predicate   = null;
-        Method preCallback = null;
-        Method postCallback = null;
+        HostRoutine predicate   = null;
+        HostRoutine preCallback = null;
+        HostRoutine postCallback = null;
 
         abstract boolean isPatternMatch();
         abstract boolean isClosure();
@@ -349,7 +370,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         @SuppressWarnings("unchecked")
-        Method getPostCallbackMethod(Attributes atts)
+        HostRoutine getPostCallbackMethod(Attributes atts)
         throws NoSuchMethodException
         {
             checkSemantics();
@@ -362,7 +383,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             }
         }
 
-        Method getPreCallbackMethod(Attributes atts)
+        HostRoutine getPreCallbackMethod(Attributes atts)
         throws NoSuchMethodException
         {
             checkSemantics();
@@ -370,7 +391,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             return semantics.getPreCallback(methodName);
         }
 
-        Method getPredicateMethod(Attributes atts)
+        HostRoutine getPredicateMethod(Attributes atts)
         throws NoSuchMethodException
         {
             checkSemantics();

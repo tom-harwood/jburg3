@@ -1,6 +1,7 @@
 package tl3;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
+
 import java.net.URI;
 import java.util.*;
 
@@ -128,12 +129,12 @@ public class CodeGenerator
 
     static final ProductionTable<Nonterminal, NodeType> productions = new ProductionTable<Nonterminal,NodeType>();
 
-    final static Method noPreCallback = null;
-    final static Method noPostCallback = null;
+    final static HostRoutine noPreCallback = null;
+    final static HostRoutine noPostCallback = null;
 
     static
     {
-        Method statementList = null;
+        HostRoutine statementList = null;
 
         try {
             statementList = getPostCallback("statementList", Class.forName("[Ljava.lang.String;"));
@@ -176,7 +177,7 @@ public class CodeGenerator
         productions.generateStates();
     }
 
-    static Method getPostCallback(String methodName, Class<?>... formalTypes)
+    static HostRoutine getPostCallback(String methodName, Class<?>... formalTypes)
     {
         Class<?>[] formalsWithNode = new Class<?>[formalTypes.length+1];
         formalsWithNode[0] = Node.class;
@@ -185,7 +186,7 @@ public class CodeGenerator
         }
 
         try {
-            return CodeGenerator.class.getDeclaredMethod(methodName, formalsWithNode);
+            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, formalsWithNode));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
@@ -194,10 +195,10 @@ public class CodeGenerator
         return null;
     }
 
-    static Method getPreCallback(String methodName)
+    static HostRoutine getPreCallback(String methodName)
     {
         try {
-            return CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Nonterminal.class);
+            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Nonterminal.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
@@ -205,10 +206,10 @@ public class CodeGenerator
         return null;
     }
 
-    static Method getPredicate(String methodName)
+    static HostRoutine getPredicate(String methodName)
     {
         try {
-            return CodeGenerator.class.getDeclaredMethod(methodName, Node.class);
+            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);

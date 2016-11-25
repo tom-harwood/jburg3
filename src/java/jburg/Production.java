@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 
 /**
  * A Production represents a transformation
@@ -15,8 +15,8 @@ public abstract class Production<Nonterminal>
     /**
      * The Nonterminal "goal state" this Production produces.
      */
-    final Nonterminal    target;
-    public Nonterminal getNonterminal() { return target; }
+    final Nonterminal   target;
+    public Nonterminal  getNonterminal() { return target; }
 
 
     /**
@@ -26,8 +26,8 @@ public abstract class Production<Nonterminal>
      * are up to the application that generates the production table.
      * Range 0..Integer.MAX_VALUE-1.
      */
-    final int            ownCost;
-    public int getCost() { return ownCost; }
+    final int   ownCost;
+    public int  getCost() { return ownCost; }
 
     /**
      * Set if the production's final dimension can extend
@@ -41,9 +41,9 @@ public abstract class Production<Nonterminal>
      * A semantic predicate method that guards this production,
      * or null if the production is evaluated solely by cost.
      */
-    Method         predicate;
-    public Method getPredicate() { return predicate; }
-    public final static Method NO_PREDICATE = null;
+    HostRoutine         predicate;
+    public HostRoutine  getPredicate() { return predicate; }
+    public final static HostRoutine NO_PREDICATE = null;
 
     /**
      * A reducer method to call before deriving the subtree's
@@ -51,9 +51,9 @@ public abstract class Production<Nonterminal>
      * derivation of the subtree). Null if no such callback
      * is required.
      */
-    Method         preCallback;
-    public Method getPreCallback() { return preCallback; }
-    public final static Method NO_PRECALLBACK = null;
+    HostRoutine         preCallback;
+    public HostRoutine  getPreCallback() { return preCallback; }
+    public final static HostRoutine NO_PRECALLBACK = null;
 
     /**
      * A reducer method to call after deriving the subtree's
@@ -61,9 +61,9 @@ public abstract class Production<Nonterminal>
      * source nonterminal). Null if no such callback
      * is required.
      */
-    Method         postCallback;
-    public Method getPostCallback() { return postCallback; }
-    public final static Method NO_POSTCALLBACK = null;
+    HostRoutine         postCallback;
+    public HostRoutine  getPostCallback() { return postCallback; }
+    public final static HostRoutine NO_POSTCALLBACK = null;
 
     /**
      * Construct a production.
@@ -74,7 +74,7 @@ public abstract class Production<Nonterminal>
      * @param preCallback   the pre-derivation callback, or null.
      * @param postCallback  the post-derivation callback, or null.
      */
-    Production(Nonterminal target, int ownCost, boolean isVarArgs, Method predicate, Method preCallback, Method postCallback)
+    Production(Nonterminal target, int ownCost, boolean isVarArgs, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback)
     {
         this.target         = target;
         this.ownCost        = ownCost;
@@ -93,7 +93,7 @@ public abstract class Production<Nonterminal>
     }
 
     /**
-     * Get the decorated callback name of a Method.
+     * Get the decorated callback name of a HostRoutine.
      * @param callback  the callback of interest.
      * @pre callback must be a pre or post callback
      * method of this Production.
@@ -101,7 +101,7 @@ public abstract class Production<Nonterminal>
      * @throws IllegalStateException if the method
      * specified is not a pre or post callback.
      */
-    protected String getCallbackName(Method callback)
+    protected String getCallbackName(HostRoutine callback)
     {
         if (callback != null) {
             if (callback == this.preCallback) {

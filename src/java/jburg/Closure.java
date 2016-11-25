@@ -1,6 +1,6 @@
 package jburg;
 
-import java.lang.reflect.Method;
+import jburg.semantics.HostRoutine;
 
 /**
  * A Closure represents a nonterminal-nonterminal transformation.
@@ -12,18 +12,18 @@ public class Closure<Nonterminal> extends Production<Nonterminal>
     public Nonterminal getSource() { return source; }
 
 
-    public Closure(Nonterminal target, Nonterminal source, int ownCost, Method preCallback, Method postCallback)
+    public Closure(Nonterminal target, Nonterminal source, int ownCost, HostRoutine preCallback, HostRoutine postCallback)
     {
         super(target, ownCost, false, null, preCallback, postCallback);
         this.source = source;
     }
 
-    public Closure(Nonterminal target, Nonterminal source, int ownCost, Method postCallback)
+    public Closure(Nonterminal target, Nonterminal source, int ownCost, HostRoutine postCallback)
     {
         this(target, source, ownCost, null, postCallback);
     }
 
-    public Closure(Nonterminal target, Nonterminal source, Method postCallback)
+    public Closure(Nonterminal target, Nonterminal source, HostRoutine postCallback)
     {
         this(target, source, 1, null, postCallback);
     }
