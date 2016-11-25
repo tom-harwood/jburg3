@@ -117,7 +117,7 @@ public class State<Nonterminal, NodeType>
         // list into its canonical form by hash code.
         assert !this.predicates.contains(predicate);
         this.predicates.add(predicate);
-        Collections.sort(this.predicates, new MethodComparator());
+        Collections.sort(this.predicates);
     }
 
     /**

@@ -71,7 +71,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
             }
         }
 
-        Collections.sort(this.predicates, new MethodComparator());
+        Collections.sort(this.predicates);
     }
 
     /**
@@ -102,7 +102,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
         }
 
         addPredicates(src.predicates);
-        Collections.sort(this.predicates, new MethodComparator());
+        Collections.sort(this.predicates);
         addArityKind(src);
     }
 
