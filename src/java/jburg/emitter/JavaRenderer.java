@@ -12,6 +12,7 @@ import org.stringtemplate.v4.AttributeRenderer;
 import jburg.Operator;
 import jburg.PatternMatcher;
 
+@SuppressWarnings("unchecked")
 public class JavaRenderer implements AttributeRenderer
 {
 
@@ -39,7 +40,7 @@ public class JavaRenderer implements AttributeRenderer
             return String.format("leafState%s", leafStates.get(o));
 
         } else if ("closurePostCallback".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
+            HostRoutine<Class> m = (HostRoutine<Class>)o;
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
             result.append("node, ");
@@ -51,11 +52,11 @@ public class JavaRenderer implements AttributeRenderer
             return result.toString();
 
         } else if ("postCallback".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
+            HostRoutine<Class> m = (HostRoutine<Class>)o;
 
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
-            Class<?>[] parameterTypes = m.getParameterTypes();
+            Class[] parameterTypes = m.getParameterTypes();
             boolean isVariadic = m.isVarArgs();
             int lastFixedArg = isVariadic? parameterTypes.length - 1: parameterTypes.length;
             result.append("node");
@@ -74,17 +75,10 @@ public class JavaRenderer implements AttributeRenderer
             return result.toString();
 
         } else if ("postCallback.variadicType".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
-            assert(m.isVarArgs());
-            Class<?>[] parameterTypes = m.getParameterTypes();
-            return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
+            return ((HostRoutine<Class>)o).getVariadicComponentType().getSimpleName();
 
         } else if ("postCallback.variadicOffset".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
-            assert(m.isVarArgs());
-            Class<?>[] parameterTypes = m.getParameterTypes();
-            assert(parameterTypes.length > 1);
-            return Integer.valueOf(parameterTypes.length - 2).toString();
+            return String.valueOf(((HostRoutine<Class>)o).getVariadicOffset());
 
         } else if ("timestamp".equals(formatString)) {
             return new java.util.Date().toString();

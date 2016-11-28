@@ -209,7 +209,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         nodeStack.pop();
     }
 
-    class CostEntry
+    public class CostEntry
     {
         final Nonterminal   nt;
         final int           cost;
@@ -470,7 +470,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
     }
 
-    class IndexEntry
+    public class IndexEntry
     {
         Integer                                 stateNumber;
         Integer                                 index;
@@ -508,7 +508,12 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         public Class<?> parseClass(Node node)
         throws Exception
         {
-            return Class.forName(node.getStringAttr("type"));
+            String className = node.getStringAttr("type");
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException noSuchClass) {
+                throw new IllegalArgumentException(String.format("Class \"%s\" not found", className));
+            }
         }
 
         public Object passthrough(Node node, Object arg)

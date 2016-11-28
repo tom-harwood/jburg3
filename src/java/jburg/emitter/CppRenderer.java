@@ -12,6 +12,7 @@ import org.stringtemplate.v4.AttributeRenderer;
 import jburg.Operator;
 import jburg.PatternMatcher;
 
+@SuppressWarnings("unchecked")
 public class CppRenderer implements AttributeRenderer
 {
 
@@ -40,60 +41,48 @@ public class CppRenderer implements AttributeRenderer
 
 
         } else if ("closurePostCallback".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
+            HostRoutine<String> m = (HostRoutine<String>)o;
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
             result.append("node, ");
-            /*
-             * TODO: Java vs. C++ types
             result.append("(");
-            result.append(m.getParameterTypes()[1].getName());
+            result.append(m.getParameterTypes()[1]);
             result.append(")");
-            */
             result.append("result");
             result.append(")");
             return result.toString();
 
         } else if ("postCallback".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
+            HostRoutine<String> m = (HostRoutine<String>)o;
 
             StringBuilder result = new StringBuilder(m.getName());
             result.append("(");
-            Class<?>[] parameterTypes = m.getParameterTypes();
+            String[] parameterTypes = m.getParameterTypes();
             boolean isVariadic = m.isVarArgs();
             int lastFixedArg = isVariadic? parameterTypes.length - 1: parameterTypes.length;
             result.append("node");
 
             for (int i = 1; i < lastFixedArg; i++) {
-            /*
-             * TODO: Have to translate types for the C++ emitter,
-               or reason about them using a host-agnostic format.
                 result.append(", (");
-                result.append(parameterTypes[i].getName());
+                result.append(parameterTypes[i]);
                 result.append(")");
-            */
-                result.append(", ");
                 result.append(String.format("result%d", i-1));
             }
 
             if (isVariadic) {
-                // TODO: C++ centric variadic handling -- va_list
-                // isn't feasible, perhaps a std::vector?
                 result.append(", variadicActuals");
             }
             result.append(")");
             return result.toString();
 
-        } else if ("postCallback.variadicType".equals(formatString)) {
-            HostRoutine m = (HostRoutine)o;
-            assert(m.isVarArgs());
-            Class<?>[] parameterTypes = m.getParameterTypes();
-            return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
-
         } else if ("postCallback.variadicOffset".equals(formatString)) {
-            PatternMatcher pattern = (PatternMatcher)o;
-            assert(pattern.getIsVarArgs());
-            return Integer.valueOf(pattern.getNonVariadicChildDescriptors().size()).toString();
+            PatternMatcher patternMatcher = (PatternMatcher)o;
+
+            if (patternMatcher.getPostCallback() != null) {
+                return String.valueOf(patternMatcher.getPostCallback().getVariadicOffset());
+            } else {
+                return "0";
+            }
 
         } else if ("timestamp".equals(formatString)) {
             return new java.util.Date().toString();

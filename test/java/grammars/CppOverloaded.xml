@@ -1,9 +1,9 @@
-<Grammar nodeClass="Node" reducerClass="Calculator" generatedNonterminals="gensrc/CppNonterminal.h">
+<Grammar nodeClass="Node" reducerClass="Calculator" language="c++" generatedNonterminals="gensrc/CppNonterminal.h">
 
     <Semantics>
-        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
-        <Nonterminal nonterminal="Short" class="java.lang.Short"/>
-        <Nonterminal nonterminal="String" class="java.lang.String"/>
+        <Nonterminal nonterminal="Int" class="Object"/>
+        <Nonterminal nonterminal="Short" class="Object"/>
+        <Nonterminal nonterminal="String" class="Object"/>
     </Semantics>
 
     <!-- Leaf operators -->

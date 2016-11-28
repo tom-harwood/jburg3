@@ -3,15 +3,15 @@ package jburg.semantics;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public abstract class HostRoutine implements Comparable<HostRoutine>
+public abstract class HostRoutine<ParameterType> implements Comparable<HostRoutine>
 {
     public abstract String getName();
-    public abstract Class<?> getDeclaringClass();
+    public abstract Object getDeclaringClass();
     public abstract int getParameterCount();
-    public abstract Class<?>[] getParameterTypes();
-    public abstract String getParameterType(int index);
+    public abstract ParameterType[] getParameterTypes();
+    public abstract ParameterType getParameterType(int index);
+    public abstract ParameterType getVariadicComponentType();
     public abstract boolean isVarArgs();
-    public abstract String getVariadicComponentType();
     public abstract int getVariadicOffset();
     public abstract Object invoke(Object receiver, Object... args)
         throws IllegalAccessException,
@@ -28,7 +28,7 @@ public abstract class HostRoutine implements Comparable<HostRoutine>
         return System.identityHashCode(this) - System.identityHashCode(x);
     }
 
-    static class MethodWrapperHostRoutine extends HostRoutine
+    static class MethodWrapperHostRoutine extends HostRoutine<Class>
     {
         final Method        m;
         final Class<?>[]    parameterTypes;
@@ -43,7 +43,7 @@ public abstract class HostRoutine implements Comparable<HostRoutine>
             return m.getName();
         }
 
-        public Class<?> getDeclaringClass()
+        public Object getDeclaringClass()
         {
             return m.getDeclaringClass();
         }
@@ -53,24 +53,25 @@ public abstract class HostRoutine implements Comparable<HostRoutine>
             return m.getParameterCount();
         }
 
-        public Class<?>[] getParameterTypes()
+        public Class[] getParameterTypes()
         {
-            return m.getParameterTypes();
+            return parameterTypes;
         }
 
-        public String getParameterType(int index)
+        public Class getParameterType(int index)
         {
-            return parameterTypes[index].getName();
+            return parameterTypes[index];
         }
+
         public boolean isVarArgs()
         {
             return m.isVarArgs();
         }
 
-        public String getVariadicComponentType()
+        public Class getVariadicComponentType()
         {
             assert isVarArgs();
-            return parameterTypes[parameterTypes.length-1].getComponentType().getSimpleName();
+            return parameterTypes[parameterTypes.length-1].getComponentType();
         }
 
         public int getVariadicOffset()

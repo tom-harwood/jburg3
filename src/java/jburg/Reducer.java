@@ -191,9 +191,8 @@ public class Reducer<Nonterminal, NodeType>
                 }
 
                 int nVarArgs = Math.max(0, actualCount - variadicFormalPos);
-                Class<?> variadicFormalClass = current.postCallback.getParameterTypes()[variadicFormalPos];
-
-                Object variadicActuals = actuals[variadicFormalPos] = Array.newInstance(variadicFormalClass.getComponentType(), nVarArgs);
+                Class<?> variadicFormalClass = (Class<?>)current.postCallback.getVariadicComponentType();
+                Object variadicActuals = actuals[variadicFormalPos] = Array.newInstance(variadicFormalClass, nVarArgs);
 
                 for (int i = 0; i < nVarArgs; i++) {
                     Object actual = reduce(node.getSubtree(i+lastFixedSubtree), patternMatcher.getNonterminal(i+lastFixedSubtree));

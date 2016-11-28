@@ -14,8 +14,7 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
 import jburg.ProductionTable;
-import jburg.semantics.BURMSemantics;
-import jburg.semantics.HostRoutine;
+import jburg.semantics.*;
 
 /**
  * A XMLGrammar instance builds a ProductionTable from an XML specification.
@@ -24,16 +23,14 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 {
     Class<?> nonterminalClass;
     Class<?> nodeTypeClass;
-    Class<?> reducerClass;
-    Class<?> nodeClass;
+    String reducerClass;
+    String nodeClass;
 
     String  language = "java";
 
-    Map<String,String> adHocNonterminals = new HashMap<String,String>();
-
     ProductionDesc currentProduction = null;
 
-    BURMSemantics<Nonterminal> semantics = null;
+    BURMSemantics semantics = null;
 
     List<ProductionDesc> productions = new ArrayList<ProductionDesc>();
 
@@ -133,58 +130,49 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     throws SAXException
     {
         try {
-        if (localName.equals("Grammar")) {
-            if (atts.getValue("language") != null) {
-                this.language = atts.getValue("language");
-            }
+            if (localName.equals("Grammar")) {
+                if (atts.getValue("language") != null) {
+                    this.language = atts.getValue("language");
+                }
 
-            // TODO: Read these from a .h file.
-            nodeClass = getClass(localName, "nodeClass", atts);
+                nodeClass = getClassName(localName, "nodeClass", atts);
+                reducerClass = getClassName(localName, "reducerClass", atts);
 
-            if (language.equals("java")) {
-                reducerClass = getClass(localName, "reducerClass", atts);
+            } else if (localName.equals("Pattern")) {
+                startPattern(localName, atts);
+
+            } else if (localName.equals("Semantics")) {
+                startSemantics(localName, atts);
+
+            } else if (localName.equals("Error")) {
+                startErrorHandler(localName, atts);
+
+            } else if (localName.equals("Nonterminal")) {
+                addNonterminal(localName, atts);
+
+            } else if (localName.equals("Closure")) {
+                startClosure(localName, atts);
+
+            } else if (localName.equals("child")) {
+                addChild(localName, atts);
+
+            } else if (localName.equals("postCallback")) {
+                addPostCallback(localName, atts);
+
+            } else if (localName.equals("preCallback")) {
+                addPreCallback(localName, atts);
+
+            } else if (localName.equals("predicate")) {
+                addPredicate(localName, atts);
+
+            } else if (localName.equals("errorHandler")) {
+                addPreCallback(localName, atts);
+
             } else {
-                // Dummy reducer class.
-                // TODO: Have to abstract the method signatures;
-                // that would be good for Java, too, so we don't
-                // have to play javac.
-                reducerClass = Object.class;
+                throw new IllegalArgumentException("Unexpected " + localName);
             }
-
-        } else if (localName.equals("Pattern")) {
-            startPattern(localName, atts);
-
-        } else if (localName.equals("Semantics")) {
-            startSemantics(localName, atts);
-
-        } else if (localName.equals("Error")) {
-            startErrorHandler(localName, atts);
-
-        } else if (localName.equals("Nonterminal")) {
-            addNonterminal(localName, atts);
-
-        } else if (localName.equals("Closure")) {
-            startClosure(localName, atts);
-
-        } else if (localName.equals("child")) {
-            addChild(localName, atts);
-
-        } else if (localName.equals("postCallback")) {
-            addPostCallback(localName, atts);
-
-        } else if (localName.equals("preCallback")) {
-            addPreCallback(localName, atts);
-
-        } else if (localName.equals("predicate")) {
-            addPredicate(localName, atts);
-
-        } else if (localName.equals("errorHandler")) {
-            addPreCallback(localName, atts);
-
-        } else {
-            throw new IllegalArgumentException("Unexpected " + localName);
-        }
-        } catch (NoSuchMethodException badCallback) {
+        } catch (Exception badCallback) {
+            badCallback.printStackTrace();
             throw new IllegalArgumentException(badCallback);
         }
     }
@@ -197,44 +185,41 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
     }
 
-    private Class<?> getClass(String localName, String attributeName, Attributes atts)
+    private String getClassName(String localName, String attributeName, Attributes atts)
     {
         if (atts.getValue(attributeName) == null) {
             throw new IllegalArgumentException(String.format("element %s missing required class attribute %s", localName, attributeName));
         }
 
-        try {
-            return Class.forName(atts.getValue(attributeName));
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("unable to get class " + atts.getValue(attributeName));
-        }
+        return atts.getValue(attributeName);
     }
 
     @SuppressWarnings("unchecked")
     private void startSemantics(String localName, Attributes atts)
     {
-        if (this.semantics == null) {
-            try {
-                this.semantics = new BURMSemantics<Nonterminal>(reducerClass, nodeClass, nonterminalClass);
-            } catch (Exception nogood) {
-                throw new IllegalArgumentException(nogood);
+        assert this.semantics == null;
+
+        try {
+            if ("java".equals(this.language)) {
+                this.semantics = new JavaSemantics(reducerClass, nodeClass, nonterminalClass);
+            } else if ("cpp".equals(this.language) || "C++".equalsIgnoreCase(this.language)) {
+                this.semantics = new CppSemantics(nodeClass, reducerClass);
             }
+        } catch (Exception nogood) {
+            throw new IllegalArgumentException(nogood);
         }
     }
 
     private void addNonterminal(String localName, Attributes atts)
     {
+        // XML grammar should disallow this.
+        assert (this.semantics != null);
         String nonterminalValue = atts.getValue("nonterminal");
-        if (this.semantics == null) {
-            throw new IllegalStateException("Nonterminal elements must be inside Semantics elements");
-        }
 
         if ("*".equals(nonterminalValue)) {
-            this.semantics.setDefaultNonterminalClass(getClass(localName, "class", atts));
-        } else if (language.equals("java")) {
-            this.semantics.setNonterminalClass(getNonterminal(nonterminalValue), getClass(localName, "class", atts));
+            this.semantics.setDefaultNonterminalClass(getClassName(localName, "class", atts));
         } else {
-            this.adHocNonterminals.put(nonterminalValue, atts.getValue("class"));
+            this.semantics.setNonterminalClass(getNonterminal(nonterminalValue), getClassName(localName, "class", atts));
         }
     }
 
@@ -261,19 +246,19 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     }
 
     private void addPostCallback(String localName, Attributes atts)
-    throws NoSuchMethodException
+    throws Exception
     {
         currentProduction.addPostCallback(atts);
     }
 
     private void addPreCallback(String localName, Attributes atts)
-    throws NoSuchMethodException
+    throws Exception
     {
         currentProduction.addPreCallback(atts);
     }
 
     private void addPredicate(String localName, Attributes atts)
-    throws NoSuchMethodException
+    throws Exception
     {
         currentProduction.addPredicate(atts);
     }
@@ -340,7 +325,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         void addPostCallback(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             if (this.postCallback == null) {
                 this.postCallback = getPostCallbackMethod(atts);
@@ -350,7 +335,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         void addPreCallback(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             if (this.preCallback == null) {
                 this.preCallback = getPreCallbackMethod(atts);
@@ -360,7 +345,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         void addPredicate(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             if (this.predicate == null) {
                 this.predicate = getPredicateMethod(atts);
@@ -371,7 +356,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
         @SuppressWarnings("unchecked")
         HostRoutine getPostCallbackMethod(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             checkSemantics();
             String methodName = atts.getValue("name");
@@ -384,7 +369,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         HostRoutine getPreCallbackMethod(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             checkSemantics();
             String methodName = atts.getValue("name");
@@ -392,7 +377,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         }
 
         HostRoutine getPredicateMethod(Attributes atts)
-        throws NoSuchMethodException
+        throws Exception
         {
             checkSemantics();
             String methodName = atts.getValue("name");
