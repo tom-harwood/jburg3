@@ -33,7 +33,6 @@ public class Console extends JPanel
     {
         this.executive = executive;
 
-
         commandLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, commandLine.getPreferredSize().height));
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), downArrow);
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("UP"), upArrow);
@@ -199,6 +198,40 @@ public class Console extends JPanel
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.add(this);
         frame.pack();
+        setIcon(frame);
         frame.setVisible(true);
+    }
+
+    int framesGenerated = 0;
+
+    void prepareFrame(JFrame frame)
+    {
+        // Position the new frame in a tiled arrangement.
+        framesGenerated = (framesGenerated+1) % 20;
+        Point frameLoc = getLocation(null);
+        int horizOffset = (int)getMinimumSize().getWidth() + framesGenerated * 10;
+        int vertOffset = (int)getMinimumSize().getHeight() + framesGenerated * 10;
+        frameLoc.translate(horizOffset,vertOffset);
+        frame.setLocation(frameLoc);
+
+        // TODO: Add an ESC listener to close the frame.
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIcon(frame);
+    }
+
+    void setIcon(JFrame frame)
+    {
+        try {
+            java.net.URL url = ClassLoader.getSystemResource("resources/jbd.png");
+            java.awt.Toolkit kit = java.awt.Toolkit.getDefaultToolkit();
+            frame.setIconImage(kit.createImage(url));
+        } catch (Exception cannotSetIcon) {
+            updateStatus(String.format("Problem loading icon: %s", cannotSetIcon));
+        }
+    }
+
+    void clear()
+    {
+        output.clear();
     }
 }

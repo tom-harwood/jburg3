@@ -1,12 +1,20 @@
 package jburg.debugger;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.JFrame;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import java.awt.Frame;
+import java.awt.event.WindowEvent;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -53,7 +61,6 @@ public class Debugger implements Console.AbstractExecutive
 
         console = new Console(this);
         console.extractHistory(properties);
-        console.display("Debugger");
 
         try {
             burmDumpFilename = args[0];
@@ -61,6 +68,8 @@ public class Debugger implements Console.AbstractExecutive
         } catch (Exception loadError) {
             console.getAbstractConsole().status(String.format("Problem loading %s: %s", burmDumpFilename, loadError));
         }
+
+        console.display("Debugger");
     }
 
     private void load()
@@ -107,6 +116,10 @@ public class Debugger implements Console.AbstractExecutive
                             analyze(command.substring(tokens[0].length()));
                             break;
 
+                        case Clear:
+                            console.clear();
+                            break;
+
                         case Echo: {
                                 String propertyName = tokens[1];
                                 String propertyValue = properties.getProperty(propertyName);
@@ -115,6 +128,7 @@ public class Debugger implements Console.AbstractExecutive
                             break;
 
                         case Exit:
+                            properties.setProperty("lastDumpFile", burmDumpFilename);
                             console.saveHistory(properties);
 
                             try {
@@ -123,8 +137,13 @@ public class Debugger implements Console.AbstractExecutive
                                 // Bummer.
                             }
 
-                            // TODO: Clean up, exit more gracefully
-                            System.exit(0);
+                            for (Frame frame: Frame.getFrames()) {
+                                frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                                frame.dispose();
+                            }
+
+                            notifyAll();
+                            break;
 
                         case Execute:
                             execute(command.substring(tokens[0].length()));
@@ -136,6 +155,25 @@ public class Debugger implements Console.AbstractExecutive
                                 CommandType.help(console.getAbstractConsole(), tokens[1]);
                             } else {
                                 CommandType.help(console.getAbstractConsole(), null);
+                            }
+                            break;
+
+                        case Load: {
+                                JFileChooser chooser = new JFileChooser();
+                                FileNameExtensionFilter filter = new FileNameExtensionFilter("XML files", "xml");
+                                chooser.setFileFilter(filter);
+
+                                if (properties.getProperty("lastDumpfile") != null) {
+                                    chooser.setCurrentDirectory(new File(properties.getProperty("lastDumpfile")).getParentFile());
+                                }
+
+                                int returnVal = chooser.showOpenDialog(new JFrame());
+
+                                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                                    burmDumpFilename = chooser.getSelectedFile().getCanonicalPath();
+                                    load();
+                                }
+
                             }
                             break;
 
@@ -205,9 +243,15 @@ public class Debugger implements Console.AbstractExecutive
     private void analyze(String xml)
     throws Exception
     {
+        analyze(xml,xml);
+    }
+
+    private void analyze(String title, String xml)
+    throws Exception
+    {
         @SuppressWarnings("deprecation")
         Document parsedXML = parseXML(new java.io.StringBufferInputStream(xml));
-        new DumpAnalyzer(this, parsedXML.getFirstChild());
+        new DumpAnalyzer(this, title, parsedXML.getFirstChild());
     }
 
     private void execute(String execCommand)
@@ -221,7 +265,7 @@ public class Debugger implements Console.AbstractExecutive
         int exitVal = proc.waitFor();
 
         if (stdout.length() > 0) {
-            analyze(stdout);
+            analyze(execCommand, stdout);
         } else if (errorOutput.length() > 0) {
             for (String line: errorOutput.split("\\n")) {
                 println(line);

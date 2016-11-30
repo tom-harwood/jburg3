@@ -16,7 +16,7 @@ class DumpAnalyzer extends JPanel
     final Debugger      debugger;
     final JTree         tree;
 
-    DumpAnalyzer(Debugger debugger, Node root)
+    DumpAnalyzer(Debugger debugger, String title, Node root)
     {
         this.debugger = debugger;
 
@@ -28,11 +28,11 @@ class DumpAnalyzer extends JPanel
 
         this.setLayout(new BorderLayout());
         this.add("Center", new JScrollPane(tree));
-        JFrame frame = new JFrame("Dump Analyzer");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        JFrame frame = new JFrame("Dump Analyzer: " + title);
         frame.getContentPane().add("Center", this);
         expandNonViable();
         frame.pack();
+        debugger.console.prepareFrame(frame);
         frame.setVisible(true);
     }
 
@@ -215,7 +215,7 @@ class DumpAnalyzer extends JPanel
                     AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
                     String stateNumber = String.valueOf(node.stateNumber);
                     JFrame popupFrame = new JFrame("State " + stateNumber);
-                    popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    debugger.console.prepareFrame(popupFrame);
                     JTextArea area = new JTextArea();
 
                     try {
@@ -226,7 +226,6 @@ class DumpAnalyzer extends JPanel
 
                     popupFrame.add(area);
                     popupFrame.pack();
-                    popupFrame.setLocation(treePopup.getLocation(null));
                     popupFrame.setVisible(true);
                 }
               }

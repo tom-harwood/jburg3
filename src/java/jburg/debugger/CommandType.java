@@ -3,11 +3,13 @@ package jburg.debugger;
 enum CommandType
 {
     Analyze("Analyze an ad-hoc tree"),
+    Clear("Clear the console log"),
     Echo("Echo a property"),
     Error,
     Execute("Execute dump-generating program"),
     Exit("Exit the debugger"),
     Help("Display help -- help <command name> for details"),
+    Load("Load a new BURS table"),
     PrintStackTrace("Print stack trace of most recent exception"),
     PrintState("PrintState <state number> -- display information about a state"),
     Reload("Reload the BURS tables"),
@@ -46,6 +48,7 @@ enum CommandType
                 console.println(String.format("%s - %s\n", ctype, ctype.shortHelpText));
             }
         } else {
+            console.println("help <command name> for more information.");
             for (CommandType ctype: values()) {
 
                 if (ctype.shortHelpText != null) {
