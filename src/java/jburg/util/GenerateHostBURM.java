@@ -115,6 +115,7 @@ public class GenerateHostBURM
         } else {
             attributes.put("nodeType.class", nodeTypeClassAlias);
         }
+        attributes.put("nodeClass", nodeClassName);
 
         productions.dump(outputFileName, templateGroup, attributes, defaults);
     }

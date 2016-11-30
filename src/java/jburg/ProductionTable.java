@@ -834,7 +834,7 @@ public class ProductionTable<Nonterminal, NodeType>
 
                 if ("java.stg".equals(templateGroup)) {
                     stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
-                } else if ("cppHeader.stg".equals(templateGroup) || "cppDefinition.stg".equals(templateGroup)) {
+                } else if ("cppHeader.stg".equals(templateGroup) || "cppDefinition.stg".equals(templateGroup)|| "cppInterface.stg".equals(templateGroup) ) {
                     stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes));
                 } else if ("xml.stg".equals(templateGroup)) {
                     // No rendering required

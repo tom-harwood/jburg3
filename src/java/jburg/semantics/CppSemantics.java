@@ -180,5 +180,10 @@ public class CppSemantics implements BURMSemantics
         {
             throw new UnsupportedOperationException();
         }
+
+        public BURMSemantics getSemantics()
+        {
+            return CppSemantics.this;
+        }
     }
 }

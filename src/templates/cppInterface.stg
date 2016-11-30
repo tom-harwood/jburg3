@@ -1,0 +1,55 @@
+delimiters "%","%"
+
+// ** Start State **
+start(table, includes, uniqueStates) ::= <<
+%interfaceDef(table, uniqueStates)%
+>>
+
+// ** Property Access **
+className() ::= <<%"";format="class.name"%>>
+
+nodeClass() ::= <<%"";format="node.class"%>>
+
+nodeTypeClass() ::= <<%"";format="nodeType.class"%>>
+
+nonterminalClass() ::= <<%"";format="nonterminal.class"%>>
+
+resultType() ::= <<%"";format="result.type"%>>
+
+timestamp() ::=<<%"";format="timestamp"%>>
+
+version() ::= <<%"";format="version"%>>
+
+visitorClass() ::= <<%"";format="visitor.class"%>>
+
+// ** Table Translation, mostly alphabetical **
+errorClosure(c) ::= <<
+%if(c.postCallback)%
+%c.postCallback;format="closurePostCallback"%;
+%endif%
+>>
+
+errorState(s) ::= <<
+%s.patterns.(s.nonterminal).preCallback;format="interfacePreCallback"%
+%s.closures.values:errorClosure();separator="\n"%
+>>
+
+interfaceDef(table, uniqueStates) ::= <<
+
+%uniqueStates:state();separator="\n\n"%
+%errorState(table.errorState)%
+>>
+
+predicatedState(s) ::= <<
+%s.patterns: { nt | %s.patterns.(nt):stateInnerds();separator="\n"%}%
+>>
+
+state(s) ::= <<
+%s.predicates;format="interfacePredicate"%
+%s.statesByMethod:{ m | %s.statesByMethod.(m):predicatedState();separator="\n"%}%
+>>
+
+stateInnerds(pattern) ::= <<
+%pattern.preCallback;format="interfacePreCallback"%
+%pattern.postCallback;format="interfacePostCallback"%
+>>

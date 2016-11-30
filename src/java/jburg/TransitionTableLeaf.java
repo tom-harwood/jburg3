@@ -53,6 +53,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     /**
      * @param states this TransitionTableLeaf's constituent states.
      */
+    @SuppressWarnings("unchecked")
     TransitionTableLeaf(List<State<Nonterminal, NodeType>> states)
     {
         for (State<Nonterminal, NodeType> s: states) {
@@ -78,6 +79,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      * Add transition entries from an input state.
      * @param src   the state whose entries are to be coalesced.
      */
+    @SuppressWarnings("unchecked")
     void addTransition(State<Nonterminal, NodeType> src)
     {
         State<Nonterminal, NodeType> dst;
@@ -198,7 +200,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     public String toString()
     {
         if (states.size() == 1 && states.containsKey(noGuard)) {
-            return String.format("TransitionTableLeaf(trival) %s", states.get(noGuard));
+            return String.format("TransitionTableLeaf %s", states.get(noGuard));
         } else {
             return String.format("TransitionTableLeaf%s", states);
         }

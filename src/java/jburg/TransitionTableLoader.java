@@ -1,6 +1,7 @@
 package jburg;
 
 import jburg.semantics.HostRoutine;
+import jburg.semantics.JavaSemantics;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -8,8 +9,16 @@ import javax.xml.parsers.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
+/**
+ * TransitionTableLoader deserializes a JBurg transition table
+ * from its XML format into a usable ProductionTable. It's largely
+ * obsolescent with the advent of host-language serialized forms,
+ * but it's still somewhat useful as a regression test.
+ */
 public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 {
+    private final JavaSemantics semantics = new JavaSemantics();
+
     public ProductionTable<Nonterminal, NodeType> load(String uri, Class<?> nonterminalClass, Class<?> nodeTypeClass)
     throws Exception
     {
@@ -20,6 +29,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         XMLReader xmlReader = saxParser.getXMLReader();
         xmlReader.setContentHandler(this);
         xmlReader.parse(uri);
+
 
         // Parse the Node tree into a production table.
         DumpParser dumpParser = new DumpParser(this.rootNode, nonterminalClass, nodeTypeClass);
@@ -540,7 +550,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         throws Exception
         {
             Class<?> receiverClass = Class.forName(node.getStringAttr("class"));
-            return HostRoutine.getHostRoutine(receiverClass.getDeclaredMethod(node.getStringAttr("name"),parameterTypes));
+            return semantics.getHostRoutine(receiverClass.getDeclaredMethod(node.getStringAttr("name"),parameterTypes));
         }
 
         public Closure<Nonterminal> parseClosureWithPre(Node node, HostRoutine preCallback)
@@ -641,6 +651,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return this.productionTable;
         }
 
+        @SuppressWarnings("unchecked")
         public State<Nonterminal, NodeType> parseState(Node node, PatternMatcher<Nonterminal, NodeType>[] patternMatchers, CostEntry[] costs, Closure<Nonterminal>[] closures, HostRoutine[] predicates)
         {
             State<Nonterminal, NodeType> result = new State<Nonterminal, NodeType>();
@@ -806,7 +817,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             }
 
             try {
-                return HostRoutine.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formalsWithNode));
+                return semantics.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formalsWithNode));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new IllegalStateException(ex);
@@ -818,7 +829,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             Class<?>[] formals = { Node.class, Object.class };
 
             try {
-                return HostRoutine.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formals));
+                return semantics.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formals));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new IllegalStateException(ex);

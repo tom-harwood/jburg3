@@ -101,6 +101,39 @@ public class CppRenderer implements AttributeRenderer
                 return "Object";
             }
 
+        } else if ("interfaceClosureCallback".equals(formatString)) {
+            HostRoutine<String> routine = (HostRoutine<String>)o;
+            return String.format("%s(%s,%s)", routine.getName(), attributes.get("nodeType.class"), routine.getParameterTypes()[0]); 
+
+        } else if ("interfacePreCallback".equals(formatString)) {
+            HostRoutine<String> routine = (HostRoutine<String>)o;
+            return "preCallback...";
+
+        } else if ("interfacePostCallback".equals(formatString)) {
+            HostRoutine<String> routine = (HostRoutine<String>)o;
+
+            StringBuilder result = new StringBuilder(routine.getName());
+            result.append("(");
+            String[] parameterTypes = routine.getParameterTypes();
+            boolean isVariadic = routine.isVarArgs();
+            int lastFixedArg = isVariadic? parameterTypes.length - 1: parameterTypes.length;
+            result.append(attributes.get("nodeClass"));
+            result.append("* node");
+
+            for (int i = 1; i < lastFixedArg; i++) {
+                result.append(", ");
+                result.append(parameterTypes[i]);
+            }
+
+            if (isVariadic) {
+                result.append(", std::vector<");
+                result.append(parameterTypes[lastFixedArg]);
+                result.append(">");
+            }
+            result.append(");");
+
+            return result.toString();
+
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);
 

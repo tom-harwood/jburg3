@@ -110,6 +110,7 @@ public class State<Nonterminal, NodeType>
      * @param source    the source state.
      * @param predicate the predicate.
      */
+    @SuppressWarnings("unchecked")
     State(State<Nonterminal, NodeType> source, HostRoutine predicate)
     {
         this(source);

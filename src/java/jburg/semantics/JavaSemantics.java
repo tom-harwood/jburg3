@@ -1,7 +1,9 @@
 package jburg.semantics;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,11 +46,27 @@ public class JavaSemantics implements BURMSemantics
      */
     private final List<String> diagnostics = new ArrayList<String>();
 
+    /**
+     * @param visitorClassName  the name of the visitor class.
+     * @param nodeClassName     the name of the nodes' class.
+     * @param nonterminalClass  the class of the nonterminals.
+     */
     public JavaSemantics(String visitorClassName, String nodeClassName, Class<?> nonterminalClass)
     {
         this.visitorClass       = getClass(visitorClassName);
         this.nodeClass          = getClass(nodeClassName);
         this.nonterminalClass   = nonterminalClass;
+    }
+
+    /**
+     * Construct a JavaSemantics instance with no clear idea
+     * of the actual semantics of the grammar; useful for
+     * ad-hoc construction of HostRoutine instances where
+     * a method is already available.
+     */
+    public JavaSemantics()
+    {
+        this("java.lang.Object", "java.lang.Object", Object.class);
     }
 
     /**
@@ -203,7 +221,7 @@ public class JavaSemantics implements BURMSemantics
             diagnostics.add(String.format("Method %s produces %s, expected %s", methodName, result.getReturnType(), returnType));
         }
 
-        return HostRoutine.getHostRoutine(result);
+        return new MethodWrapperHostRoutine(result);
     }
 
     /**
@@ -279,5 +297,75 @@ public class JavaSemantics implements BURMSemantics
         }
 
         return result;
+    }
+
+    public HostRoutine getHostRoutine(Method m)
+    {
+        return new MethodWrapperHostRoutine(m);
+    }
+
+    class MethodWrapperHostRoutine extends HostRoutine<Class>
+    {
+        final Method        m;
+        final Class<?>[]    parameterTypes;
+        MethodWrapperHostRoutine(Method m)
+        {
+            this.m = m;
+            this.parameterTypes = m.getParameterTypes();
+        }
+
+        public String getName()
+        {
+            return m.getName();
+        }
+
+        public Object getDeclaringClass()
+        {
+            return m.getDeclaringClass();
+        }
+
+        public int getParameterCount()
+        {
+            return m.getParameterCount();
+        }
+
+        public Class[] getParameterTypes()
+        {
+            return parameterTypes;
+        }
+
+        public Class getParameterType(int index)
+        {
+            return parameterTypes[index];
+        }
+
+        public boolean isVarArgs()
+        {
+            return m.isVarArgs();
+        }
+
+        public Class getVariadicComponentType()
+        {
+            assert isVarArgs();
+            return parameterTypes[parameterTypes.length-1].getComponentType();
+        }
+
+        public int getVariadicOffset()
+        {
+            assert isVarArgs();
+            assert parameterTypes.length > 1;
+            return parameterTypes.length - 2;
+        }
+
+        public Object invoke(Object receiver, Object... args)
+        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+        {
+            return m.invoke(receiver, args);
+        }
+
+        public BURMSemantics getSemantics()
+        {
+            return JavaSemantics.this;
+        }
     }
 }

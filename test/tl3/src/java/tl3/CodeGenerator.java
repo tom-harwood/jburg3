@@ -16,6 +16,7 @@ import javax.tools.ToolProvider;
 
 import jburg.ProductionTable;
 import jburg.Reducer;
+import jburg.semantics.JavaSemantics;
 
 import static tl3.Nonterminal.*;
 import static tl3.NodeType.*;
@@ -23,6 +24,8 @@ import static tl3.NodeType.*;
 public class CodeGenerator
 {
     private final Node root;
+
+    private static final JavaSemantics dummySemantics = new JavaSemantics();
 
     static class ScopeNamespace
     {
@@ -186,7 +189,7 @@ public class CodeGenerator
         }
 
         try {
-            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, formalsWithNode));
+            return dummySemantics.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, formalsWithNode));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
@@ -198,7 +201,7 @@ public class CodeGenerator
     static HostRoutine getPreCallback(String methodName)
     {
         try {
-            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Nonterminal.class));
+            return dummySemantics.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Nonterminal.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
@@ -209,7 +212,7 @@ public class CodeGenerator
     static HostRoutine getPredicate(String methodName)
     {
         try {
-            return HostRoutine.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class));
+            return dummySemantics.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
