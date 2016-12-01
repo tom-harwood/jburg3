@@ -16,6 +16,8 @@ class DumpAnalyzer extends JPanel
     final Debugger      debugger;
     final JTree         tree;
 
+    static final String expandAll = "expand";
+
     DumpAnalyzer(Debugger debugger, String title, Node root)
     {
         this.debugger = debugger;
@@ -28,32 +30,73 @@ class DumpAnalyzer extends JPanel
 
         this.setLayout(new BorderLayout());
         this.add("Center", new JScrollPane(tree));
-        JFrame frame = new JFrame("Dump Analyzer: " + title);
+        JFrame frame = new JFrame("Tree Analyzer: " + title);
         frame.getContentPane().add("Center", this);
         expandNonViable();
         frame.pack();
         debugger.console.prepareFrame(frame);
         frame.setVisible(true);
+
+        this.getInputMap().put(KeyStroke.getKeyStroke("F2"), expandAll);
+        this.getActionMap().put(expandAll,
+            new AbstractAction() {
+                public void actionPerformed(ActionEvent e) {
+                    expandAll();
+               }
+            });
     }
 
     private void expandNonViable()
     {
-        java.util.List<AdapterNode> nodes = new ArrayList<AdapterNode>();
-        nodes.add(root);
-        expandNonViable(nodes);
+        java.util.List<AdapterNode> path = new ArrayList<AdapterNode>();
+        path.add(root);
+
+        for (AdapterNode child: root.childNodes) {
+            expandNonViable(path, child);
+        }
     }
 
-    private void expandNonViable(java.util.List<AdapterNode> path)
+    private void expandNonViable(java.util.List<AdapterNode> path, AdapterNode next)
     {
-        AdapterNode last = path.get(path.size()-1);
-
-        if (last.stateNumber == 0) {
-            tree.expandPath(new TreePath(path.toArray(new Object[0])));
+        if (next.stateNumber == 0) {
+            expandPath(path);
         }
 
-        for (AdapterNode child: last.childNodes) {
-            path.add(child);
-            expandNonViable(path);
+        path.add(next);
+
+        for (AdapterNode child: next.childNodes) {
+            expandNonViable(path, child);
+        }
+
+        path.remove(path.size()-1);
+    }
+
+    private void expandPath(java.util.List<AdapterNode> path)
+    {
+        tree.expandPath(new TreePath(path.toArray(new Object[0])));
+    }
+
+    private void expandAll()
+    {
+        java.util.List<AdapterNode> path = new ArrayList<AdapterNode>();
+        path.add(root);
+
+        for (AdapterNode child: root.childNodes) {
+            expandAll(path, child);
+        }
+    }
+
+    private void expandAll(java.util.List<AdapterNode> path, AdapterNode next)
+    {
+        if (next.getChildCount() == 0) {
+            expandPath(path);
+        } else {
+            path.add(next);
+
+            for (AdapterNode child: next.childNodes) {
+                expandAll(path, child);
+            }
+
             path.remove(path.size()-1);
         }
     }
@@ -217,6 +260,8 @@ class DumpAnalyzer extends JPanel
                     JFrame popupFrame = new JFrame("State " + stateNumber);
                     debugger.console.prepareFrame(popupFrame);
                     JTextArea area = new JTextArea();
+                    area.setEditable(false);
+                    area.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
 
                     try {
                         area.setText(debugger.getStateInformation(stateNumber));

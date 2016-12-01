@@ -213,7 +213,7 @@ public class Debugger implements Console.AbstractExecutive
                 }
             }
         } catch (Exception commandProblem) {
-            exception(commandProblem, "Problem executing %s", command);
+            exception(commandProblem, "Problem executing " + command);
         }
 
         return true;
