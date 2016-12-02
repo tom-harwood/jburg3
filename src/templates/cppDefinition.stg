@@ -227,6 +227,8 @@ for (int i = 0; i < node->getSubtreeCount() - %pattern;format="postCallback.vari
 %endif%
 %if(pattern.postCallback)%
 result=visitor.%pattern.postCallback;format="postCallback"%;
+%else%
+// No post callback...
 %endif%
 >>
 
