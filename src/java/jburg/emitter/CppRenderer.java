@@ -42,15 +42,7 @@ public class CppRenderer implements AttributeRenderer
 
         } else if ("closurePostCallback".equals(formatString)) {
             HostRoutine<String> m = (HostRoutine<String>)o;
-            StringBuilder result = new StringBuilder(m.getName());
-            result.append("(");
-            result.append("node, ");
-            result.append("(");
-            result.append(m.getParameterTypes()[1]);
-            result.append(")");
-            result.append("result");
-            result.append(")");
-            return result.toString();
+            return String.format("%s(node, result)", m.getName());
 
         } else if ("postCallback".equals(formatString)) {
             HostRoutine<String> m = (HostRoutine<String>)o;
@@ -63,10 +55,7 @@ public class CppRenderer implements AttributeRenderer
             result.append("node");
 
             for (int i = 1; i < lastFixedArg; i++) {
-                result.append(", (");
-                result.append(parameterTypes[i]);
-                result.append(")");
-                result.append(String.format("result%d", i-1));
+                result.append(String.format(", result%d", i-1));
             }
 
             if (isVariadic) {
