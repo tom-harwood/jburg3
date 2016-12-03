@@ -43,6 +43,7 @@ public class Debugger implements Console.AbstractExecutive
     String              burmDumpFilename;
     Document            burmDump;
     final static String propertiesFileName = "jburgDebugger.properties";
+    final static String debuggerConsoleName = "Debugger";
 
     public static void main(String[] args)
     {
@@ -69,7 +70,7 @@ public class Debugger implements Console.AbstractExecutive
             console.getAbstractConsole().status(String.format("Problem loading %s: %s", burmDumpFilename, loadError));
         }
 
-        console.display("Debugger");
+        console.display(debuggerConsoleName);
     }
 
     private void load()

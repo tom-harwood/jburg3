@@ -231,7 +231,7 @@ class DumpAnalyzer extends JPanel
 
             AdapterNode node = (AdapterNode)value;
 
-            if (node.stateNumber == 0) {
+            if (node.stateNumber == 0 && !"#text".equals(node.text)) {
                 setForeground(Color.red.darker());
             }
 

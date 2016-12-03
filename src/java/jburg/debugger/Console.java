@@ -199,6 +199,19 @@ public class Console extends JPanel
         frame.add(this);
         frame.pack();
         setIcon(frame);
+
+        // Exit the application if the console window closes.
+        frame.addWindowListener(new WindowAdapter() {
+            boolean isClosing = false;
+            @Override
+            public void windowClosing(WindowEvent evt) {
+
+                if (!isClosing) {
+                    isClosing = true;
+                    executive.executeCommand("Exit");
+                }
+            }
+        });
         frame.setVisible(true);
     }
 
