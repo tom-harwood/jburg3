@@ -7,7 +7,7 @@ import java.util.Map;
  * CppSemantics relies on string-based type names
  * to loosely emulate a C++-style type system.
  */
-public class CppSemantics implements BURMSemantics
+public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterminal,NodeType>
 {
     private HashMap<Object,String> nonterminalMappings = new HashMap<Object,String>();
     private String defaultMapping = null;
@@ -102,16 +102,48 @@ public class CppSemantics implements BURMSemantics
         return new CppHostRoutine(methodName, VariadicArity, producesNt, nonterminals);
     }
 
-    String getNonterminalMapping(Object nt)
+    /**
+     * Get a nonterminal given its "name," i.e., a nominal description.
+     * @param   ntName  the "name" of the nonterminal.
+     * @return  the canonical nonterminal object corresponding to the name.
+     */
+    @SuppressWarnings("unchecked")
+    public Nonterminal getNonterminal(Object ntName)
     {
-        if (this.nonterminalMappings.containsKey(nt)) {
-            return this.nonterminalMappings.get(nt);
-        } else if (this.defaultMapping != null) {
-            return this.defaultMapping;
+        if (this.nonterminalMappings.containsKey(ntName.toString())) {
+            return (Nonterminal)ntName;
         } else {
-            throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping",nt));
+            throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping", ntName));
         }
     }
+
+    /**
+     * Get the host class a nonterminal maps to.
+     * @param ntName the name of the nonterminal.
+     * @return the mapped host class for that nonterminal.
+     */
+    private Object getNonterminalMapping(Object ntName)
+    {
+        if (this.nonterminalMappings.containsKey(ntName.toString())) {
+            return (Nonterminal)this.nonterminalMappings.get(ntName.toString());
+        } else if (this.defaultMapping != null) {
+            return (Nonterminal)this.defaultMapping;
+        } else {
+            throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping",ntName));
+        }
+    }
+
+    /**
+     * Get a node type given its "name," i.e., a nominal description.
+     * @param   typeName  the "name" of the node type.
+     * @return  the canonical node type object corresponding to the name.
+     */
+    @SuppressWarnings("unchecked")
+    public NodeType getNodeType(Object typeName)
+    {
+        return (NodeType)typeName;
+    }
+
 
     class CppHostRoutine extends HostRoutine<String>
     {
@@ -149,7 +181,7 @@ public class CppSemantics implements BURMSemantics
             result[0] = nodeClassName;
 
             for (int i = 0; i < nonterminals.length; i++) {
-                result[i+1] = getNonterminalMapping(nonterminals[i]);
+                result[i+1] = getNonterminalMapping(nonterminals[i]).toString();
             }
 
             return result;
@@ -158,7 +190,7 @@ public class CppSemantics implements BURMSemantics
         public String getParameterType(int index)
         {
             assert index > 0;
-            return getNonterminalMapping(nonterminals[index-1]);
+            return getNonterminalMapping(nonterminals[index-1]).toString();
         }
 
         public boolean isVarArgs()

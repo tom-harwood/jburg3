@@ -265,8 +265,11 @@ public class State<Nonterminal, NodeType>
             return String.format("Missing antecedent %s", closure.source);
         } else {
             long closureCost = closure.ownCost + getCost(closure.source);
-            assert closureCost >= getCost(closure.target);
-            return String.format("Closure cost %d beat by existing %d", closureCost, getCost(closure.target));
+            if (closureCost >= getCost(closure.target)) {
+                return String.format("Closure cost %d beat by existing %d", closureCost, getCost(closure.target));
+            } else {
+                return String.format("Incumbent Closure cost %d beats %d", getCost(closure.target), closureCost);
+            }
         }
     }
 

@@ -26,8 +26,8 @@ public class TestRunner
         List<String>    failedTestcases = new ArrayList<String>();
 
         boolean verbose = true;
+        boolean randomize = false;
 
-        XMLGrammar<Nonterminal,NodeType> grammarBuilder = new XMLGrammar<Nonterminal,NodeType>(Nonterminal.class, NodeType.class);
 
         for (int i = 0; i < args.length; i++) {
 
@@ -42,7 +42,7 @@ public class TestRunner
             } else if (args[i].equals("-quiet")) {
                 verbose = false;
             } else if (args[i].equals("-randomize")) {
-                grammarBuilder.setRandomized(true);
+                randomize = true;
             } else if (args[i].equals("-reducer")) {
                 reducerClassName = args[++i];
             } else if (args[i].equals("-visitor")) {
@@ -55,6 +55,9 @@ public class TestRunner
                 throw new IllegalArgumentException("unrecognized argument " + args[i]);
             }
         }
+
+        XMLGrammar<Nonterminal,NodeType> grammarBuilder = new XMLGrammar<Nonterminal,NodeType>("Nonterminal", "NodeType");
+        grammarBuilder.setRandomized(randomize);
 
         ProductionTable<Nonterminal, NodeType> productions = null;
 

@@ -21,16 +21,18 @@ import jburg.semantics.*;
  */
 public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 {
-    Class<?> nonterminalClass;
-    Class<?> nodeTypeClass;
-    String reducerClass;
-    String nodeClass;
+    String nonterminalClass;
+    String nodeTypeClass;
+    String reducerClassName;
+    String nodeClassName;
 
     String  language = "java";
 
+    String verboseTrigger = null;
+
     ProductionDesc currentProduction = null;
 
-    BURMSemantics semantics = null;
+    BURMSemantics<Nonterminal,NodeType> semantics = null;
 
     List<ProductionDesc> productions = new ArrayList<ProductionDesc>();
 
@@ -39,7 +41,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
      */
     boolean randomizeProductions = false;
 
-    public XMLGrammar(Class<?> nonterminalClass, Class<?> nodeTypeClass)
+    public XMLGrammar(String nonterminalClass, String nodeTypeClass)
     {
         this.nonterminalClass = nonterminalClass;
         this.nodeTypeClass = nodeTypeClass;
@@ -48,6 +50,11 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     public void setRandomized(boolean randomize)
     {
         this.randomizeProductions = randomize;
+    }
+
+    public void setVerboseTrigger(String trigger)
+    {
+        this.verboseTrigger = trigger;
     }
 
     public ProductionTable<Nonterminal,NodeType> build(String filename)
@@ -66,6 +73,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         xmlReader.parse(filename);
 
         ProductionTable<Nonterminal,NodeType> result = new ProductionTable<Nonterminal,NodeType>();
+        result.setVerboseTrigger(verboseTrigger);
 
         if (!randomizeProductions) {
 
@@ -97,28 +105,28 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             PatternMatcherDesc pattern = (PatternMatcherDesc)desc;
 
             productionTable.addPatternMatch(
-                pattern.nonterminal,
-                pattern.nodeType,
+                semantics.getNonterminal(pattern.nonterminal),
+                semantics.getNodeType(pattern.nodeType),
                 pattern.cost,
                 pattern.predicate,
                 pattern.preCallback,
                 pattern.postCallback,
                 pattern.isVarArgs,
-                pattern.children
+                pattern.getNonterminals()
             );
 
         } else if (desc.isClosure()) {
             ClosureDesc closure = (ClosureDesc)desc;
             productionTable.addClosure(
-                closure.nonterminal,
-                closure.sourceNonterminal,
+                semantics.getNonterminal(closure.nonterminal),
+                semantics.getNonterminal(closure.sourceNonterminal),
                 closure.cost,
                 closure.postCallback
             );
 
         } else if (desc.isErrorHandler()) {
             ErrorHandlerDesc errorHandler = (ErrorHandlerDesc)desc;
-            productionTable.addErrorHandler(errorHandler.nonterminal, errorHandler.preCallback);
+            productionTable.addErrorHandler(semantics.getNonterminal(errorHandler.nonterminal), errorHandler.preCallback);
 
         } else {
             throw new IllegalStateException(String.format("Unhandled production type %s", desc.getClass()));
@@ -135,8 +143,8 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
                     this.language = atts.getValue("language");
                 }
 
-                nodeClass = getClassName(localName, "nodeClass", atts);
-                reducerClass = getClassName(localName, "reducerClass", atts);
+                nodeClassName = getClassName(localName, "nodeClass", atts);
+                reducerClassName = getClassName(localName, "reducerClass", atts);
 
             } else if (localName.equals("Pattern")) {
                 startPattern(localName, atts);
@@ -201,9 +209,10 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
         try {
             if ("java".equals(this.language)) {
-                this.semantics = new JavaSemantics(reducerClass, nodeClass, nonterminalClass);
+                this.semantics = new JavaSemantics<Nonterminal,NodeType>(reducerClassName, nodeClassName, nodeTypeClass, nonterminalClass);
+
             } else if ("cpp".equals(this.language) || "C++".equalsIgnoreCase(this.language)) {
-                this.semantics = new CppSemantics(nodeClass, reducerClass);
+                this.semantics = new CppSemantics<Nonterminal,NodeType>(nodeClassName, reducerClassName);
             }
         } catch (Exception nogood) {
             throw new IllegalArgumentException(nogood);
@@ -219,7 +228,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         if ("*".equals(nonterminalValue)) {
             this.semantics.setDefaultNonterminalClass(getClassName(localName, "class", atts));
         } else {
-            this.semantics.setNonterminalClass(getNonterminal(nonterminalValue), getClassName(localName, "class", atts));
+            this.semantics.setNonterminalClass(nonterminalValue, getClassName(localName, "class", atts));
         }
     }
 
@@ -269,39 +278,16 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         currentProduction = null;
     }
 
-    @SuppressWarnings("unchecked")
-    NodeType getNodeType(String ntName)
-    {
-        for (Object nt: nodeTypeClass.getEnumConstants()) {
-            if (nt.toString().equals(ntName)) {
-                    return (NodeType)nt;
-            }
-        }
-
-        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, ntName));
-    }
-
-    @SuppressWarnings("unchecked")
-    Nonterminal getNonterminal(String ntName)
-    {
-        for (Object nt: nonterminalClass.getEnumConstants()) {
-            if (nt.toString().equals(ntName)) {
-                return (Nonterminal)nt;
-            }
-        }
-
-        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
-    }
 
     /**
      * Build-time description of a pattern matcher or closure.
      */
     private abstract class ProductionDesc
     {
-        final Nonterminal           nonterminal;
-        final List<Nonterminal>     children = new ArrayList<Nonterminal>();
-        final int                   cost;
-        final boolean               isVarArgs;
+        final String        nonterminal;
+        final List<String>  children = new ArrayList<String>();
+        final int           cost;
+        final boolean       isVarArgs;
 
         HostRoutine predicate   = null;
         HostRoutine preCallback = null;
@@ -314,14 +300,14 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
         ProductionDesc(Attributes atts, boolean isVarArgs)
         {
-            this.nonterminal    = getNonterminal(atts.getValue("nonterminal"));
+            this.nonterminal    = atts.getValue("nonterminal");
             this.cost           = atts.getValue("cost") != null ? Integer.parseInt(atts.getValue("cost")): 1;
             this.isVarArgs      = isVarArgs;
         }
 
         void addChild(Attributes atts)
         {
-            children.add(getNonterminal(atts.getValue("nonterminal")));
+            children.add(atts.getValue("nonterminal"));
         }
 
         void addPostCallback(Attributes atts)
@@ -362,10 +348,21 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             String methodName = atts.getValue("name");
 
             if (isClosure()) {
-                return semantics.getPostCallback(methodName, false, this.nonterminal, ((ClosureDesc)this).sourceNonterminal);
+                return semantics.getPostCallback(methodName, false, this.nonterminal, semantics.getNonterminal(((ClosureDesc)this).sourceNonterminal));
             } else {
-                return semantics.getPostCallback(methodName, this.isVarArgs, this.nonterminal, (Nonterminal[])this.children.toArray());
+                return semantics.getPostCallback(methodName, this.isVarArgs, semantics.getNonterminal(this.nonterminal), getChildNonterminals());
             }
+        }
+
+        private Object[] getChildNonterminals()
+        {
+            Object[] result = new Object[children.size()];
+
+            for (int i = 0; i < children.size(); i++) {
+                result[i] = semantics.getNonterminal(children.get(i));
+            }
+
+            return result;
         }
 
         HostRoutine getPreCallbackMethod(Attributes atts)
@@ -395,28 +392,39 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
     private class PatternMatcherDesc extends ProductionDesc
     {
-        final NodeType  nodeType;
+        final String  nodeType;
 
         PatternMatcherDesc(Attributes atts, boolean isVarArgs)
         {
             super(atts, isVarArgs);
-            this.nodeType   = getNodeType(atts.getValue("nodeType"));
+            this.nodeType   = atts.getValue("nodeType");
         }
 
         boolean isPatternMatch()    { return true; }
         boolean isClosure()         { return false; }
         boolean isErrorHandler()    { return false; }
         boolean isNullHandler()     { return false; }
+
+        List<Nonterminal> getNonterminals()
+        {
+            List<Nonterminal> result = new ArrayList<Nonterminal>();
+            for (int i = 0; i < this.children.size(); i++) {
+                result.add(semantics.getNonterminal(this.children.get(i)));
+            }
+
+            return result;
+        }
+
     }
 
     private class ClosureDesc extends ProductionDesc
     {
-        final Nonterminal           sourceNonterminal;
+        final String    sourceNonterminal;
 
         ClosureDesc(Attributes atts)
         {
             super(atts, false);
-            this.sourceNonterminal = getNonterminal(atts.getValue("sourceNonterminal"));
+            this.sourceNonterminal = atts.getValue("sourceNonterminal");
         }
 
         boolean isPatternMatch()    { return false; }

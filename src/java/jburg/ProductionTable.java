@@ -40,7 +40,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * multiple references to a nonterminal, and their
      * order here is not important.
      */
-    private Set<Nonterminal>    nonterminals = new TreeSet<Nonterminal>();
+    private Set<Nonterminal>    nonterminals = new HashSet<Nonterminal>();
 
     /**
      * Unique states, computed by permuting all inputs to each operator.
@@ -48,10 +48,10 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     private Map<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>> states = new HashMap<State<Nonterminal, NodeType>, State<Nonterminal, NodeType>>();
 
-    /** Manifest constant input the the label routine; label subtrees and the root node. */
+    /** Manifest constant input to the the label routine; label subtrees and the root node. */
     public static boolean LABEL_DEEP = true;
 
-    /** Manifest constant input the the label routine; only label the root node. */
+    /** Manifest constant input to the the label routine; only label the root node. */
     public static boolean LABEL_SHALLOW = false;
 
     /**
@@ -459,7 +459,7 @@ public class ProductionTable<Nonterminal, NodeType>
      */
     public String setVerboseTrigger(String pattern)
     {
-        String result = verboseTrigger;
+        String result = this.verboseTrigger;
         verboseTrigger = pattern;
         return result;
     }

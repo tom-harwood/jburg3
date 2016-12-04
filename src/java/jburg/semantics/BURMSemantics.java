@@ -9,7 +9,7 @@ import java.util.Map;
  * that they are compatible with the BURM's declared
  * nonterminal-to-host type mappings.
  */
-public interface BURMSemantics
+public interface BURMSemantics<Nonterminal, NodeType>
 {
     /**
      * Create a nonterminal-host class mapping.
@@ -64,4 +64,18 @@ public interface BURMSemantics
     @SuppressWarnings("unchecked")
     public HostRoutine getVariadicPostCallback(String methodName, Object producesNt, Object ... nonterminals)
     throws Exception;
+
+    /**
+     * Get a nonterminal given its "name," i.e., a nominal description.
+     * @param   ntName  the "name" of the nonterminal.
+     * @return  the canonical nonterminal object corresponding to the name.
+     */
+    public Nonterminal getNonterminal(Object ntName);
+
+    /**
+     * Get a node type given its "name," i.e., a nominal description.
+     * @param   typeName  the "name" of the node type.
+     * @return  the canonical node type object corresponding to the name.
+     */
+    public NodeType getNodeType(Object typeName);
 }

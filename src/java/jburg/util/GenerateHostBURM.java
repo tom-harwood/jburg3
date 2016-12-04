@@ -18,11 +18,6 @@ import jburg.frontend.XMLGrammar;
  */
 public class GenerateHostBURM
 {
-    /** We don't know the compile-time type of the nonterminal enum, so fake it. */
-    enum DummyNonterminal { Fee, Fie };
-    /** We don't know the compile-time type of the node type enum, so fake it. */
-    enum DummyNodeType    { Fo, Fum };
-
     public static void main(String[] args)
     throws Exception
     {
@@ -34,12 +29,12 @@ public class GenerateHostBURM
         String nodeClassName = null;
         String nodeTypeClassAlias = null;
 
+        String verboseTrigger = null;
+
         Map<String,String> attributes = new HashMap<String,String>();
 
-        // TODO: This should be a more general abstraction
-        // so non-Java development is less painful!
-        Class nonterminalClass = null;
-        Class nodeTypeClass = null;
+        String nonterminalClassName = null;
+        String nodeTypeClassName = null;
 
         List<String>    includes = new ArrayList<String>();
 
@@ -52,11 +47,11 @@ public class GenerateHostBURM
             } else if (args[i].equalsIgnoreCase("-include")) {
                 includes.add(args[++i]);
             } else if (args[i].equalsIgnoreCase("-nonterminalClass")) {
-                nonterminalClass = Class.forName(args[++i]);
+                nonterminalClassName = args[++i];
             } else if (args[i].equalsIgnoreCase("-nodeClass")) {
                 nodeClassName = args[++i];
             } else if (args[i].equalsIgnoreCase("-nodeTypeClass")) {
-                nodeTypeClass = Class.forName(args[++i]);
+                nodeTypeClassName = args[++i];
             } else if (args[i].equalsIgnoreCase("-nodeTypeClassAlias")) {
                 nodeTypeClassAlias = args[++i];
             } else if (args[i].equals("-output")) {
@@ -69,6 +64,8 @@ public class GenerateHostBURM
                 templateGroup = args[++i];
             } else if (args[i].equals("-visitor")) {
                 visitorClassName = args[++i];
+            } else if (args[i].equals("-verbose")) {
+                verboseTrigger = args[++i];
             } else {
                 throw new IllegalArgumentException("unrecognized argument " + args[i]);
             }
@@ -89,29 +86,30 @@ public class GenerateHostBURM
         } else if (visitorClassName == null) {
             throw new IllegalArgumentException("-visitor must be specified.");
 
-        } else if (nonterminalClass == null) {
+        } else if (nonterminalClassName == null) {
             throw new IllegalArgumentException("-nonterminalClass must be specified.");
 
         } else if (nodeClassName == null) {
             throw new IllegalArgumentException("-nodeClass must be specified.");
 
-        } else if (nodeTypeClass == null) {
+        } else if (nodeTypeClassName == null) {
             throw new IllegalArgumentException("-nodeTypeClass must be specified.");
         }
 
-        XMLGrammar<?,?> grammarBuilder = new XMLGrammar<DummyNonterminal,DummyNodeType>(nonterminalClass, nodeTypeClass);
-        ProductionTable<?, ?> productions = grammarBuilder.build(convertToFileURL(grammarFile));
+        XMLGrammar<String,String> grammarBuilder = new XMLGrammar<String,String>(nonterminalClassName, nodeTypeClassName);
+        grammarBuilder.setVerboseTrigger(verboseTrigger);
+        ProductionTable<String, String> productions = grammarBuilder.build(convertToFileURL(grammarFile));
 
         attributes.put("class.name", burmClassName);
         attributes.put("visitor.class", visitorClassName);
         attributes.put("node.class", nodeClassName);
-        attributes.put("nonterminal.class", nonterminalClass.getName());
+        attributes.put("nonterminal.class", nonterminalClassName);
 
         Map<String,Object> defaults = new HashMap<String, Object>();
         defaults.put("includes",includes);
 
         if (nodeTypeClassAlias == null) {
-            attributes.put("nodeType.class", nodeTypeClass.getName());
+            attributes.put("nodeType.class", nodeTypeClassName);
         } else {
             attributes.put("nodeType.class", nodeTypeClassAlias);
         }

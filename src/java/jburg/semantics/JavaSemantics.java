@@ -14,7 +14,7 @@ import java.util.Map;
  * JavaSemantics is a BURMSemantics
  * implementation based on Java reflection.
  */
-public class JavaSemantics implements BURMSemantics
+public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterminal, NodeType>
 {
     /**
      * The class of the visitor that hosts the callback routines.
@@ -27,14 +27,19 @@ public class JavaSemantics implements BURMSemantics
     private final Class<?> nodeClass;
 
     /**
-     * The class of the nonterminal enumeration, which is passed to pre callbacks.
+     * The class of the nonterminal enumeration.
      */
     private final Class<?> nonterminalClass;
 
     /**
+     * The class of the node tpye enumeration.
+     */
+    private final Class<?> nodeTypeClass;
+
+    /**
      * Nonterminals whose classes are known.
      */
-    private final Map<Object,Class<?>> nonterminalClasses = new HashMap<Object,Class<?>>();
+    private final Map<Nonterminal,Class<?>> nonterminalClasses = new HashMap<Nonterminal,Class<?>>();
 
     /**
      * Default class to be assigned to nonterminals with no explicit class.
@@ -51,11 +56,12 @@ public class JavaSemantics implements BURMSemantics
      * @param nodeClassName     the name of the nodes' class.
      * @param nonterminalClass  the class of the nonterminals.
      */
-    public JavaSemantics(String visitorClassName, String nodeClassName, Class<?> nonterminalClass)
+    public JavaSemantics(String visitorClassName, String nodeClassName, String nodeTypeClassName, String nonterminalClassName)
     {
         this.visitorClass       = getClass(visitorClassName);
         this.nodeClass          = getClass(nodeClassName);
-        this.nonterminalClass   = nonterminalClass;
+        this.nodeTypeClass      = getClass(nodeTypeClassName);
+        this.nonterminalClass   = getClass(nonterminalClassName);
     }
 
     /**
@@ -66,7 +72,7 @@ public class JavaSemantics implements BURMSemantics
      */
     public JavaSemantics()
     {
-        this("java.lang.Object", "java.lang.Object", Object.class);
+        this("java.lang.Object", "java.lang.Object", "java.lang.Object", "java.lang.Object");
     }
 
     /**
@@ -74,8 +80,10 @@ public class JavaSemantics implements BURMSemantics
      * @param nt    the nonterminal.
      * @param clazz the host language class.
      */
-    public void setNonterminalClass(Object nt, Object clazz)
+    public void setNonterminalClass(Object ntName, Object clazz)
     {
+        Nonterminal nt = getNonterminal(ntName);
+
         if (nonterminalClasses.containsKey(nt)) {
             throw new IllegalArgumentException(String.format("Nonterminal %s already mapped to %s", nt, clazz));
         } else {
@@ -264,8 +272,10 @@ public class JavaSemantics implements BURMSemantics
      * @param isVarArgs true if the result class should
      * be that of an array of the corresponding type.
      */
-    private Class<?> getClassFor(Object nt, boolean isVarArgs)
+    private Class<?> getClassFor(Object ntName, boolean isVarArgs)
     {
+        Nonterminal nt = getNonterminal(ntName);
+
         // First find the class mapped to the nonterminal.
         Class<?> baseClass;
 
@@ -297,6 +307,30 @@ public class JavaSemantics implements BURMSemantics
         }
 
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public NodeType getNodeType(Object typeName)
+    {
+        for (Object nt: nodeTypeClass.getEnumConstants()) {
+            if (nt.toString().equals(typeName.toString())) {
+                    return (NodeType)nt;
+            }
+        }
+
+        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, typeName));
+    }
+
+    @SuppressWarnings("unchecked")
+    public Nonterminal getNonterminal(Object ntName)
+    {
+        for (Object nt: nonterminalClass.getEnumConstants()) {
+            if (nt.toString().equals(ntName.toString())) {
+                return (Nonterminal)nt;
+            }
+        }
+
+        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
     }
 
     public HostRoutine getHostRoutine(Method m)

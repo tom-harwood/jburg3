@@ -235,10 +235,15 @@ allTests - run java tests
         </java>
     </target>
 
-    <target name="cppGen" depends="compile">
+    <target name="cppGen" depends="init">
         <mkdir dir="${gensrc.dir}"/>
         <echo>Generating ${cppclassname}.h from ${cppgrammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
+            <!-- Uncomment and substitute a pattern that matches
+                 the operator of interest to trace its generation.
+            <arg value="-verbose"/>
+            <arg value=".*Add.1.*"/>
+            -->
             <arg value="-grammar"/>
             <arg value="${cppgrammar.xml}"/>
             <arg value="-classname"/>

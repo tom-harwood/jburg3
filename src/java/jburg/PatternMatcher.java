@@ -48,9 +48,9 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     public boolean usesNonterminalAt(Nonterminal n, int index)
     {
         if (isVarArgs && index >= size()) {
-            return getNonterminal(size()-1) == n;
+            return getNonterminal(size()-1).equals(n);
         } else {
-            return index < childTypes.size() && getNonterminal(index) == n;
+            return index < childTypes.size() && getNonterminal(index).equals(n);
         }
     }
 
