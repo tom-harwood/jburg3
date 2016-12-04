@@ -1,0 +1,30 @@
+delimiters "%","%"
+
+// ** Start State **
+start(table) ::= <<
+%nonterminals(table)%
+>>
+
+// ** Property Access **
+className() ::= <<%"";format="class.name"%>>
+
+nodeClass() ::= <<%"";format="node.class"%>>
+
+nodeTypeClass() ::= <<%"";format="nodeType.class"%>>
+
+nonterminalClass() ::= <<%"";format="nonterminal.class"%>>
+
+resultType() ::= <<%"";format="result.type"%>>
+
+timestamp() ::=<<%"";format="timestamp"%>>
+
+version() ::= <<%"";format="version"%>>
+
+visitorClass() ::= <<%"";format="visitor.class"%>>
+
+// ** Table Translation, mostly alphabetical **
+nonterminals(table) ::= <<
+enum %nonterminalClass()% {
+    %table.nonterminals;separator=",\n"%
+};
+>>
