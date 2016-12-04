@@ -256,12 +256,45 @@ allTests - run java tests
             <arg value="NodeType"/>
             <arg value="-include"/>
             <arg value="Test.h"/>
+            <arg value="-include"/>
+            <arg value="Nonterminals.h"/>
             <arg value="-visitor"/>
             <arg value="Calculator"/>
             <arg value="-templateGroup"/>
             <arg value="cppHeader.stg"/>
             <arg value="-output"/>
             <arg value="${gensrc.dir}/${cppclassname}.h"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+
+        <echo>Generating Nonterminals.h from ${cppgrammar.xml}</echo>
+        <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
+            <!-- Uncomment and substitute a pattern that matches
+                 the operator of interest to trace its generation.
+            <arg value="-verbose"/>
+            <arg value=".*Add.1.*"/>
+            -->
+            <arg value="-grammar"/>
+            <arg value="${cppgrammar.xml}"/>
+            <arg value="-classname"/>
+            <arg value="${cppclassname}"/>
+            <arg value="-nodeClass"/>
+            <arg value="Node"/>
+            <arg value="-nonterminalClass"/>
+            <arg value="Nonterminal"/>
+            <arg value="-nodeTypeClass"/>
+            <arg value="NodeType"/>
+            <arg value="-visitor"/>
+            <arg value="Calculator"/>
+            <arg value="-templateGroup"/>
+            <arg value="cppNonterminals.stg"/>
+            <arg value="-output"/>
+            <arg value="${gensrc.dir}/Nonterminals.h"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>

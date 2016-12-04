@@ -41,6 +41,10 @@ public class ProductionTable<Nonterminal, NodeType>
      * order here is not important.
      */
     private Set<Nonterminal>    nonterminals = new HashSet<Nonterminal>();
+    public Set<Nonterminal> getNonterminals()
+    {
+        return nonterminals;
+    }
 
     /**
      * Unique states, computed by permuting all inputs to each operator.
@@ -834,10 +838,13 @@ public class ProductionTable<Nonterminal, NodeType>
 
                 if ("java.stg".equals(templateGroup)) {
                     stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
-                } else if ("cppHeader.stg".equals(templateGroup) || "cppDefinition.stg".equals(templateGroup)|| "cppInterface.stg".equals(templateGroup) ) {
+
+                } else if (templateGroup.startsWith("cpp")) {
                     stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes));
+
                 } else if ("xml.stg".equals(templateGroup)) {
                     // No rendering required
+
                 } else {
                     throw new IllegalArgumentException(String.format("Unknown emitter \"%s\"", templateGroup));
                 }

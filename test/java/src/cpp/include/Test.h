@@ -18,12 +18,6 @@ enum class NodeType {
     Subtract,
 };
 
-enum class Nonterminal {
-    Int,
-    Short,
-    String,
-};
-
 class Node
 {
 public:

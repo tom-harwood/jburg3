@@ -122,6 +122,7 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
      * @param ntName the name of the nonterminal.
      * @return the mapped host class for that nonterminal.
      */
+    @SuppressWarnings("unchecked")
     private Object getNonterminalMapping(Object ntName)
     {
         if (this.nonterminalMappings.containsKey(ntName.toString())) {
