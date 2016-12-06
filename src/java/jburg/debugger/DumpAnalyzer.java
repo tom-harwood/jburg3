@@ -16,7 +16,7 @@ class DumpAnalyzer extends JPanel
     final Debugger      debugger;
     final JTree         tree;
 
-    static final String expandAll = "expand";
+    static final String expandAllCommand = "expand";
 
     DumpAnalyzer(Debugger debugger, String title, Node root)
     {
@@ -37,13 +37,17 @@ class DumpAnalyzer extends JPanel
         debugger.console.prepareFrame(frame);
         frame.setVisible(true);
 
-        this.getInputMap().put(KeyStroke.getKeyStroke("F2"), expandAll);
-        this.getActionMap().put(expandAll,
+        this.getInputMap().put(KeyStroke.getKeyStroke("F2"), expandAllCommand);
+        this.getActionMap().put(expandAllCommand,
             new AbstractAction() {
                 public void actionPerformed(ActionEvent e) {
-                    expandAll();
-               }
-            });
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            expandAll();
+                        }
+                    }
+                );
+            }});
     }
 
     private void expandNonViable()
@@ -124,7 +128,7 @@ class DumpAnalyzer extends JPanel
                     this.childNodes = new ArrayList<AdapterNode>();
                     for (Node n = domNode.getFirstChild(); n != null; n = n.getNextSibling()) {
 
-                        if (n.getNodeName() != null) {
+                        if (n.getNodeName() != null && !"#text".equals(n.getNodeName())) {
                             childNodes.add(new AdapterNode(n));
                         }
                     }
