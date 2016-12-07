@@ -208,6 +208,16 @@ public class Console extends JPanel
         menu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menu);
 
+        JMenuItem loadItem = new JMenuItem("Open BURM dump...", KeyEvent.VK_O);
+        menu.add(loadItem);
+        loadItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    executive.executeCommand("Load");
+                }
+            }
+        );
+
         JMenuItem closeItem = new JMenuItem("Exit", KeyEvent.VK_X);
         menu.add(closeItem);
         closeItem.addActionListener(
@@ -238,30 +248,32 @@ public class Console extends JPanel
 
     int framesGenerated = 0;
 
+    /**
+     * Prepare a subsidary frame with icon and place it relative to the console frame.
+     */
     void prepareFrame(JFrame frame)
     {
         // Position the new frame in a tiled arrangement.
         framesGenerated = (framesGenerated+1) % 20;
-        Point frameLoc = getLocation(null);
+        Point frameLoc = frame.getLocation(null);
         int horizOffset = (int)getMinimumSize().getWidth() + framesGenerated * 10;
         int vertOffset = (int)getMinimumSize().getHeight() + framesGenerated * 10;
         frameLoc.translate(horizOffset,vertOffset);
         frame.setLocation(frameLoc);
 
-        // TODO: Add an ESC listener to close the frame.
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setIcon(frame);
     }
 
     void setIcon(JFrame frame)
     {
-        try {
-            java.net.URL url = ClassLoader.getSystemResource("resources/jbd.png");
-            java.awt.Toolkit kit = java.awt.Toolkit.getDefaultToolkit();
-            frame.setIconImage(kit.createImage(url));
-        } catch (Exception cannotSetIcon) {
-            updateStatus(String.format("Problem loading icon: %s", cannotSetIcon));
-        }
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                java.net.URL url = ClassLoader.getSystemResource("resources/jbd.png");
+                java.awt.Toolkit kit = java.awt.Toolkit.getDefaultToolkit();
+                frame.setIconImage(kit.createImage(url));
+            }
+        });
     }
 
     void clear()

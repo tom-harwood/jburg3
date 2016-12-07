@@ -63,11 +63,14 @@ public class Debugger implements Console.AbstractExecutive
         console = new Console(this);
         console.extractHistory(properties);
 
-        try {
-            burmDumpFilename = args[0];
-            load();
-        } catch (Exception loadError) {
-            console.getAbstractConsole().status(String.format("Problem loading %s: %s", burmDumpFilename, loadError));
+        if (args.length > 0) {
+
+            try {
+                burmDumpFilename = args[0];
+                load();
+            } catch (Exception loadError) {
+                console.getAbstractConsole().status(String.format("Problem loading %s: %s", burmDumpFilename, loadError));
+            }
         }
 
         console.display(debuggerConsoleName);
