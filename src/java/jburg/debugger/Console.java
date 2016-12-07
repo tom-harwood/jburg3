@@ -23,6 +23,7 @@ public class Console extends JPanel
     final List<String>              history = new ArrayList<String>();
     int                             historyPos = -1;
     final JLabel                    statusLine = new JLabel();
+    boolean                         applicationShutdownCommanded = false;
 
     final AbstractExecutive         executive;
 
@@ -200,14 +201,34 @@ public class Console extends JPanel
         frame.pack();
         setIcon(frame);
 
+        JMenuBar menuBar = new JMenuBar();
+        frame.setJMenuBar(menuBar);
+
+        JMenu menu = new JMenu("File");
+        menu.setMnemonic(KeyEvent.VK_F);
+        menuBar.add(menu);
+
+        JMenuItem closeItem = new JMenuItem("Exit", KeyEvent.VK_X);
+        menu.add(closeItem);
+        closeItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    applicationShutdownCommanded = true;
+                    executive.executeCommand("Exit");
+                }
+            }
+        );
+
         // Exit the application if the console window closes.
+        // Only do this if the shutdown sequence is not already
+        // active, since this window will get a window close
+        // notification when the debugger core shuts down all windows.
         frame.addWindowListener(new WindowAdapter() {
-            boolean isClosing = false;
             @Override
             public void windowClosing(WindowEvent evt) {
 
-                if (!isClosing) {
-                    isClosing = true;
+                if (!applicationShutdownCommanded) {
+                    applicationShutdownCommanded = true;
                     executive.executeCommand("Exit");
                 }
             }

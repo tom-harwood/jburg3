@@ -15,8 +15,10 @@ class DumpAnalyzer extends JPanel
     final AdapterNode   root;
     final Debugger      debugger;
     final JTree         tree;
+    final JFrame        frame;
 
-    static final String expandAllCommand = "expand";
+    static final String closeCommand = "Close";
+    static final String expandAllCommand = "Expand fully";
 
     DumpAnalyzer(Debugger debugger, String title, Node root)
     {
@@ -30,24 +32,43 @@ class DumpAnalyzer extends JPanel
 
         this.setLayout(new BorderLayout());
         this.add("Center", new JScrollPane(tree));
-        JFrame frame = new JFrame("Tree Analyzer: " + title);
+        this.frame = new JFrame("Tree Analyzer: " + title);
         frame.getContentPane().add("Center", this);
+
+        JMenuBar menuBar = new JMenuBar();
+        frame.setJMenuBar(menuBar);
+
+        JMenu menu = new JMenu("Tree");
+        menu.setMnemonic(KeyEvent.VK_T);
+        menuBar.add(menu);
+
+        JMenuItem closeItem = new JMenuItem(closeCommand, KeyEvent.VK_C);
+        menu.add(closeItem);
+        closeItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                    frame.dispose();
+                }
+            }
+        );
+
+        JMenuItem expandItem = new JMenuItem(expandAllCommand, KeyEvent.VK_E);
+        menu.add(expandItem);
+        expandItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    expandAll();
+                    frame.pack();
+                }
+            }
+        );
+
         expandNonViable();
+
         frame.pack();
         debugger.console.prepareFrame(frame);
         frame.setVisible(true);
-
-        this.getInputMap().put(KeyStroke.getKeyStroke("F2"), expandAllCommand);
-        this.getActionMap().put(expandAllCommand,
-            new AbstractAction() {
-                public void actionPerformed(ActionEvent e) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            expandAll();
-                        }
-                    }
-                );
-            }});
     }
 
     private void expandNonViable()
