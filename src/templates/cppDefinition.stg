@@ -60,8 +60,8 @@ void %className()%::label(%visitorClass()%& visitor, %nodeClass()%* node)
 
 %resultType()% %className()%::reduce(%visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState)
 {
-    if (node->getTransitionTableLeaf()) {
-        %className()%::TransitionEntry* ti = (%className()%::TransitionEntry*)(node->getTransitionTableLeaf());
+    %className()%::TransitionEntry* ti = (%className()%::TransitionEntry*)(node->getTransitionTableLeaf());
+    if (ti) {
         return ti->reduce(*this, visitor, node, goalState);
     } else {
         return errorHandler.reduce(visitor, node, goalState);
@@ -136,9 +136,10 @@ class %s:leafStateName()%Impl: public %className()%::TransitionEntry
         %resultType()% result;
 
         switch(goalState) {
-        %s.statesByMethod:{ m | %s.statesByMethod.(m):reducer();separator="\n"%}%
-        default:
-            throw std::logic_error("Unhandled nonterminal");
+            %s.statesByMethod:{ m | %s.statesByMethod.(m):reducer();separator="\n"%}%
+            default: {
+                result = reducer.reduce(visitor, node, goalState);
+            }
         }
 
         return result;
@@ -203,13 +204,12 @@ case %nonterminalClass()%::%nt%: {
 %if(s.patterns.(nt))%
     %reduction(s.patterns.(nt))%
 %elseif (s.closures.(nt))%
-    result = reducer.reduce(visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
+    result = reduce(reducer, visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
     %if(s.closures.(nt).postCallback)%
     result = visitor.%s.closures.(nt).postCallback;format="closurePostCallback"%;
     %endif%
 %else%
 %endif%
-
     break;
 }
 >>
