@@ -131,22 +131,25 @@ public class Debugger implements Console.AbstractExecutive
                             }
                             break;
 
-                        case Exit:
-                            properties.setProperty("lastDumpFile", burmDumpFilename);
-                            console.saveHistory(properties);
+                        case Exit: {
+                                if (burmDumpFilename != null) {
+                                    properties.setProperty("lastDumpFile", burmDumpFilename);
+                                }
+                                console.saveHistory(properties);
 
-                            try {
-                                properties.store(new FileOutputStream(propertiesFileName), "JBurg3 debugger properties");
-                            } catch (Exception cannotStore) {
-                                // Bummer.
+                                try {
+                                    properties.store(new FileOutputStream(propertiesFileName), "JBurg3 debugger properties");
+                                } catch (Exception cannotStore) {
+                                    // Bummer.
+                                }
+
+                                for (Frame frame: Frame.getFrames()) {
+                                    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                                    frame.dispose();
+                                }
+
+                                notifyAll();
                             }
-
-                            for (Frame frame: Frame.getFrames()) {
-                                frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-                                frame.dispose();
-                            }
-
-                            notifyAll();
                             break;
 
                         case Execute:
