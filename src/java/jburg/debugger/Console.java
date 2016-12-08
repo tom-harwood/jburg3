@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -37,6 +38,7 @@ public class Console extends JPanel
         commandLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, commandLine.getPreferredSize().height));
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), downArrow);
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("UP"), upArrow);
+        commandLine.setBorder(BorderFactory.createLoweredBevelBorder());
 
         commandLine.getActionMap().put(downArrow, new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
@@ -52,6 +54,7 @@ public class Console extends JPanel
 
         JList<String> outputList = new JList<String>(output);
         final JScrollPane outputPane = new JScrollPane(outputList);
+        outputPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
         commandLine.addActionListener(new ActionListener() {
 
