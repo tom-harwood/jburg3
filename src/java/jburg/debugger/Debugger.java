@@ -165,6 +165,14 @@ public class Debugger implements Console.AbstractExecutive
                             }
                             break;
 
+                        case HGrep:
+                            console.hgrep(command.substring(tokens[0].length()));
+                            break;
+
+                        case History:
+                            console.history();
+                            break;
+
                         case Load: {
                                 JFileChooser chooser = new JFileChooser();
                                 FileNameExtensionFilter filter = new FileNameExtensionFilter("XML files", "xml");
@@ -220,7 +228,7 @@ public class Debugger implements Console.AbstractExecutive
                 }
             }
         } catch (Exception commandProblem) {
-            exception(commandProblem, "Problem executing " + command);
+            exception(commandProblem, "Problem executing %s", command);
         }
 
         return true;
@@ -322,9 +330,15 @@ public class Debugger implements Console.AbstractExecutive
         console.getAbstractConsole().println(String.format(format,args));
     }
 
-    private void exception(Exception exception, String formatString, Object... args)
+    void exception(Exception exception, String formatString, Object... args)
     {
-        console.getAbstractConsole().exception(String.format(formatString, args), exception);
+        String diagnostic;
+        try {
+            diagnostic = String.format(formatString, args);
+        } catch (Exception cannotFormat) {
+            diagnostic = "Funky diagnostic: " + formatString + String.format(" %s",args);
+        }
+        console.getAbstractConsole().exception(diagnostic, exception);
         mostRecentException = exception;
     }
 

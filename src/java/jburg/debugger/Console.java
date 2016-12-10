@@ -23,7 +23,6 @@ public class Console extends JPanel
     final DefaultListModel<String>  output = new DefaultListModel<String>();
     final List<String>              history = new ArrayList<String>();
     int                             historyPos = -1;
-    final JLabel                    statusLine = new JLabel();
     boolean                         applicationShutdownCommanded = false;
 
     final AbstractExecutive         executive;
@@ -60,9 +59,15 @@ public class Console extends JPanel
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                output.addElement(commandLine.getText());
-                updateStatus("");
-                executive.executeCommand(commandLine.getText());
+                final String currentCommand = commandLine.getText();
+                output.addElement(currentCommand);
+
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        executive.executeCommand(currentCommand);
+                    }
+                });
+
                 history.add(0, commandLine.getText());
                 historyPos = -1;
                 commandLine.setText("");
@@ -83,13 +88,11 @@ public class Console extends JPanel
             layout.createParallelGroup()
                 .addComponent(outputPane)
                 .addComponent(commandLine)
-                .addComponent(statusLine)
         );
         layout.setVerticalGroup(
             layout.createSequentialGroup()
                 .addComponent(outputPane)
                 .addComponent(commandLine)
-                .addComponent(statusLine)
         );
 
         setLayout(layout);
@@ -120,11 +123,6 @@ public class Console extends JPanel
         for (int i = 0; i < history.size(); i++) {
             properties.setProperty(historyKey(i), history.get(i));
         }
-    }
-
-    void updateStatus(String format, Object... args)
-    {
-        statusLine.setText(String.format(format, args));
     }
 
     void injectHistory(int newPos)
@@ -177,17 +175,15 @@ public class Console extends JPanel
         public void exception(String operation, Exception ex) {
 
             if (ex.getMessage() != null) {
-                status(ex.getMessage());
+                status("%s", ex.getMessage());
             } else {
-                status(ex.toString());
+                status("%s", ex.toString());
             }
         }
 
         @Override
         public void status(String format, Object... args) {
-            String formattedMessage = String.format(format, args);
-            println(formattedMessage);
-            updateStatus(formattedMessage);
+            println(String.format(format, args));
         }
     }
 
@@ -282,5 +278,28 @@ public class Console extends JPanel
     void clear()
     {
         output.clear();
+    }
+
+    void hgrep(String pattern)
+    {
+        pattern = ".*" + pattern.trim() + ".*";
+
+        String lastHistory = null;
+
+        for (String s: history) {
+
+            if (s.matches(pattern)) {
+
+                if (!s.equals(lastHistory)) {
+                    output.addElement(s);
+                    lastHistory = s;
+                }
+            }
+        }
+    }
+
+    void history()
+    {
+        hgrep(".*");
     }
 }

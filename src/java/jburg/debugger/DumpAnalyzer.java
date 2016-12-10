@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 
@@ -280,23 +281,28 @@ class DumpAnalyzer extends JPanel
                 String command = event.getActionCommand();
 
                 if (command.equals(PRINT_STATE)) {
-                    AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
-                    String stateNumber = String.valueOf(node.stateNumber);
-                    JFrame popupFrame = new JFrame("State " + stateNumber);
-                    debugger.console.prepareFrame(popupFrame);
-                    JTextArea area = new JTextArea();
-                    area.setEditable(false);
-                    area.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
+                            String stateNumber = String.valueOf(node.stateNumber);
+                            JFrame popupFrame = new JFrame("State " + stateNumber);
+                            debugger.console.prepareFrame(popupFrame);
+                            JTextArea area = new JTextArea();
+                            area.setEditable(false);
+                            area.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
 
-                    try {
-                        area.setText(debugger.getStateInformation(stateNumber));
-                    } catch (Exception ex) {
-                        area.setText(ex.toString());
-                    }
+                            try {
+                                area.setText(debugger.getStateInformation(stateNumber));
+                                area.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+                                popupFrame.add(area);
+                                popupFrame.pack();
+                                popupFrame.setVisible(true);
+                            } catch (Exception ex) {
+                                debugger.exception(ex, "Generating state description");
+                            }
+                        }
+                    });
 
-                    popupFrame.add(area);
-                    popupFrame.pack();
-                    popupFrame.setVisible(true);
                 }
               }
             };
