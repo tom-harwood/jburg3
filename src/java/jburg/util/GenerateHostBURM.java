@@ -22,7 +22,7 @@ public class GenerateHostBURM
     throws Exception
     {
         String outputFileName = null;
-        String grammarFile = null;
+        String grammarFileName = null;
         String templateGroup = null;
         String burmClassName = null;
         String visitorClassName = null;
@@ -43,7 +43,7 @@ public class GenerateHostBURM
             if (args[i].equals("-classname")) {
                 burmClassName = args[++i];
             } else if (args[i].equals("-grammar")) {
-                grammarFile = args[++i];
+                grammarFileName = args[++i];
             } else if (args[i].equalsIgnoreCase("-include")) {
                 includes.add(args[++i]);
             } else if (args[i].equalsIgnoreCase("-nonterminalClass")) {
@@ -74,7 +74,7 @@ public class GenerateHostBURM
         if (outputFileName == null) {
             throw new IllegalArgumentException("-output must be specified.");
 
-        } else if (grammarFile == null) {
+        } else if (grammarFileName == null) {
             throw new IllegalArgumentException("-grammar must be specified.");
 
         } else if (templateGroup == null) {
@@ -98,12 +98,13 @@ public class GenerateHostBURM
 
         XMLGrammar<String,String> grammarBuilder = new XMLGrammar<String,String>(nonterminalClassName, nodeTypeClassName);
         grammarBuilder.setVerboseTrigger(verboseTrigger);
-        ProductionTable<String, String> productions = grammarBuilder.build(convertToFileURL(grammarFile));
+        ProductionTable<String, String> productions = grammarBuilder.build(convertToFileURL(grammarFileName));
 
         attributes.put("class.name", burmClassName);
         attributes.put("visitor.class", visitorClassName);
         attributes.put("node.class", nodeClassName);
         attributes.put("nonterminal.class", nonterminalClassName);
+        attributes.put("grammar.name", grammarFileName);
 
         Map<String,Object> defaults = new HashMap<String, Object>();
         defaults.put("includes",includes);

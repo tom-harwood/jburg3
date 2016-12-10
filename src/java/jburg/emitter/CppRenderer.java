@@ -123,6 +123,11 @@ public class CppRenderer implements AttributeRenderer
 
             return result.toString();
 
+        } else if ("grammar.name".equals(formatString)) {
+            return (attributes.containsKey(formatString))?
+                " from " + attributes.get(formatString)
+                : "";
+
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);
 

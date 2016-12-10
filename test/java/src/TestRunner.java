@@ -87,6 +87,10 @@ public class TestRunner
             attributes.put("nonterminal.class", "Nonterminal");
             attributes.put("nodeType.class", "NodeType");
 
+            if (grammarFile != null) {
+                attributes.put("grammar.name", grammarFile);
+            }
+
             Map<String,Object> defaults = new HashMap<String, Object>();
             productions.dump(dumpFile, dumpTemplates, attributes, defaults);
         }

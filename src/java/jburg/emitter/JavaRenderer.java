@@ -86,6 +86,11 @@ public class JavaRenderer implements AttributeRenderer
         } else if ("version".equals(formatString)) {
             return jburg.version.JBurgVersion.version;
 
+        } else if ("grammar.name".equals(formatString)) {
+            return (attributes.containsKey(formatString))?
+                " from " + attributes.get(formatString)
+                : "";
+
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);
 
