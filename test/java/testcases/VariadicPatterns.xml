@@ -55,6 +55,15 @@
             </Node>
         </Node>
     </Testcase>
+    <Testcase name="Add int and string " type="String" expected="12a">
+        <Node op="Add">
+            <Node op="Add">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="ShortLiteral" content="2"/>
+            </Node>
+            <Node op="StringLiteral" content="a"/>
+        </Node>
+    </Testcase>
     <Testcase name="concat, various modes" type="String" expected="a48defgj">
         <Node op="Concat">
             <Node op="StringLiteral" content="a"/>
