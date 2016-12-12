@@ -55,35 +55,5 @@ int main(int argc, char* argv[])
         runTest(testcase);
     }
 
-#if 0
-	Node* concat = new Node(NodeType::Concat);
-	concat->addChild(new Node(NodeType::StringLiteral, "a"));
-	concat->addChild(new Node(NodeType::StringLiteral, "b"));
-	concat->addChild(new Node(NodeType::StringLiteral, "c"));
-
-	reducer.label(calculator, concat);
-	result = reducer.reduce(calculator, concat, Nonterminal::String);
-	checkResult("abc", result.stringValue, "concat a | b | c");
-
-	concat->addChild(new Node(NodeType::IntLiteral, 1));
-	reducer.label(calculator, concat);
-	result = reducer.reduce(calculator, concat, Nonterminal::String);
-	checkResult("abc1", result.stringValue, "concat a | b | c | 1");
-
-	concat->addChild(new Node(NodeType::ShortLiteral, 2));
-	reducer.label(calculator, concat);
-	result = reducer.reduce(calculator, concat, Nonterminal::String);
-	checkResult("abc12", result.stringValue, "concat a | b | c | 1 | 2");
-
-	Node* multiply = new Node(NodeType::Multiply);
-	multiply->addChild(new Node(NodeType::IntLiteral, 2));
-	multiply->addChild(new Node(NodeType::Subtract));
-	multiply->getSubtree(1)->addChild(new Node(NodeType::IntLiteral, 5));
-	multiply->getSubtree(1)->addChild(new Node(NodeType::IntLiteral, 2));
-	reducer.label(calculator, multiply);
-	result = reducer.reduce(calculator, multiply, Nonterminal::Int);
-	checkResult(6, result.intValue, "2 * (5-2)");
-#endif
-
     return failureCount;
 }
