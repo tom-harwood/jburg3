@@ -1,0 +1,46 @@
+<Test>
+
+    <Testcase name="1+2" type="Int" expected="3">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="a | b | c" type="String" expected="abc">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+            <Node op="StringLiteral" content="c"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="a | b | c | 1" type="String" expected="abc1">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+            <Node op="StringLiteral" content="c"/>
+            <Node op="IntLiteral" content="1"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="a | b | c | (short)2" type="String" expected="abc2">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="a"/>
+            <Node op="StringLiteral" content="b"/>
+            <Node op="StringLiteral" content="c"/>
+            <Node op="ShortLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="2 * (5-2)" type="String" expected="6">
+        <Node op="Multiply">
+            <Node op="IntLiteral" content="2"/>
+            <Node op="Subtract">
+                <Node op="IntLiteral" content="5"/>
+                <Node op="ShortLiteral" content="2"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+</Test>

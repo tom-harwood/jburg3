@@ -303,6 +303,63 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
+        <echo>Generating NonterminalLookup.h from ${cppgrammar.xml}</echo>
+        <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
+            <!-- Uncomment and substitute a pattern that matches
+                 the operator of interest to trace its generation.
+            <arg value="-verbose"/>
+            <arg value=".*Add.1.*"/>
+            -->
+            <arg value="-grammar"/>
+            <arg value="${cppgrammar.xml}"/>
+            <arg value="-classname"/>
+            <arg value="${cppclassname}"/>
+            <arg value="-nodeClass"/>
+            <arg value="Node"/>
+            <arg value="-nonterminalClass"/>
+            <arg value="Nonterminal"/>
+            <arg value="-nodeTypeClass"/>
+            <arg value="NodeType"/>
+            <arg value="-visitor"/>
+            <arg value="Calculator"/>
+            <arg value="-templateGroup"/>
+            <arg value="cppNonterminalsLookup.stg"/>
+            <arg value="-output"/>
+            <arg value="${gensrc.dir}/NonterminalLookup.h"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+
+        <echo>Generating CppReducer.xml from ${cppgrammar.xml}</echo>
+        <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
+            <arg value="-grammar"/>
+            <arg value="${cppgrammar.xml}"/>
+            <arg value="-classname"/>
+            <arg value="${cppclassname}"/>
+            <arg value="-nodeClass"/>
+            <arg value="Node"/>
+            <arg value="-nonterminalClass"/>
+            <arg value="Nonterminal"/>
+            <arg value="-nodeTypeClass"/>
+            <arg value="NodeType"/>
+            <arg value="-visitor"/>
+            <arg value="Calculator"/>
+            <arg value="-templateGroup"/>
+            <arg value="xml.stg"/>
+            <arg value="-output"/>
+            <arg value="${gensrc.dir}/CppReducer.xml"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+
         <echo>Generating ${cppclassname}.cpp from ${cppgrammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
@@ -341,12 +398,15 @@ allTests - run java tests
                 <arg value="src/cpp/include"/>
                 <arg value="-std=c++11"/>
                 <arg value="${cppmain}"/>
+                <arg value="src/cpp/TestcaseBuilder.cpp"/>
                 <arg value="gensrc/${cppclassname}.cpp"/>
                 <arg value="-o"/>
                 <arg value="gensrc/${cppclassname}"/>
             </exec>
             <!-- vmlauncher="false" so the exec finds the right relative path -->
-            <exec executable="gensrc/${cppclassname}" vmlauncher="false" failonerror="true"/>
+            <exec executable="gensrc/${cppclassname}" vmlauncher="false" failonerror="true">
+                <arg value="testcases/cppFirst.xml"/>
+            </exec>
         </sequential>
     </target>
 

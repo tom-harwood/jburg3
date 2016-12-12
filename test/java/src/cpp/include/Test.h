@@ -5,17 +5,11 @@
 #include <string>
 #include <map>
 #include <stdio.h>
+#include "Nonterminals.h"
 
+#define NODE_TYPE(x)x,
 enum class NodeType { 
-    Add,
-    AddStrict,
-    Concat,
-    IntLiteral,
-    Multiply,
-    QualifiedLiteral,
-    ShortLiteral,
-    StringLiteral,
-    Subtract,
+#include "NodeTypes.inc"
 };
 
 class Node
@@ -23,7 +17,7 @@ class Node
 public:
     Node(NodeType type): type(type), leaf(NULL), intValue(-1) {}
     Node(NodeType type, int intValue): type(type), leaf(NULL), intValue(intValue) {}
-    Node(NodeType type, const char* str): type(type), intValue(-1), stringValue(str) {}
+    Node(NodeType type, const std::string str): type(type), intValue(-1), stringValue(str) {}
 
     NodeType getNodeType() const
     {
@@ -217,6 +211,26 @@ public:
     bool shortGuard(Node* node)
     {
         return node->getIntValue() >= -32768 && node->getIntValue() <= 32767;
+    }
+
+    /*
+     * Error Handler
+     */
+    Object onError(Node* node, Nonterminal goalState)
+    {
+        Object result;
+        result.stringValue = "error:";
+        return result;
+    }
+
+    /*
+     * Null input handler
+     */
+    Object onNull(Node* node)
+    {
+        Object result;
+        result.stringValue = "null:";
+        return result;
     }
 
 private:

@@ -1,43 +1,61 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "Test.h"
+#include "Testcase.h"
 #include "CppTestReducer.h"
 
 int failureCount = 0;
 
-void checkResult(int expected, int actual, const char* testname)
+void checkResult(int expected, int actual, const std::string& testname)
 {
 	if (expected == actual) {
-		printf("Succeeded: %s\n", testname);
+		printf("Succeeded: %s\n", testname.c_str());
 	} else {
-		printf("FAILED: %s, expected %d != actual %d\n", testname, expected, actual);
+		printf("FAILED: %s, expected %d != actual %d\n", testname.c_str(), expected, actual);
 		failureCount++;
 	}
 }
 
-void checkResult(std::string expected, std::string actual, const char* testname)
+void checkResult(std::string expected, std::string actual, const std::string& testname)
 {
 	if (expected == actual) {
-		printf("Succeeded: %s\n", testname);
+		printf("Succeeded: %s\n", testname.c_str());
 	} else {
-		printf("FAILED: %s, expected %s != actual %s\n", testname, expected.c_str(), actual.c_str());
+		printf("FAILED: %s, expected %s != actual %s\n", testname.c_str(), expected.c_str(), actual.c_str());
 		failureCount++;
 	}
+}
+
+void runTest(Testcase& testcase)
+{
+    try {
+        CppTestReducer  reducer;
+        Calculator      calculator;
+        reducer.label(calculator, testcase.root);
+        Object result = reducer.reduce(calculator, testcase.root, testcase.valueType);
+
+        if (testcase.valueType == Nonterminal::String) {
+            checkResult(testcase.expectedValue, result.stringValue, testcase.name);
+        } else {
+            checkResult(atoi(testcase.expectedValue.c_str()), result.intValue, testcase.name);
+        }
+
+    } catch (std::logic_error& exception) {
+        // TODO: Negative testcase logic
+        printf("FAILED: %s, exception %s\n", testcase.name.c_str(), exception.what());
+        printf("%s\n", toXML(testcase.root).c_str());
+        failureCount++;
+    }
 }
 
 int main(int argc, char* argv[])
 {
-    Node* add = new Node(NodeType::Add);
-    add->addChild(new Node(NodeType::IntLiteral, 1));
-    add->addChild(new Node(NodeType::IntLiteral, 2));
+    for (Testcase& testcase: buildTestcases(argv[1])) {
+        runTest(testcase);
+    }
 
-    CppTestReducer  reducer;
-    Calculator      calculator;
-	reducer.label(calculator, add);
-    Object result = reducer.reduce(calculator, add, Nonterminal::Int);
-
-    checkResult(3, result.intValue, "1+2");
-
+#if 0
 	Node* concat = new Node(NodeType::Concat);
 	concat->addChild(new Node(NodeType::StringLiteral, "a"));
 	concat->addChild(new Node(NodeType::StringLiteral, "b"));
@@ -65,6 +83,7 @@ int main(int argc, char* argv[])
 	reducer.label(calculator, multiply);
 	result = reducer.reduce(calculator, multiply, Nonterminal::Int);
 	checkResult(6, result.intValue, "2 * (5-2)");
+#endif
 
     return failureCount;
 }
