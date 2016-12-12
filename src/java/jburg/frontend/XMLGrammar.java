@@ -128,6 +128,10 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             ErrorHandlerDesc errorHandler = (ErrorHandlerDesc)desc;
             productionTable.addErrorHandler(semantics.getNonterminal(errorHandler.nonterminal), errorHandler.preCallback);
 
+        } else if (desc.isNullHandler()) {
+            NullHandlerDesc nullHandler = (NullHandlerDesc)desc;
+            productionTable.addNullPointerProduction(semantics.getNonterminal(nullHandler.nonterminal), 1, nullHandler.preCallback);
+
         } else {
             throw new IllegalStateException(String.format("Unhandled production type %s", desc.getClass()));
         }
@@ -155,6 +159,9 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             } else if (localName.equals("Error")) {
                 startErrorHandler(localName, atts);
 
+            } else if (localName.equals("NullNode")) {
+                startNullHandler(localName, atts);
+
             } else if (localName.equals("Nonterminal")) {
                 addNonterminal(localName, atts);
 
@@ -176,6 +183,9 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
             } else if (localName.equals("errorHandler")) {
                 addPreCallback(localName, atts);
 
+            } else if (localName.equals("nullHandler")) {
+                addPreCallback(localName, atts);
+
             } else {
                 throw new IllegalArgumentException("Unexpected " + localName);
             }
@@ -188,7 +198,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     @Override
     public void endElement(String namespaceURI, String localName, String qName)
     {
-        if (localName.equals("Pattern") || localName.equals("Closure") || localName.equals("Error")) {
+        if (localName.equals("Pattern") || localName.equals("Closure") || localName.equals("Error") || localName.equals("NullNode")) {
             finishProduction();
         }
     }
@@ -247,6 +257,11 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     private void startErrorHandler(String localName, Attributes atts)
     {
         currentProduction = new ErrorHandlerDesc(atts);
+    }
+
+    private void startNullHandler(String localName, Attributes atts)
+    {
+        currentProduction = new NullHandlerDesc(atts);
     }
 
     private void addChild(String localName, Attributes atts)

@@ -9,6 +9,7 @@
                 <xs:element name = 'Pattern' type = 'Pattern' minOccurs = '1' maxOccurs = 'unbounded'/>
                 <xs:element name = 'Closure' type = 'Closure' minOccurs = '0' maxOccurs = 'unbounded'/>
                 <xs:element name = 'Error' type = 'Error' minOccurs = '0' maxOccurs = 'unbounded'/>
+                <xs:element name = 'NullNode' type = 'Null' minOccurs = '0' maxOccurs = 'unbounded'/>
              </xs:choice>
          </xs:sequence>
           <xs:attribute name = 'nodeClass' type = 'xs:string'/>
@@ -42,6 +43,13 @@
    <xs:complexType name = "Error">
       <xs:sequence>
          <xs:element name = "errorHandler" type = "Callback" minOccurs='0' maxOccurs='1'/>
+      </xs:sequence>
+      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+   </xs:complexType>
+
+   <xs:complexType name = "Null">
+      <xs:sequence>
+         <xs:element name = "nullHandler" type = "Callback" minOccurs='0' maxOccurs='1'/>
       </xs:sequence>
       <xs:attribute name = 'nonterminal' type = 'xs:string'/>
    </xs:complexType>

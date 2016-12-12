@@ -67,6 +67,7 @@ public:
     %resultType()% reduce(%visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState);
 };
 
+public:
 static ErrorHandler errorHandler;
 >>
 

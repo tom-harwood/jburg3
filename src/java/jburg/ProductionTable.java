@@ -379,7 +379,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * If the grammar did not record any null productions, then this state is empty.
      * @return the state that specifies valid transitions for a null pointer.
      */
-    State<Nonterminal, NodeType> getNullPointerState()
+    public State<Nonterminal, NodeType> getNullPointerState()
     {
         if (nullState == null) {
             nullState = new State<Nonterminal, NodeType>();

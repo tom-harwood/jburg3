@@ -62,10 +62,15 @@ void %className()%::label(%visitorClass()%& visitor, %nodeClass()%* node)
 
 %resultType()% %className()%::reduce(%visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState)
 {
-    %className()%::TransitionEntry* ti = (%className()%::TransitionEntry*)(node->getTransitionTableLeaf());
-    if (ti) {
-        return ti->reduce(*this, visitor, node, goalState);
+    if (node) {
+        %className()%::TransitionEntry* ti = (%className()%::TransitionEntry*)(node->getTransitionTableLeaf());
+        if (ti) {
+            return ti->reduce(*this, visitor, node, goalState);
+        } else {
+            return errorHandler.reduce(visitor, node, goalState);
+        }
     } else {
+        %table.nullPointerState:nullPointerHandler()%
         return errorHandler.reduce(visitor, node, goalState);
     }
 }
@@ -79,21 +84,20 @@ void %className()%::label(%visitorClass()%& visitor, %nodeClass()%* node)
 >>
 
 errorClosure(c) ::= <<
-case %c.nonterminal%: {
-        %resultType()% result = reduce(visitor, node, %nonterminalClass()%.%c.source%);
-        %if(c.postCallback)%
-        result = visitor.%c.postCallback;format="closurePostCallback"%;
-        %endif%
-        return result;
-    }
+} else if (goalState == %nonterminalClass()%::%c.nonterminal%) {
+    %resultType()% result = reduce(visitor, node, %nonterminalClass()%::%c.source%);
+    %if(c.postCallback)%
+    result = visitor.%c.postCallback;format="closurePostCallback"%;
+    %endif%
+    return result;
 >>
 
 errorState(s) ::= <<
 %resultType()% %className()%::ErrorHandler::reduce(%visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState)
 {
     %if(s.nonterminal)%
-    switch(goalState) {
-    case %nonterminalClass()%::%s.nonterminal%:
+    %resultType()% result;
+    if (goalState == %nonterminalClass()%::%s.nonterminal%) {
         return visitor.%s.patterns.(s.nonterminal).preCallback.name%(node, goalState);
     %s.closures.values:errorClosure();separator="\n"%
     }
@@ -140,7 +144,7 @@ class %s:leafStateName()%Impl: public %className()%::TransitionEntry
         switch(goalState) {
             %s.statesByMethod:{ m | %s.statesByMethod.(m):reducer();separator="\n"%}%
             default: {
-                result = reducer.reduce(visitor, node, goalState);
+                result = reducer.errorHandler.reduce(visitor, node, goalState);
             }
         }
 
@@ -161,6 +165,24 @@ case %nodeTypeClass()%::%nodeType%:
         %operatorList:operatorDefinition();separator="\n"%
     }
     break;
+>>
+
+nullCase(nt) ::= <<
+if (goalState == %nonterminalClass()%::%nt%) {
+%if(s.patterns.(nt))%
+    %resultType()% result;
+    %reduction(s.patterns.(nt))%
+    return result;
+%elseif (s.closures.(nt))%
+    %resultType()% result = reduce(reducer, visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
+    %if(s.closures.(nt).postCallback)%
+    result = visitor.%s.closures.(nt).postCallback;format="closurePostCallback"%;
+    %endif%
+%endif%}
+>>
+
+nullPointerHandler(s) ::= <<
+%s.nonterminals:nullCase();separator="\n"%
 >>
 
 operatorDefinition(op) ::= <<
