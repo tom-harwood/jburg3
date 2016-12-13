@@ -1,9 +1,17 @@
 <Test>
 
-    <Testcase name="1-foo" type="String" expected="error:">
+    <Testcase name="1-foo" type="String" expected="!error!">
         <Node op="Subtract">
             <Node op="IntLiteral" content="1"/>
             <Node op="StringLiteral" content="foo"/>
         </Node>
     </Testcase>
+
+    <Testcase name="foo | null" type="String" expected="foo!null!">
+        <Node op="Concat">
+            <Node op="StringLiteral" content="foo"/>
+            <Node null="true"/>
+        </Node>
+    </Testcase>
+
 </Test>

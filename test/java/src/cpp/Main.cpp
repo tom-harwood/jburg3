@@ -7,23 +7,27 @@
 
 int failureCount = 0;
 
-void checkResult(int expected, int actual, const std::string& testname)
+bool checkResult(int expected, int actual, const std::string& testname)
 {
 	if (expected == actual) {
 		printf("Succeeded: %s\n", testname.c_str());
+        return true;
 	} else {
 		printf("FAILED: %s, expected %d != actual %d\n", testname.c_str(), expected, actual);
 		failureCount++;
+        return false;
 	}
 }
 
-void checkResult(std::string expected, std::string actual, const std::string& testname)
+bool checkResult(std::string expected, std::string actual, const std::string& testname)
 {
 	if (expected == actual) {
 		printf("Succeeded: %s\n", testname.c_str());
+        return true;
 	} else {
 		printf("FAILED: %s, expected %s != actual %s\n", testname.c_str(), expected.c_str(), actual.c_str());
 		failureCount++;
+        return false;
 	}
 }
 
@@ -36,9 +40,14 @@ void runTest(Testcase& testcase)
         Object result = reducer.reduce(calculator, testcase.root, testcase.valueType);
 
         if (testcase.valueType == Nonterminal::String) {
-            checkResult(testcase.expectedValue, result.stringValue, testcase.name);
+            if (!checkResult(testcase.expectedValue, result.stringValue, testcase.name)) {
+                printf("%s\n", toXML(testcase.root).c_str());
+            }
+
         } else {
-            checkResult(atoi(testcase.expectedValue.c_str()), result.intValue, testcase.name);
+            if (!checkResult(atoi(testcase.expectedValue.c_str()), result.intValue, testcase.name)) {
+                printf("%s\n", toXML(testcase.root).c_str());
+            }
         }
 
     } catch (std::logic_error& exception) {

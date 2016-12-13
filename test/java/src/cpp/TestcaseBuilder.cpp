@@ -13,6 +13,7 @@
 static const std::string content("content");
 static const std::string expected("expected");
 static const std::string name("name");
+static const std::string null("null");
 static const std::string op("op");
 static const std::string type("type");
 
@@ -37,11 +38,9 @@ NodeType lookupNodeType(std::string nodeType)
     throw std::logic_error(diagnostic);
 }
 
-void dumpAttributes(std::map<std::string,std::string> attrs)
+bool isTrue(std::string& value)
 {
-    for (auto& attr: attrs) {
-        std::cout << "\t" << attr.first << "=" << attr.second << std::endl;
-    }
+    return value == "yes" || value == "true" || value == "1";
 }
 
 std::vector<Testcase> buildTestcases(std::string fileName)
@@ -79,28 +78,37 @@ std::vector<Testcase> buildTestcases(std::string fileName)
         }
         
         if (isStartTag(line, "Node")) {
-            Attributes attrs = getAttributes(line);
-            NodeType nodeType = lookupNodeType(attrs[op]);
-            std::string nodeContent = attrs[content];
-
-            if (verbose) {
-                std::cout << "Found Node: " << line << std::endl;
-                std::cout << "\t" << "op is " << (int)nodeType << std::endl;
-                if (!content.empty()) {
-                    std::cout << "\t" << "content is " << nodeContent << std::endl;
-                }
-            }
-
             Node* node;
+            Attributes attrs = getAttributes(line);
 
-            if (!content.empty()) {
-                if (nodeType != NodeType::StringLiteral) {
-                    node = new Node(nodeType, atoi(nodeContent.c_str()));
-                } else {
-                    node = new Node(nodeType, nodeContent);
+            if (!attrs[op].empty()) {
+                NodeType nodeType = lookupNodeType(attrs[op]);
+                std::string nodeContent = attrs[content];
+
+                if (verbose) {
+                    std::cout << "Found Node: " << line << std::endl;
+                    std::cout << "\t" << "op is " << (int)nodeType << std::endl;
+                    if (!content.empty()) {
+                        std::cout << "\t" << "content is " << nodeContent << std::endl;
+                    }
                 }
+
+                if (!content.empty()) {
+                    if (nodeType != NodeType::StringLiteral) {
+                        node = new Node(nodeType, atoi(nodeContent.c_str()));
+                    } else {
+                        node = new Node(nodeType, nodeContent);
+                    }
+                } else {
+                    node = new Node(nodeType);
+                }
+
+            } else if (isTrue(attrs[null])) {
+                node = NULL;
             } else {
-                node = new Node(nodeType);
+                std::string diagnostic("Missing required op or null attribute:");
+                diagnostic += line;
+                throw std::logic_error(diagnostic);
             }
 
             if (!nodeStack.empty()) {
@@ -184,6 +192,10 @@ std::map<std::string,std::string> getAttributes(std::string& tag)
 
 std::string toXML(Node* node)
 {
+    if (!node) {
+        return "<null state=\"1\"/>";
+    }
+
     std::string result("<");
     result += nodeTypeToString(node->getNodeType());
     result += " state=\"";

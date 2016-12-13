@@ -26,4 +26,5 @@
     </Pattern>
 
     <Closure nonterminal="String" sourceNonterminal="Error"/>
+    <Closure nonterminal="String" sourceNonterminal="Null"/>
 </Grammar>

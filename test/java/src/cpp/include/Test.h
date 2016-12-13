@@ -158,7 +158,7 @@ public:
         return result;
     }
 
-    Object concatFixed(Node* node, Object rhs, Object lhs)
+    Object concatFixed(Node* node, Object lhs, Object rhs)
     {
         Object result;
         result.stringValue = lhs.stringValue;
@@ -219,7 +219,7 @@ public:
     Object onError(Node* node, Nonterminal goalState)
     {
         Object result;
-        result.stringValue = "error:";
+        result.stringValue = "!error!";
         return result;
     }
 
@@ -229,7 +229,7 @@ public:
     Object onNull(Node* node)
     {
         Object result;
-        result.stringValue = "null:";
+        result.stringValue = "!null!";
         return result;
     }
 
