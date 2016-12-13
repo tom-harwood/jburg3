@@ -1,0 +1,29 @@
+<!-- Test error and null pointer productions in C++ generated code. -->
+<Grammar nodeClass="Node" reducerClass="Calculator" language="c++" generatedNonterminals="gensrc/CppErrorTolerantNonterminal.h">
+
+    <Semantics>
+        <Nonterminal nonterminal="String" class="ReducerResult"/>
+        <Nonterminal nonterminal="Error" class="ReducerResult"/>
+        <Nonterminal nonterminal="Null" class="ReducerResult"/>
+    </Semantics>
+
+    <Error nonterminal="Error">
+        <errorHandler name="onError"/>
+    </Error>
+
+    <NullNode nonterminal="Null">
+        <nullHandler name="onNull"/>
+    </NullNode>
+
+    <Pattern nonterminal="String" nodeType="Concat">
+        <child nonterminal="String"/>
+        <child nonterminal="String"/>
+        <postCallback name="concatFixed"/>
+    </Pattern>
+
+    <Pattern nonterminal="String" nodeType="StringLiteral">
+        <postCallback name="stringLiteral"/>
+    </Pattern>
+
+    <Closure nonterminal="String" sourceNonterminal="Error"/>
+</Grammar>

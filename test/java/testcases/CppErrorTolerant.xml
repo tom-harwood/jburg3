@@ -1,0 +1,9 @@
+<Test>
+
+    <Testcase name="1-foo" type="String" expected="error:">
+        <Node op="Subtract">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="StringLiteral" content="foo"/>
+        </Node>
+    </Testcase>
+</Test>

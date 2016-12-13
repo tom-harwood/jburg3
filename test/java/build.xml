@@ -24,6 +24,7 @@
         <property name="cppclassname" value="CppTestReducer"/>
         <property name="cppmain" value="src/cpp/Main.cpp"/>
         <property name="cpp.compiler" value="c++"/>
+        <property name="cpp.testcase" value="testcases/CppFirst.xml"/>
 
     </target>
 
@@ -97,6 +98,10 @@ allTests - run java tests
             <param name="testcase.xml" value="testcases/ErrorTolerant.xml"/>
         </antcall>
         <antcall target="cppGen"/>
+        <antcall target="cppGen">
+            <param name="cppgrammar.xml" value="grammars/CppErrorTolerant.xml"/>
+            <param name="cpp.testcase" value="testcases/CppErrorTolerant.xml"/>
+        </antcall>
     </target>
 
     <target name="calculator">
@@ -334,7 +339,7 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating CppReducer.xml from ${cppgrammar.xml}</echo>
+        <echo>Generating ${cppclassname}.xml from ${cppgrammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
             <arg value="${cppgrammar.xml}"/>
@@ -351,7 +356,7 @@ allTests - run java tests
             <arg value="-templateGroup"/>
             <arg value="xml.stg"/>
             <arg value="-output"/>
-            <arg value="${gensrc.dir}/CppReducer.xml"/>
+            <arg value="${gensrc.dir}/${cppclassname}.xml"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>
@@ -404,8 +409,9 @@ allTests - run java tests
                 <arg value="gensrc/${cppclassname}"/>
             </exec>
             <!-- vmlauncher="false" so the exec finds the right relative path -->
+            <echo message="Executing gensrc/${cppclassname} ${cpp.testcase}"/>
             <exec executable="gensrc/${cppclassname}" vmlauncher="false" failonerror="true">
-                <arg value="testcases/cppFirst.xml"/>
+                <arg value="${cpp.testcase}"/>
             </exec>
         </sequential>
     </target>
