@@ -43,6 +43,12 @@ classDef(table, includes, uniqueStates) ::= <<
 #include <stdexcept>
 %includes;format="include"%
 
+namespace jburg {
+    int getStateNumber(%nodeClass()%* node) {
+        return node? node->getStateNumber():1;
+    }
+}
+
 void %className()%::label(%visitorClass()%& visitor, %nodeClass()%* node)
 {
     if (node) {
@@ -174,10 +180,11 @@ if (goalState == %nonterminalClass()%::%nt%) {
     %reduction(s.patterns.(nt))%
     return result;
 %elseif (s.closures.(nt))%
-    %resultType()% result = reduce(reducer, visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
+    %resultType()% result = reduce(visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
     %if(s.closures.(nt).postCallback)%
     result = visitor.%s.closures.(nt).postCallback;format="closurePostCallback"%;
     %endif%
+    return result;
 %endif%}
 >>
 
@@ -258,11 +265,11 @@ result=visitor.%pattern.postCallback;format="postCallback"%;
 
 transitionTable(t) ::= <<
 %if(t.nextDimension.empty)%
-switch(node->getSubtree(%t.dimension%)->getStateNumber()) {
+switch(jburg::getStateNumber(node->getSubtree(%t.dimension%))) {
 %t.finalDimIndexMap:transitionTableLeaf();separator="break;\n"%
 }
 %else%
-switch(node->getSubtree(%t.dimension%)->getStateNumber()) {
+switch(jburg::getStateNumber(node->getSubtree(%t.dimension%))) {
 %t.nextDimIndexMap:{ s | case %s%:
     %transitionTable(t.nextDimensionByIndex.(s))%};separator="break;\n"%
 }
