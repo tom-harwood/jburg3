@@ -293,7 +293,12 @@ class DumpAnalyzer extends JPanel
 
                             try {
                                 area.setText(debugger.getStateInformation(stateNumber));
-                                area.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+                                area.setBorder(
+                                    BorderFactory.createCompoundBorder(
+                                        BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
+                                        BorderFactory.createEmptyBorder(0,2,0,4)
+                                    )
+                                );
                                 popupFrame.add(area);
                                 popupFrame.pack();
                                 popupFrame.setVisible(true);

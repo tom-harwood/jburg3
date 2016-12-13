@@ -310,9 +310,15 @@ public class Debugger implements Console.AbstractExecutive
         if (!cachedStateInfo.containsKey(stateNumber)) {
             StringBuilder result = new StringBuilder();
 
+            boolean isFirstTime = true;
             for (PrintState.Finding finding: PrintState.analyzeState(burmDump, stateNumber)) {
+
+                if (isFirstTime) {
+                    isFirstTime = false;
+                } else {
+                    result.append("\n");
+                }
                 result.append(finding.toString());
-                result.append("\n");
             }
             cachedStateInfo.put(stateNumber, result.toString());
         }
