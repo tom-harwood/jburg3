@@ -93,6 +93,7 @@ test - call the test/MAT directory's build.xml
 
     <target name="debugger" depends="jar">
         <java classname="jburg.debugger.Debugger" fork="true">
+            <arg value="-burm"/>
             <arg value="test/java/burmdump/dumpTest.xml"/>
             <classpath>
                 <pathelement path="${lib.dir}/${jar.file}"/>

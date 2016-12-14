@@ -52,28 +52,50 @@ public class Debugger implements Console.AbstractExecutive
 
     Debugger(String[] args)
     {
+        console = new Console(this);
         properties = new Properties();
 
         try {
             properties.load(new FileInputStream(propertiesFileName));
         } catch (Exception cannotLoad) {
-            // Ignore.
+            console.getAbstractConsole().exception("loading properties ", cannotLoad);
         }
 
-        console = new Console(this);
         console.extractHistory(properties);
 
-        if (args.length > 0) {
+        StringBuilder aPrioriCommand = null;
+
+        for (int i = 0; i < args.length; i++) {
+
+            if (args[i].equalsIgnoreCase("-burm") && i+1 < args.length) {
+                burmDumpFilename = args[++i];
+            } else if ((args[i].equalsIgnoreCase("-command") || args[i].equalsIgnoreCase("-cmd") || args[i].equals("-c")) && i+1 < args.length) {
+                aPrioriCommand = new StringBuilder();
+
+                for (i = i+1;i < args.length; i++) {
+                    aPrioriCommand.append(" ");
+                    aPrioriCommand.append(args[i]);
+                }
+
+            } else {
+                println("Unrecognized command " + args[i]);
+            }
+        }
+
+        if (burmDumpFilename != null) {
 
             try {
-                burmDumpFilename = args[0];
                 load();
             } catch (Exception loadError) {
-                console.getAbstractConsole().status(String.format("Problem loading %s: %s", burmDumpFilename, loadError));
+                console.getAbstractConsole().exception(String.format("loading %s", burmDumpFilename), loadError);
             }
         }
 
         console.display(debuggerConsoleName);
+
+        if (aPrioriCommand != null) {
+            executeCommand(aPrioriCommand.toString());
+        }
     }
 
     private void load()
@@ -96,6 +118,9 @@ public class Debugger implements Console.AbstractExecutive
 
         DocumentBuilder db = dbf.newDocumentBuilder();
 
+        // Get diagnostics via thrown exceptions.
+        // TODO: Configure this better so the more
+        // informative parser diagnostics show up.
         db.setErrorHandler(new NilErrorHandler());
         return db.parse(is);
     }
@@ -117,7 +142,7 @@ public class Debugger implements Console.AbstractExecutive
                     switch (ctype) {
 
                         case Analyze:
-                            analyze(command.substring(tokens[0].length()));
+                            analyze(allTextAfter(command, tokens[0]));
                             break;
 
                         case Clear:
@@ -236,7 +261,7 @@ public class Debugger implements Console.AbstractExecutive
 
     private String[] tokenize(String tokenSource)
     {
-        return tokenSource.split("\\s+");
+        return tokenSource.trim().split("\\s+");
     }
 
     private void set(String propertyName, String propertyValue)
@@ -250,7 +275,7 @@ public class Debugger implements Console.AbstractExecutive
 
     private String allTextAfter(String command, String lastTokenUsed)
     {
-        return command.substring(command.indexOf(lastTokenUsed) + lastTokenUsed.length());
+        return command.substring(command.indexOf(lastTokenUsed) + lastTokenUsed.length()).trim();
     }
 
     private Exception mostRecentException = null;
@@ -258,7 +283,11 @@ public class Debugger implements Console.AbstractExecutive
     private void analyze(String xml)
     throws Exception
     {
-        analyze(xml,xml);
+        if (xml.startsWith("<")) {
+            analyze(xml,xml);
+        } else {
+            execute(xml);
+        }
     }
 
     private void analyze(String title, String xml)

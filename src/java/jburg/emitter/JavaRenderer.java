@@ -86,6 +86,16 @@ public class JavaRenderer implements AttributeRenderer
         } else if ("version".equals(formatString)) {
             return jburg.version.JBurgVersion.version;
 
+        } else if ("parameterType".equals(formatString)) {
+
+            // TODO: give all parameter types an abstract wrapper
+            // so they have a uniform API.
+            if (o instanceof Class<?>) {
+                return ((Class<?>)o).getName();
+            } else {
+                return o.toString();
+            }
+
         } else if ("grammar.name".equals(formatString)) {
             return (attributes.containsKey(formatString))?
                 " from " + attributes.get(formatString)

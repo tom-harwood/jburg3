@@ -96,7 +96,7 @@ public class CppRenderer implements AttributeRenderer
 
         } else if ("interfacePreCallback".equals(formatString)) {
             HostRoutine<String> routine = (HostRoutine<String>)o;
-            return "preCallback...";
+            return String.format("%s(%s,%s)", routine.getName(), attributes.get("nodeType.class"), routine.getParameterTypes()[0]); 
 
         } else if ("interfacePostCallback".equals(formatString)) {
             HostRoutine<String> routine = (HostRoutine<String>)o;

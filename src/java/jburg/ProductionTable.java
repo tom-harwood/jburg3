@@ -843,7 +843,7 @@ public class ProductionTable<Nonterminal, NodeType>
                     stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes));
 
                 } else if ("xml.stg".equals(templateGroup)) {
-                    // No rendering required
+                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
 
                 } else {
                     throw new IllegalArgumentException(String.format("Unknown emitter \"%s\"", templateGroup));

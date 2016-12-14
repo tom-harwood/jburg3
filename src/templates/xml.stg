@@ -67,7 +67,7 @@ method(m) ::= <<
 <method name="%m.name%" class="%m.declaringClass.name%">
     %if(m.parameterTypes)%
     <parameterTypes>
-        %m.parameterTypes: { t | <parameter type="%t.name%"/> };separator="\n"%
+        %m.parameterTypes: { t | <parameter type="%t;format="parameterType"%"/> };separator="\n"%
     </parameterTypes>
     %endif%
 </method>

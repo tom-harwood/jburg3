@@ -54,10 +54,18 @@ public class PrintState
         for (Node node: findNodes(doc, String.format("//state[@number=%s]", stateNum))) {
 
             for (Node pattern: findNodes(node, ".//pattern")) {
-                    Finding finding = new PatternFinding(pattern);
+                Finding finding = new PatternFinding(pattern);
 
                 if (!uniqueFindings.contains(finding)) {
                     uniqueFindings.add(finding);
+
+                    for (Node preCallback: findNodes(pattern, "./preCallback/method")) {
+                        uniqueFindings.add(new PreCallbackFinding(preCallback));
+                    }
+
+                    for (Node postCallback: findNodes(pattern, "./postCallback/method")) {
+                        uniqueFindings.add(new PostCallbackFinding(postCallback));
+                    }
                 }
             }
 
@@ -211,5 +219,66 @@ public class PrintState
                 return false;
             }
         }
+    }
+
+    static class CallbackFinding extends Finding
+    {
+        final String        methodName;
+        final List<String>  parameterTypes;
+
+        CallbackFinding (Node method)
+        {
+            methodName = getNamedAttribute(method, "name");
+            parameterTypes = new ArrayList<String>();
+
+            try {
+                for (Node parameter: findNodes(method, ".//parameter")) {
+                    parameterTypes.add(getNamedAttribute(parameter,"type"));
+                }
+            } catch (Exception ex) {
+                parameterTypes.add(String.format("Problem getting parameter types: %s", ex));
+            }
+        }
+
+        public String getNonterminal() { return "-callback-"; }
+        public String getSourceNonterminal()   { return null; }
+        public boolean hasSourceNonterminal() { return false; }
+
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder(methodName);
+            builder.append("(");
+
+            for (int i = 0; i < parameterTypes.size(); i++) {
+                if (i > 0) {
+                    builder.append(",");
+                }
+                builder.append(parameterTypes.get(i));
+            }
+
+            builder.append(")");
+            return builder.toString();
+        }
+    }
+
+    static class PreCallbackFinding extends CallbackFinding
+    {
+        PreCallbackFinding(Node method)
+        {
+            super(method);
+        }
+
+        public String toString() { return String.format("    precallback: %s", super.toString()); }
+    }
+
+    static class PostCallbackFinding extends CallbackFinding
+    {
+
+        PostCallbackFinding(Node method)
+        {
+            super(method);
+        }
+
+        public String toString() { return String.format("    postcallback: %s", super.toString()); }
     }
 }
