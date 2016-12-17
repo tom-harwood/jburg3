@@ -52,6 +52,7 @@ public class Console extends JPanel
         });
 
         JList<String> outputList = new JList<String>(output);
+        outputList.setCellRenderer(new ConsoleHistoryRenderer());
         final JScrollPane outputPane = new JScrollPane(outputList);
         outputPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
@@ -60,7 +61,7 @@ public class Console extends JPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String currentCommand = commandLine.getText();
-                output.addElement(currentCommand);
+                output.addElement("<b>" + currentCommand);
 
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
@@ -302,4 +303,26 @@ public class Console extends JPanel
     {
         hgrep(".*");
     }
+
+    class ConsoleHistoryRenderer extends JLabel implements ListCellRenderer<String> {
+
+     // This is the only method defined by ListCellRenderer.
+     // We just reconfigure the JLabel each time we're called.
+
+     public Component getListCellRendererComponent( JList<? extends String> list, String s, int index, boolean isSelected, boolean cellHasFocus)
+     {
+         setEnabled(list.isEnabled());
+         if (s.startsWith("<i>")) {
+             setText(s.substring(3));
+             setFont(list.getFont().deriveFont(Font.ITALIC));
+         } else if (s.startsWith("<b>")) {
+             setText(s.substring(3));
+             setFont(list.getFont().deriveFont(Font.BOLD));
+         } else {
+             setText(s);
+             setFont(list.getFont());
+         }
+         return this;
+     }
+ }
 }
