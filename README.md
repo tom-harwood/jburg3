@@ -10,9 +10,7 @@ JBurg3 shares most of these capabilities with JBurg2, which uses an ["iburg"](ht
 JBurg3 differs from most other BURGs in that it does not have a specification language; the benefits of a bespoke language have, in many deployment scenarios, been outweighed by the overhead of educating developers in the tool and integrating the tool into build processes.
 
 Work outstanding before beta:
-* A better toy compiler; I'm considering a "4GL" with embedded SQL, since SQL `SELECT` statements are among the gnarlier things one's called upon to translate.
 * A good deal more documentation, in particular presentations of the reasoning behind variadic productions and nonterminal-to-nonterminal productions with logic.
-* A great deal more testing!
 
 The author also wishes to thank former and present employers who have supported the JBurg project:
 
