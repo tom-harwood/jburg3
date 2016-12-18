@@ -127,7 +127,7 @@ class DumpAnalyzer extends JPanel
         }
     }
 
-    class AdapterNode 
+    class AdapterNode
     {
         private final Node              domNode;
         private final String            text;
@@ -275,46 +275,20 @@ class DumpAnalyzer extends JPanel
         {
             this.tree = tree;
             treePopup = new JPopupMenu();
-
-            ActionListener menuListener = new ActionListener() {
-              public void actionPerformed(ActionEvent event) {
-                String command = event.getActionCommand();
-
-                if (command.equals(PRINT_STATE)) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            AdapterNode node = (AdapterNode)TreePopupListener.this.tree.getLeadSelectionPath().getLastPathComponent();
-                            String stateNumber = String.valueOf(node.stateNumber);
-                            JFrame popupFrame = new JFrame("State " + stateNumber);
-                            debugger.console.prepareFrame(popupFrame);
-                            JTextArea area = new JTextArea();
-                            area.setEditable(false);
-                            area.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-
-                            try {
-                                area.setText(debugger.getStateInformation(stateNumber));
-                                area.setBorder(
-                                    BorderFactory.createCompoundBorder(
-                                        BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
-                                        BorderFactory.createEmptyBorder(0,2,0,4)
-                                    )
-                                );
-                                popupFrame.add(area);
-                                popupFrame.pack();
-                                popupFrame.setVisible(true);
-                            } catch (Exception ex) {
-                                debugger.exception(ex, "Generating state description");
-                            }
-                        }
-                    });
-
-                }
-              }
-            };
-
             JMenuItem item = new JMenuItem(PRINT_STATE);
             treePopup.add(item);
-            item.addActionListener(menuListener);
+            item.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        String command = event.getActionCommand();
+
+                        if (command.equals(PRINT_STATE)) {
+                            AdapterNode node = (AdapterNode)tree.getLeadSelectionPath().getLastPathComponent();
+                            new PrintStateThread(node).start();
+                        }
+                    }
+                }
+            );
         }
 
         @Override
@@ -332,5 +306,65 @@ class DumpAnalyzer extends JPanel
         public void mouseExited(MouseEvent e) { /* Ignore. */  }
         public void mousePressed(MouseEvent e) { /* Ignore. */  }
         public void mouseReleased(MouseEvent e) { /* Ignore. */  }
+    }
+
+    class PrintStateThread extends Thread
+    {
+        final JTextArea area = new JTextArea();
+        final JFrame popupFrame;
+
+        Runnable runner;
+
+        PrintStateThread(final AdapterNode node)
+        {
+            final String stateNumber = String.valueOf(node.stateNumber);
+            this.popupFrame = new JFrame("State " + stateNumber);
+
+            this.runner = new Runnable() {
+                public void run() {
+                    debugger.console.prepareFrame(popupFrame);
+                    area.setEditable(false);
+                    area.setBorder(
+                        BorderFactory.createCompoundBorder(
+                            BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
+                            BorderFactory.createEmptyBorder(0,2,0,4)
+                        )
+                    );
+                    area.setText("working...");
+                    popupFrame.add(area);
+                    popupFrame.pack();
+                    popupFrame.setVisible(true);
+
+                    String stateInfo;
+
+                    try {
+                        SwingUtilities.invokeLater(new AreaUpdater(debugger.getStateInformation(stateNumber)));
+                    } catch (Exception ex) {
+                        SwingUtilities.invokeLater(new AreaUpdater(String.format("Problem generating state description: %s", ex)));
+                    }
+                }
+            };
+        }
+
+        public void run()
+        {
+            runner.run();
+        }
+
+        class AreaUpdater implements Runnable
+        {
+            final String text;
+
+            AreaUpdater(final String text)
+            {
+                this.text = text;
+            }
+
+            public void run()
+            {
+                area.setText(text);
+                popupFrame.pack();
+            }
+        }
     }
 }

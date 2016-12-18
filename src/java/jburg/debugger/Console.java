@@ -19,11 +19,36 @@ import javax.swing.GroupLayout.*;
 
 public class Console extends JPanel
 {
-    final JTextField                commandLine = new JTextField();
-    final DefaultListModel<String>  output = new DefaultListModel<String>();
-    final List<String>              history = new ArrayList<String>();
-    int                             historyPos = -1;
-    boolean                         applicationShutdownCommanded = false;
+    /** An editable command line. */
+    final JTextField commandLine = new JTextField();
+
+    /** The contents of the history pane; they extend the history with a font. */
+    final DefaultListModel<ConsoleHistoryElement>  output = new DefaultListModel<ConsoleHistoryElement>();
+
+    /** The list displaying the contents of the history pane. */
+    final JList<ConsoleHistoryElement> outputList;
+
+    /** The history pane itself. */
+    final JScrollPane outputPane;
+
+    /** The default font used for debugger output. */
+    final Font normalFont;
+    /** The italic version of the default font. */
+    final Font italicFont;
+    /** The bold version of the default font. */
+    final Font boldFont;
+
+    /** The contents of command history; saved and restored via properties. */
+    final List<String> history = new ArrayList<String>();
+
+    /** Current position scrolling through the history list. */
+    int historyPos = -1;
+
+    /** Set true when an application shutdown is in progress;
+     *  avoids recursive attempts to shutdown the application
+     *  as this Console's window closes.
+     */
+    boolean applicationShutdownCommanded = false;
 
     final AbstractExecutive         executive;
 
@@ -51,33 +76,25 @@ public class Console extends JPanel
             }
         });
 
-        JList<String> outputList = new JList<String>(output);
+        this.outputList = new JList<ConsoleHistoryElement>(output);
         outputList.setCellRenderer(new ConsoleHistoryRenderer());
-        final JScrollPane outputPane = new JScrollPane(outputList);
+        this.normalFont = outputList.getFont();
+        this.italicFont = normalFont.deriveFont(Font.ITALIC);
+        this.boldFont = normalFont.deriveFont(Font.BOLD);
+
+        this.outputPane = new JScrollPane(outputList);
         outputPane.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
         commandLine.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                final String currentCommand = commandLine.getText();
-                output.addElement("<b>" + currentCommand);
-
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        executive.executeCommand(currentCommand);
-                    }
-                });
-
-                history.add(0, commandLine.getText());
+                final String command = commandLine.getText();
+                addOutput(command, boldFont);
+                new CommandExecutor(command).start();
+                history.add(0, command);
                 historyPos = -1;
                 commandLine.setText("");
-
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        outputPane.getVerticalScrollBar().setValue(outputPane.getVerticalScrollBar().getMaximum());
-                    }
-                });
             }
         });
 
@@ -97,6 +114,16 @@ public class Console extends JPanel
         );
 
         setLayout(layout);
+    }
+
+    void addOutput(String content, Font font)
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                output.addElement(new ConsoleHistoryElement(content, font));
+                outputList.ensureIndexIsVisible(output.getSize());
+            }
+        });
     }
 
     void extractHistory(Properties properties)
@@ -146,45 +173,22 @@ public class Console extends JPanel
 
     class GuiConsole extends AbstractConsole
     {
-        StringBuilder pendingOutput = null;
-
         @Override
-        public synchronized void print(String s)
+        public void println(String s)
         {
-            if (this.pendingOutput == null) {
-                this.pendingOutput = new StringBuilder();
-            }
-            this.pendingOutput.append(s);
-
-            if (s.endsWith("\n")) {
-                println("");
-            }
-        }
-
-        @Override
-        public synchronized void println(String s)
-        {
-            if (this.pendingOutput == null) {
-                output.addElement(s);
-            } else {
-                output.addElement(this.pendingOutput.toString() + s);
-                this.pendingOutput = null;
-            }
+            addOutput(s, normalFont);
         }
 
         @Override
         public void exception(String operation, Exception ex) {
 
-            if (ex.getMessage() != null) {
-                status("%s", ex.getMessage());
-            } else {
-                status("%s", ex.toString());
-            }
+            String diagnostic = ex.getMessage() != null?  ex.getMessage(): ex.toString();
+            addOutput(diagnostic, italicFont);
         }
 
         @Override
         public void status(String format, Object... args) {
-            println(String.format(format, args));
+            addOutput(String.format(format, args), italicFont);
         }
     }
 
@@ -292,7 +296,7 @@ public class Console extends JPanel
             if (s.matches(pattern)) {
 
                 if (!s.equals(lastHistory)) {
-                    output.addElement(s);
+                    addOutput(s, normalFont);
                     lastHistory = s;
                 }
             }
@@ -304,25 +308,37 @@ public class Console extends JPanel
         hgrep(".*");
     }
 
-    class ConsoleHistoryRenderer extends JLabel implements ListCellRenderer<String> {
+    class ConsoleHistoryElement
+    {
+        String  content;
+        Font    font;
+        ConsoleHistoryElement(String content, Font font)
+        {
+            this.content = content;
+            this.font = font;
+        }
+    }
 
-     // This is the only method defined by ListCellRenderer.
-     // We just reconfigure the JLabel each time we're called.
+    class ConsoleHistoryRenderer extends JLabel implements ListCellRenderer<ConsoleHistoryElement>
+    {
+        public Component getListCellRendererComponent( JList<? extends ConsoleHistoryElement> list, ConsoleHistoryElement element, int index, boolean isSelected, boolean cellHasFocus)
+        {
+            setEnabled(list.isEnabled());
+            setText(element.content);
+            setFont(element.font);
+            return this;
+        }
+    }
 
-     public Component getListCellRendererComponent( JList<? extends String> list, String s, int index, boolean isSelected, boolean cellHasFocus)
-     {
-         setEnabled(list.isEnabled());
-         if (s.startsWith("<i>")) {
-             setText(s.substring(3));
-             setFont(list.getFont().deriveFont(Font.ITALIC));
-         } else if (s.startsWith("<b>")) {
-             setText(s.substring(3));
-             setFont(list.getFont().deriveFont(Font.BOLD));
-         } else {
-             setText(s);
-             setFont(list.getFont());
-         }
-         return this;
-     }
- }
+    class CommandExecutor extends Thread
+    {
+        CommandExecutor(final String command)
+        {
+            super(new Runnable() {
+                public void run() {
+                    executive.executeCommand(command);
+                }
+            });
+        }
+    }
 }
