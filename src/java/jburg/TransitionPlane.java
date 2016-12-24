@@ -195,6 +195,18 @@ public class TransitionPlane<Nonterminal, NodeType>
         return nextDimensionByIndex;
     }
 
+    /** Finish compilation of this planes's next and/or final dimension(s). */
+    void finishCompilation()
+    {
+        for (TransitionPlane<Nonterminal, NodeType> child: nextDimension) {
+            child.finishCompilation();
+        }
+
+        for (TransitionTableLeaf<Nonterminal, NodeType> child: finalDimension) {
+            child.finishCompilation();
+        }
+    }
+
     /**
      * Find all states mapped to a child hyperplane.
      * @param idx   the index of the child of interest.

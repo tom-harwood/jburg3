@@ -74,6 +74,25 @@ public class State<Nonterminal, NodeType>
     public List<HostRoutine> getPredicates() { return predicates; }
 
     /**
+     * Closure chains' pre-reduction callback actions.
+     * Denormalized for the string templates' use.
+     */
+    public final Map<Nonterminal,List<Production<Nonterminal>>> closurePreProductions = new HashMap<Nonterminal,List<Production<Nonterminal>>>();
+
+    /**
+     * Closure chains' post-reduction callback actions.
+     * Denormalized for the string templates' use.
+     */
+    public final Map<Nonterminal,List<Production<Nonterminal>>> closurePostProductions = new HashMap<Nonterminal,List<Production<Nonterminal>>>();
+
+    /**
+     * The nonterminals that start closure chains.
+     * Denormalized for the string templates' use.
+     */
+    public final Map<Nonterminal,Nonterminal> closurePatternPrecursor = new HashMap<Nonterminal,Nonterminal>();
+    boolean isFinished;
+
+    /**
      * Construct a state that characterizes non-null nodes.
      * @param nodeType the node type of the nodes.
      */
@@ -133,6 +152,7 @@ public class State<Nonterminal, NodeType>
     {
         assert cost < getCost(p.target);
         assert !(p instanceof Closure): "use addClosure to add closures";
+
         patternCosts.put(p.target, cost);
         nonClosureProductions.put(p.target, p);
 
@@ -140,6 +160,26 @@ public class State<Nonterminal, NodeType>
             arityKind = p.isVarArgs? ArityKind.Variadic:ArityKind.Fixed;
         } else if (isVarArgs() != p.isVarArgs) {
             throw new UnsupportedOperationException("Cannot mix variadic and fixed-arity productions");
+        }
+    }
+
+    /**
+     * Finish compilation of a state; create denormalized lists of pre and post productions
+     * for the string template's use as it creates closure chains.
+     */
+    void finishCompilation()
+    {
+        if (!this.isFinished) {
+
+            for (Nonterminal nt: getNonterminals()) {
+                closurePreProductions.put(nt, getProductionsFor(nt, ClosureProductionsType.PreCallback));
+                List<Production<Nonterminal>> postProductionsForNt = getProductionsFor(nt, ClosureProductionsType.PostCallback);
+                Collections.reverse(postProductionsForNt);
+                closurePostProductions.put(nt, postProductionsForNt);
+                setClosurePrecursor(nt);
+            }
+
+            this.isFinished = true;
         }
     }
 
@@ -214,6 +254,52 @@ public class State<Nonterminal, NodeType>
             return closures.get(goal);
         } else {
             throw new IllegalArgumentException(String.format("%s not produced by %s", goal, this));
+        }
+    }
+
+    enum ClosureProductionsType { PreCallback, PostCallback };
+
+    /**
+     * Get all the productions this State uses
+     * to transform an intput to a given nonterminal goal.
+     * @param nt    the nonterminal.
+     * @return a list of the productions to run.
+     */
+    List<Production<Nonterminal>> getProductionsFor(Nonterminal goal, ClosureProductionsType type)
+    {
+        List<Production<Nonterminal>> result = new ArrayList<Production<Nonterminal>>();
+
+        while (!nonClosureProductions.containsKey(goal)) {
+            assert(closures.containsKey(goal));
+            Closure<Nonterminal> c = closures.get(goal);
+
+            if (type == ClosureProductionsType.PreCallback &&  c.getPreCallback() != null) {
+                result.add(c);
+            } else if (type == ClosureProductionsType.PostCallback &&  c.getPostCallback() != null) {
+                result.add(c);
+            }
+            goal = c.getSource();
+        }
+
+        return result;
+    }
+
+    /**
+     * Cache the nonterminal that starts a closure chain;
+     * this is the nonterminal that the reducer first reduces
+     * via a pattern matching production.
+     */
+    private void setClosurePrecursor(Nonterminal goal)
+    {
+        if (!nonClosureProductions.containsKey(goal)) {
+            Nonterminal precursor = goal;
+
+            while (!nonClosureProductions.containsKey(precursor) && closures.containsKey(precursor)) {
+                precursor = closures.get(precursor).getSource();
+            }
+
+            assert nonClosureProductions.containsKey(precursor);
+            closurePatternPrecursor.put(goal, precursor);
         }
     }
 
@@ -330,6 +416,10 @@ public class State<Nonterminal, NodeType>
     public String toString()
     {
         StringBuilder buffer = new StringBuilder(String.format("State %d %s", this.number, this.nodeType));
+
+        if (!this.isFinished) {
+            buffer.append(" !unfinished!");
+        }
 
         if (nonClosureProductions.size() > 0) {
             buffer.append("[");

@@ -145,6 +145,10 @@ public class TestRunner
                             System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
                         }
                     } else {
+                        if (verbose) {
+                            ex.printStackTrace();
+                        }
+
                         failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
                     }
                 } catch (Exception ex) {

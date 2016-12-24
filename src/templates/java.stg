@@ -140,7 +140,9 @@ static TransitionEntry %s:leafStateName()% = new TransitionEntry()
         Object result = null;
 
         switch(goalState) {
-        %s.statesByMethod:{ m | %s.statesByMethod.(m):reducer();separator="\n"%}%
+            %s.statesByMethod:{ m | %s.statesByMethod.(m):reducer();separator="\n"%}%
+            default:
+                result = errorHandler.reduce(visitor, node, goalState);
         }
 
         return result;
@@ -201,13 +203,10 @@ case %nt%: {
 %if(s.patterns.(nt))%
     %reduction(s.patterns.(nt))%
 %elseif (s.closures.(nt))%
-    result = reducer.reduce(visitor, node, %nonterminalClass()%.%s.closures.(nt).source%);
-    %if(s.closures.(nt).postCallback)%
-    result = visitor.%s.closures.(nt).postCallback;format="closurePostCallback"%;
-    %endif%
-%else%
+    %s.closurePreProductions.(nt): { production | %production.preCallback% };separator="\n * "%
+    result = reducer.reduce(visitor, node, %nonterminalClass()%.%s.closurePatternPrecursor.(nt)%);
+    %s.closurePostProductions.(nt): { production | result = visitor.%production;format="postCallback"% };separator="\n"%
 %endif%
-
     break;
 }
 >>
@@ -217,14 +216,16 @@ reduction(pattern) ::= <<
 visitor.%pattern.preCallback.name%(node, goalState);
 %endif%
 %pattern.nonVariadicChildDescriptors: { c | Object result%c.position% = reducer.reduce(visitor, node.getSubtree(%c.position%), %nonterminalClass()%.%c.nonterminal%);};separator="\n"%
-%if(pattern.postCallback)%
 %if(pattern.isVarArgs)%
 %pattern.postCallback;format="postCallback.variadicType"%[] variadicActuals = new %pattern.postCallback;format="postCallback.variadicType"%[node.getSubtreeCount() - %pattern.postCallback;format="postCallback.variadicOffset"%];
 for (int i = 0; i < node.getSubtreeCount() - %pattern.postCallback;format="postCallback.variadicOffset"%; i++) {
     variadicActuals[i] = (%pattern.postCallback;format="postCallback.variadicType"%)reducer.reduce(visitor, node.getSubtree(i + %pattern.postCallback;format="postCallback.variadicOffset"%), %nonterminalClass()%.%pattern.variadicNonterminal%);
 }
 %endif%
+%if(pattern.postCallback)%
 result=visitor.%pattern.postCallback;format="postCallback"%;
+%else%
+// No post callback...
 %endif%
 >>
 

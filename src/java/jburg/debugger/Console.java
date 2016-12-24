@@ -116,7 +116,7 @@ public class Console extends JPanel
         setLayout(layout);
     }
 
-    void addOutput(String content, Font font)
+    synchronized void addOutput(String content, Font font)
     {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {

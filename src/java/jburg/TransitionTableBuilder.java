@@ -43,7 +43,9 @@ class TransitionTableBuilder<Nonterminal, NodeType>
 
     TransitionPlane<Nonterminal, NodeType> buildTransitionTable()
     {
-        return buildTransitionPlane(transitions, 0);
+        TransitionPlane<Nonterminal, NodeType> result = buildTransitionPlane(transitions, 0);
+        result.finishCompilation();
+        return result;
     }
 
     TransitionPlane<Nonterminal, NodeType> buildTransitionPlane(TransitionMap transitions, int dim)

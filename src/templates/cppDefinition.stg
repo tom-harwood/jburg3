@@ -235,10 +235,9 @@ case %nonterminalClass()%::%nt%: {
 %if(s.patterns.(nt))%
     %reduction(s.patterns.(nt))%
 %elseif (s.closures.(nt))%
-    result = reduce(reducer, visitor, node, %nonterminalClass()%::%s.closures.(nt).source%);
-    %if(s.closures.(nt).postCallback)%
-    result = visitor.%s.closures.(nt).postCallback;format="closurePostCallback"%;
-    %endif%
+    %s.closurePreProductions.(nt): { production | %production.preCallback% };separator="\n * "%
+    result = reducer.reduce(visitor, node, %nonterminalClass()%::%s.closurePatternPrecursor.(nt)%);
+    %s.closurePostProductions.(nt): { production | result = visitor.%production;format="postCallback"% };separator="\n"%
 %else%
 %endif%
     break;

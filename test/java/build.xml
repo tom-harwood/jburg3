@@ -69,21 +69,21 @@ allTests - run java tests
 
     <target name="allTests" depends="init">
         <antcall target="calculator">
-            <param name="calculator.xml" value="testcases/FirstTest.xml"/>
+            <param name="testcase.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="calculator">
-            <param name="calculator.xml" value="testcases/VariadicPatterns.xml"/>
+            <param name="testcase.xml" value="testcases/VariadicPatterns.xml"/>
         </antcall>
         <antcall target="calculator">
             <param name="grammar.xml" value="grammars/PreCallback.xml"/>
-            <param name="calculator.xml" value="testcases/PreCallback.xml"/>
+            <param name="testcase.xml" value="testcases/PreCallback.xml"/>
         </antcall>
         <antcall target="calculator">
             <param name="grammar.xml" value="grammars/MultiplePredicates.xml"/>
-            <param name="calculator.xml" value="testcases/MultiplePredicates.xml"/>
+            <param name="testcase.xml" value="testcases/MultiplePredicates.xml"/>
         </antcall>
         <antcall target="dumpLoad">
-            <param name="calculator.xml" value="testcases/FirstTest.xml"/>
+            <param name="testcase.xml" value="testcases/FirstTest.xml"/>
         </antcall>
         <antcall target="javaGen"/>
         <antcall target="javaGen">
@@ -104,13 +104,12 @@ allTests - run java tests
         </antcall>
     </target>
 
-    <target name="calculator">
-        <echo>Testing ${calculator.xml}</echo>
+    <target name="calculator" depends="init">
+        <echo>Testing ${testcase.xml}</echo>
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
-            <!-- The default grammar -->
             <arg value="${grammar.xml}"/>
-            <arg value="${calculator.xml}"/>
+            <arg value="${testcase.xml}"/>
             <classpath>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${jburg.jar}"/>

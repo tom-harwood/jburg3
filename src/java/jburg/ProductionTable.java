@@ -349,7 +349,9 @@ public class ProductionTable<Nonterminal, NodeType>
             }
         }
 
-        // Finish compilation of the operators' transition tables.
+        errorState.finishCompilation();
+
+        // Compile the operators' transition tables.
         for (List<Operator<Nonterminal,NodeType>> opList: operators.values()) {
 
             for (Operator<Nonterminal, NodeType> op: opList) {
@@ -392,6 +394,7 @@ public class ProductionTable<Nonterminal, NodeType>
             }
 
             closure(nullState);
+            nullState.finishCompilation();
             State<Nonterminal, NodeType> canonicalNullState = addState(nullState);
             assert canonicalNullState == nullState;
         }

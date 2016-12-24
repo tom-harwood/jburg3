@@ -115,9 +115,10 @@ public class Operator<Nonterminal, NodeType>
         assert builder != null: String.format("Operator %s has already flushed compiler compile time data");
         if (!builder.isEmpty()) {
             this.transitionTable = builder.buildTransitionTable();
-        }
+        } else if (this.leafState != null) {
+            this.leafState.finishCompilation();
 
-        if (this.transitionTable == null && this.leafState == null) {
+        } else {
             throw new IllegalStateException(String.format("Operator %s is not a leaf or non-leaf -- probably because there is a child nonterminal with no productions.", this));
         }
 

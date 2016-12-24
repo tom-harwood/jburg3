@@ -9,8 +9,10 @@ import jburg.semantics.HostRoutine;
 
 import org.stringtemplate.v4.AttributeRenderer;
 
+import jburg.Closure;
 import jburg.Operator;
 import jburg.PatternMatcher;
+import jburg.Production;
 
 @SuppressWarnings("unchecked")
 public class CppRenderer implements AttributeRenderer
@@ -45,24 +47,36 @@ public class CppRenderer implements AttributeRenderer
             return String.format("%s(node, result)", m.getName());
 
         } else if ("postCallback".equals(formatString)) {
-            HostRoutine<String> m = (HostRoutine<String>)o;
 
-            StringBuilder result = new StringBuilder(m.getName());
-            result.append("(");
-            String[] parameterTypes = m.getParameterTypes();
-            boolean isVariadic = m.isVarArgs();
-            int lastFixedArg = isVariadic? parameterTypes.length - 1: parameterTypes.length;
-            result.append("node");
+            if (o instanceof HostRoutine) {
+                HostRoutine<String> m = (HostRoutine<String>)o;
 
-            for (int i = 1; i < lastFixedArg; i++) {
-                result.append(String.format(", result%d", i-1));
+                StringBuilder result = new StringBuilder(m.getName());
+                result.append("(");
+                String[] parameterTypes = m.getParameterTypes();
+                boolean isVariadic = m.isVarArgs();
+                int lastFixedArg = isVariadic? parameterTypes.length - 1: parameterTypes.length;
+                result.append("node");
+
+                for (int i = 1; i < lastFixedArg; i++) {
+                    result.append(String.format(", result%d", i-1));
+                }
+
+                if (isVariadic) {
+                    result.append(", variadicActuals");
+                }
+                result.append(")");
+                return result.toString();
+
+            } else if (o instanceof PatternMatcher) {
+                return toString(((Production<?>)o).getPostCallback(), "postCallback", locale) + ";";
+
+            } else if (o instanceof Closure) {
+                return toString(((Production<?>)o).getPostCallback(), "closurePostCallback", locale) +  ";";
+
+            } else {
+                throw new IllegalStateException("Unknown type in postCallback conversion:" + o.getClass().toString());
             }
-
-            if (isVariadic) {
-                result.append(", variadicActuals");
-            }
-            result.append(")");
-            return result.toString();
 
         } else if ("postCallback.variadicOffset".equals(formatString)) {
             PatternMatcher patternMatcher = (PatternMatcher)o;

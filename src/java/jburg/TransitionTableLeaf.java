@@ -211,6 +211,14 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
         return states.values();
     }
 
+    /** Finish compilation of this leaf's states. */
+    void finishCompilation()
+    {
+        for (State<Nonterminal, NodeType> state: getStates()) {
+            state.finishCompilation();
+        }
+    }
+
     @Override
     /**
      * The hash of a leaf is the composite hash of its components;
