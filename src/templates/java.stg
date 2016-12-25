@@ -204,7 +204,7 @@ case %nt%: {
     %reduction(s.patterns.(nt))%
 %elseif (s.closures.(nt))%
     %s.closurePreProductions.(nt): { production | %production.preCallback% };separator="\n * "%
-    result = reducer.reduce(visitor, node, %nonterminalClass()%.%s.closurePatternPrecursor.(nt)%);
+    %reduction(s.patterns.(s.closurePatternPrecursor.(nt)))%
     %s.closurePostProductions.(nt): { production | result = visitor.%production;format="postCallback"% };separator="\n"%
 %endif%
     break;
