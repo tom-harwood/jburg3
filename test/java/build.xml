@@ -18,17 +18,24 @@
         <property name="gensrc.dir" value="./gensrc" />
         <property name="junit.log.dir" value="./log" />
         <property name="grammar.xml" value="grammars/PoorlyOverloaded.xml"/>
-        <property name="cppgrammar.xml" value="grammars/CppOverloaded.xml"/>
         <property name="testcase.xml" value="testcases/FirstTest.xml"/>
         <property name="classname" value="Test"/>
         <property name="cppclassname" value="CppTestReducer"/>
         <property name="cppmain" value="src/cpp/Main.cpp"/>
         <property name="cpp.compiler" value="c++"/>
-        <property name="cpp.testcase" value="testcases/CppFirst.xml"/>
+        <property name="cpp.default.grammar" value="grammars/CppOverloaded.xml"/>
+        <property name="cpp.default.testcase" value="testcases/CppFirst.xml"/>
 
     </target>
 
     <target name="cleanBuildAndTest" depends="clean,buildJar,compile,allTests"/>
+
+    <target name="cppGen" depends="init">
+        <antcall target="cppGenerateAndCompile">
+            <param name="grammar.xml" value="${cpp.default.grammar}"/>
+            <param name="testcase.xml" value="${cpp.default.testcase}"/>
+        </antcall>
+    </target>
 
     <target name="clean" depends="init">
         <!-- Remove VIM backup files.  -->
@@ -97,10 +104,13 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/ErrorTolerant.xml"/>
             <param name="testcase.xml" value="testcases/ErrorTolerant.xml"/>
         </antcall>
-        <antcall target="cppGen"/>
-        <antcall target="cppGen">
-            <param name="cppgrammar.xml" value="grammars/CppErrorTolerant.xml"/>
-            <param name="cpp.testcase" value="testcases/CppErrorTolerant.xml"/>
+        <antcall target="cppGenerateAndCompile">
+            <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>
+            <param name="testcase.xml" value="testcases/CppFirst.xml"/>
+        </antcall>
+        <antcall target="cppGenerateAndCompile">
+            <param name="grammar.xml" value="grammars/CppErrorTolerant.xml"/>
+            <param name="testcase.xml" value="testcases/CppErrorTolerant.xml"/>
         </antcall>
     </target>
 
@@ -239,9 +249,9 @@ allTests - run java tests
         </java>
     </target>
 
-    <target name="cppGen" depends="init">
+    <target name="cppGenerateAndCompile" depends="init">
         <mkdir dir="${gensrc.dir}"/>
-        <echo>Generating ${cppclassname}.h from ${cppgrammar.xml}</echo>
+        <echo>Generating ${cppclassname}.h from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <!-- Uncomment and substitute a pattern that matches
                  the operator of interest to trace its generation.
@@ -249,7 +259,7 @@ allTests - run java tests
             <arg value=".*Add.1.*"/>
             -->
             <arg value="-grammar"/>
-            <arg value="${cppgrammar.xml}"/>
+            <arg value="${grammar.xml}"/>
             <arg value="-classname"/>
             <arg value="${cppclassname}"/>
             <arg value="-nodeClass"/>
@@ -276,7 +286,7 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating Nonterminals.h from ${cppgrammar.xml}</echo>
+        <echo>Generating Nonterminals.h from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <!-- Uncomment and substitute a pattern that matches
                  the operator of interest to trace its generation.
@@ -284,7 +294,7 @@ allTests - run java tests
             <arg value=".*Add.1.*"/>
             -->
             <arg value="-grammar"/>
-            <arg value="${cppgrammar.xml}"/>
+            <arg value="${grammar.xml}"/>
             <arg value="-classname"/>
             <arg value="${cppclassname}"/>
             <arg value="-nodeClass"/>
@@ -307,7 +317,7 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating NonterminalLookup.h from ${cppgrammar.xml}</echo>
+        <echo>Generating NonterminalLookup.h from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <!-- Uncomment and substitute a pattern that matches
                  the operator of interest to trace its generation.
@@ -315,7 +325,7 @@ allTests - run java tests
             <arg value=".*Add.1.*"/>
             -->
             <arg value="-grammar"/>
-            <arg value="${cppgrammar.xml}"/>
+            <arg value="${grammar.xml}"/>
             <arg value="-classname"/>
             <arg value="${cppclassname}"/>
             <arg value="-nodeClass"/>
@@ -338,10 +348,10 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating ${cppclassname}.xml from ${cppgrammar.xml}</echo>
+        <echo>Generating ${cppclassname}.xml from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
-            <arg value="${cppgrammar.xml}"/>
+            <arg value="${grammar.xml}"/>
             <arg value="-classname"/>
             <arg value="${cppclassname}"/>
             <arg value="-nodeClass"/>
@@ -364,10 +374,10 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating ${cppclassname}.cpp from ${cppgrammar.xml}</echo>
+        <echo>Generating ${cppclassname}.cpp from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>
-            <arg value="${cppgrammar.xml}"/>
+            <arg value="${grammar.xml}"/>
             <arg value="-templateGroup"/>
             <arg value="cppDefinition.stg"/>
             <arg value="-classname"/>
@@ -408,9 +418,9 @@ allTests - run java tests
                 <arg value="gensrc/${cppclassname}"/>
             </exec>
             <!-- vmlauncher="false" so the exec finds the right relative path -->
-            <echo message="Executing gensrc/${cppclassname} ${cpp.testcase}"/>
+            <echo message="Executing gensrc/${cppclassname} ${testcase.xml}"/>
             <exec executable="gensrc/${cppclassname}" vmlauncher="false" failonerror="true">
-                <arg value="${cpp.testcase}"/>
+                <arg value="${testcase.xml}"/>
             </exec>
         </sequential>
     </target>
