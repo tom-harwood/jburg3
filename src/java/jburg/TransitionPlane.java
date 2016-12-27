@@ -40,6 +40,17 @@ public class TransitionPlane<Nonterminal, NodeType>
     public Map<Integer, Integer> getFinalDimIndexMap() { return finalDimIndexMap; }
 
     /**
+     * Get a de-duplicated list of refererences to this
+     * plane's transition table leaves.
+     * @return a ConsolidatedIndexReference structure
+     * holding the final dimension's leaf references.
+     */
+    public ConsolidatedIndexReference getNormalizedFinalDimension()
+    {
+        return new ConsolidatedIndexReference(finalDimIndexMap);
+    }
+
+    /**
      * The dimension this plane occupies in the transition table;
      * denormalized data for use by emitters.
      */
@@ -244,6 +255,39 @@ public class TransitionPlane<Nonterminal, NodeType>
 
         } else {
             return String.format("TransitionPlane{%s %s}", nextDimension, finalDimension);
+        }
+    }
+
+    /**
+     * FinalDimIndexReference holds a consolidated reference
+     * to a transition table leaf; the leaf reference itself,
+     * and a list of the state numbers that lead to that leaf.
+     */
+    public class FinalDimIndexReference
+    {
+        public final List<Integer> stateNumbers = new ArrayList<Integer>();
+        public TransitionTableLeaf<Nonterminal, NodeType> reference;
+    }
+
+    /**
+     */
+    public class ConsolidatedIndexReference extends ArrayList<FinalDimIndexReference>
+    {
+        Map<TransitionTableLeaf<Nonterminal, NodeType>,FinalDimIndexReference> deduped = new HashMap<TransitionTableLeaf<Nonterminal, NodeType>,FinalDimIndexReference>();
+
+        ConsolidatedIndexReference(Map<Integer,Integer> unduped)
+        {
+            for (Map.Entry<Integer,Integer> entry: unduped.entrySet()) {
+                Integer index = entry.getValue();
+                TransitionTableLeaf<Nonterminal, NodeType> reference = finalDimension.get(index);
+
+                if (!deduped.containsKey(reference)) {
+                    deduped.put(reference, new FinalDimIndexReference());
+                    deduped.get(reference).reference = reference;
+                }
+                deduped.get(reference).stateNumbers.add(entry.getKey());
+            }
+            this.addAll(deduped.values());
         }
     }
 

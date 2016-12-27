@@ -232,7 +232,7 @@ result=visitor.%pattern.postCallback;format="postCallback"%;
 transitionTable(t) ::= <<
 %if(t.nextDimension.empty)%
 switch(node.getSubtree(%t.dimension%).getStateNumber()) {
-%t.finalDimIndexMap:transitionTableLeaf();separator="break;\n"%
+%t.normalizedFinalDimension:transitionTableLeaf();separator="\n"%
 }
 %else%
 switch(node.getSubtree(%t.dimension%).getStateNumber()) {
@@ -242,6 +242,10 @@ switch(node.getSubtree(%t.dimension%).getStateNumber()) {
 %endif%
 >>
 
-transitionTableLeaf(s) ::= <<
-case %s%: %leafReference(t.statesByIndex.(s))%
+transitionTableLeaf(leafReferences) ::= <<
+%leafReferences: { ref |
+    %ref.stateNumbers: { index | case %index%: };separator="\n"%
+        %leafReference(ref.reference)%
+        break;
+}%
 >>
