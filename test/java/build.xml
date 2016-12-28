@@ -104,6 +104,14 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/ErrorTolerant.xml"/>
             <param name="testcase.xml" value="testcases/ErrorTolerant.xml"/>
         </antcall>
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/Addition.xml"/>
+            <param name="testcase.xml" value="testcases/CanProduce.xml"/>
+        </antcall>
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/TransitiveClosures.xml"/>
+            <param name="testcase.xml" value="testcases/TransitiveClosures.xml"/>
+        </antcall>
         <antcall target="cppGenerateAndCompile">
             <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>
             <param name="testcase.xml" value="testcases/CppFirst.xml"/>

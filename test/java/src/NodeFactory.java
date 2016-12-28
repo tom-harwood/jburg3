@@ -49,16 +49,27 @@ class NodeFactory extends DefaultHandler
             // Do a little validation to get better diagnostics.
             String testcaseName = atts.getValue("name");
             String testcaseType = atts.getValue("type");
+            String canProduce = atts.getValue("canProduce");
+            String cannotProduce = atts.getValue("cannotProduce");
+            String expectedResult = atts.getValue("expected");
+            String expectedException = atts.getValue("expectedException");
 
-            if (testcaseType == null) {
+            if (canProduce != null) {
+                testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(canProduce), Testcase.TestType.CanProduce));
+            } else if (cannotProduce != null) {
+                testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(cannotProduce), Testcase.TestType.CannotProduce));
+            } else if (testcaseType == null) {
                 throw new IllegalArgumentException(String.format("Testcase %s requires a type specifier", testcaseName));
-            }
-
-            if (nodeStack.isEmpty()) {
-                testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(testcaseType), atts.getValue("expected"), atts.getValue("expectedException")));
+            } else if (nodeStack.isEmpty()) {
+                if (expectedException != null) {
+                    testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(testcaseType), expectedException, Testcase.TestType.Negative));
+                } else {
+                    testcases.add(new Testcase(testcaseName, Nonterminal.valueOf(testcaseType), expectedResult, Testcase.TestType.Normal));
+                }
             } else {
                 throw new IllegalStateException("Testcases cannot be nested.");
             }
+
         } else {
             Node        node;
             NodeType    nodeType = null;

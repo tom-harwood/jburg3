@@ -101,6 +101,7 @@ public class TestRunner
             Object                          bespokeReducer = null;
             Method                          labelMethod = null;
             Method                          reduceMethod = null;
+            Method                          canProduceMethod = null;
             Object                          visitor = Class.forName(visitorClassName).newInstance();
 
             if (reducerClassName == null) {
@@ -109,65 +110,116 @@ public class TestRunner
                 bespokeReducer = Class.forName(reducerClassName).newInstance();
                 labelMethod = bespokeReducer.getClass().getDeclaredMethod("label", visitor.getClass(), Node.class);
                 reduceMethod = bespokeReducer.getClass().getDeclaredMethod("reduce", visitor.getClass(), Node.class, Nonterminal.class);
+                canProduceMethod = bespokeReducer.getClass().getDeclaredMethod("canProduce", Node.class, Nonterminal.class);
             }
 
             NodeFactory nf = new NodeFactory(testcaseFile);
 
             for (Testcase tc: nf.testcases) {
-                try {
-                    String result = null;
 
-                    if (bespokeReducer == null) {
-                        defaultReducer.label(tc.root);
-                        result = defaultReducer.reduce(tc.root, tc.type).toString();;
-                    } else {
-                        labelMethod.invoke(bespokeReducer, visitor, tc.root);
-                        Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type);
+                if (bespokeReducer != null) {
+                    labelMethod.invoke(bespokeReducer, visitor, tc.root);
+                } else {
+                    defaultReducer.label(tc.root);
+                }
 
-                        if (reduced != null) {
-                            result = reduced.toString();
+                switch(tc.testType) {
+                    case CanProduce:
+                    case CannotProduce: {
+                        boolean canProduce;
+
+                        if (bespokeReducer != null) {
+                            canProduce = (Boolean)canProduceMethod.invoke(bespokeReducer, tc.root, tc.canProduceType);
+                        } else {
+                            canProduce = defaultReducer.canProduce(tc.root, tc.canProduceType);
                         }
+
+                        if (canProduce && tc.testType == Testcase.TestType.CanProduce) {
+                            if (verbose) {
+                                System.out.printf("Succeeded: %s can produce %s\n", tc.name, tc.canProduceType);
+                            }
+                        } else if (!canProduce) {
+                            if (verbose) {
+                                System.out.printf("Succeeded: %s cannot produce %s\n", tc.name, tc.canProduceType);
+                            }
+                        } else {
+                            failedTestcases.add(String.format("FAILED: %s: canProduce %s expected %s got %s", tc.name, tc.canProduceType, tc.canProduceType, canProduce));
+                        }
+                        break;
                     }
 
-                    if (tc.expected.equals(result)) {
-                        if (verbose) {
-                            System.out.printf("Succeeded: %s\n", tc.name);
-                        }
-                    } else {
-                        failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
-                    }
-                } catch (java.lang.reflect.InvocationTargetException ite) {
-                    Throwable ex = ite.getCause();
+                case Normal:
+                    try {
+                        String result = null;
 
-                    if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+                        if (bespokeReducer == null) {
+                            result = defaultReducer.reduce(tc.root, tc.type).toString();;
+                        } else {
+                            Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type);
 
-                        if (verbose) {
-                            System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
+                            if (reduced != null) {
+                                result = reduced.toString();
+                            }
                         }
-                    } else {
+
+                        if (tc.expected.equals(result)) {
+                            if (verbose) {
+                                System.out.printf("Succeeded: %s\n", tc.name);
+                            }
+                        } else {
+                            failedTestcases.add(String.format("FAILED: %s: expected %s got %s", tc.name, tc.expected, result));
+                        }
+                    } catch (java.lang.reflect.InvocationTargetException ite) {
+                        Throwable ex = ite.getCause();
+
                         if (verbose) {
                             ex.printStackTrace();
                         }
 
                         failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
+                    } catch (Exception ex) {
+
+                        if (verbose) {
+                            ex.printStackTrace();
+                        }
+                        failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
                     }
-                } catch (Exception ex) {
-                    if (tc.expectedException != null && ex.toString().matches(tc.expectedException)) {
+                    break;
+                case Negative: {
+                    Throwable ex = null;
+
+                    try {
+                        if (bespokeReducer == null) {
+                            defaultReducer.reduce(tc.root, tc.type);
+                        } else {
+                            reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type);
+                        }
+
+                        failedTestcases.add(String.format("FAILED: %s: expected exception %s", tc.name, tc.expected));
+                        break;
+
+                    } catch (java.lang.reflect.InvocationTargetException ite) {
+                        ex = (Exception)ite.getCause();
+                    } catch (Exception exOrig) {
+                        ex = exOrig;
+                    }
+
+                    if (ex.toString().matches(tc.expected)) {
+
                         if (verbose) {
                             System.out.printf("Succeeded: %s negative case caught expected %s\n", tc.name, ex);
                         }
                     } else {
-                        if (tc.expectedException == null) {
 
-                            if (verbose) {
-                                ex.printStackTrace();
-                            }
-                            failedTestcases.add(String.format("FAILED: %s: unexpected exception %s", tc.name, ex));
-                        } else {
-                            failedTestcases.add(String.format("FAILED: %s: expected exception %s, got %s", tc.name, tc.expectedException, ex));
+                        if (verbose) {
+                            ex.printStackTrace();
                         }
+
+                        failedTestcases.add(String.format("FAILED: %s: expected exception %s, got %s", tc.name, tc.expected, ex));
                     }
+                    break;
                 }
+            }
             }
         }
 

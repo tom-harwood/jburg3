@@ -1,0 +1,24 @@
+<!-- Reduce a so-called short directly to Integer to check transitive closure operation. -->
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="BigShort" class="java.lang.Integer"/>
+    </Semantics>
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="BigShort" nodeType="ShortLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+
+    <Closure nonterminal="Int" sourceNonterminal="BigShort"/>
+</Grammar>

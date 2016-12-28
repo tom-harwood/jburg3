@@ -1,0 +1,17 @@
+<Test>
+
+    <Testcase name="1+2" canProduce="Int">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="1+2" cannotProduce="String">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+</Test>
