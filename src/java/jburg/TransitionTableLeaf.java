@@ -30,6 +30,10 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      */
     public Map<List<HostRoutine>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
 
+    Map<Nonterminal,List<Integer>> statesProducingNonterminal = new HashMap<Nonterminal,List<Integer>>();
+    public Map<Nonterminal,List<Integer>> getStatesProducingNonterminal() { return statesProducingNonterminal; }
+
+
     /**
      * A sorted and de-dup'd list of all predicate methods
      * found in the constituent states. Used to create
@@ -216,6 +220,13 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
     {
         for (State<Nonterminal, NodeType> state: getStates()) {
             state.finishCompilation();
+
+            for (Nonterminal nt: state.getNonterminals()) {
+                if (!statesProducingNonterminal.containsKey(nt)) {
+                    statesProducingNonterminal.put(nt, new ArrayList<Integer>());
+                }
+                statesProducingNonterminal.get(nt).add(state.number);
+            }
         }
     }
 

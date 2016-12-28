@@ -68,12 +68,23 @@ public class %className()%
         }
     }
 
+    public boolean canProduce(%nodeClass()% node,  %nonterminalClass()% goalState)
+    {
+        if (node != null && node.getTransitionTableLeaf() != null) {
+            TransitionEntry ti = (TransitionEntry)(node.getTransitionTableLeaf());
+            return ti.canProduce(node, goalState);
+        } else {
+            return false;
+        }
+    }
+
     %labelRoutines(table)%
 
     static abstract class TransitionEntry
     {
         abstract void assignState(%visitorClass()% visitor, %nodeClass()% node);
         abstract Object reduce(%className()% reducer, %visitorClass()% visitor, %nodeClass()% node, %nonterminalClass()% goalState);
+        abstract boolean canProduce(%nodeClass()% node, %nonterminalClass()% goalState);
     }
 
     %uniqueStates:leafDefinition();separator="\n"%
@@ -147,7 +158,25 @@ static TransitionEntry %s:leafStateName()% = new TransitionEntry()
 
         return result;
     }
+
+    boolean canProduce(%nodeClass()% node, %nonterminalClass()% goalState)
+    {
+        switch(goalState) {
+            %s.statesProducingNonterminal:canProduceNt();separator="\n"%
+            default: return false;
+        }
+    }
 };
+>>
+
+canProduceNt(nt) ::= <<
+case %nt%:
+    switch (node.getStateNumber()) {
+    %s.statesProducingNonterminal.(nt): { stateNumber |case %stateNumber%: };separator="\n"%
+        return true;
+    default:
+        return false;
+    }
 >>
 
 leafReference(s) ::= <<

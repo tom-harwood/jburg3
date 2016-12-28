@@ -40,11 +40,14 @@ public:
 
     %resultType()% reduce(%visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState);
 
+    bool canProduce(%nodeClass()%* node,  %nonterminalClass()% goalState);
+
     class TransitionEntry
     {
     public:
         virtual void assignState(%visitorClass()%& visitor, %nodeClass()%* node) = 0;
         virtual %resultType()% reduce(%className()%& reducer, %visitorClass()%& visitor, %nodeClass()%* node, %nonterminalClass()% goalState) = 0;
+        virtual bool canProduce(%nodeClass()%* node, %nonterminalClass()% goalState) = 0;
     };
 
 private:

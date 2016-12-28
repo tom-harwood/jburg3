@@ -54,7 +54,7 @@ public class Reducer<Nonterminal, NodeType>
      * @param goal  the nonterminal of interest.
      * @return true if node's state table entry can produce goalNt.
      */
-    boolean canProduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
+    public boolean canProduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
     {
         State<Nonterminal,NodeType> state = node != null? productionTable.getState(node.getStateNumber()): productionTable.getNullPointerState();
         return state.getCost(goal) < Integer.MAX_VALUE;

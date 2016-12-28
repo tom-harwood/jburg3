@@ -81,6 +81,15 @@ void %className()%::label(%visitorClass()%& visitor, %nodeClass()%* node)
     }
 }
 
+bool %className()%::canProduce(%nodeClass()%* node,  %nonterminalClass()% goalState)
+{
+    if (node != NULL && node->getTransitionTableLeaf() != NULL) {
+        TransitionEntry* ti = (TransitionEntry*)(node->getTransitionTableLeaf());
+        return ti->canProduce(node, goalState);
+    } else {
+        return false;
+    }
+}
 %labelRoutines(table)%
 
 %uniqueStates:leafClassDeclaration();separator="\n\n"%
@@ -156,7 +165,25 @@ class %s:leafStateName()%Impl: public %className()%::TransitionEntry
 
         return result;
     }
+
+    virtual bool canProduce(%nodeClass()%* node, %nonterminalClass()% goalState)
+    {
+        switch(goalState) {
+            %s.statesProducingNonterminal:canProduceNt();separator="\n"%
+            default: return false;
+        }
+    }
 };
+>>
+
+canProduceNt(nt) ::= <<
+case %nonterminalClass()%::%nt%:
+    switch (node->getStateNumber()) {
+    %s.statesProducingNonterminal.(nt): { stateNumber |case %stateNumber%: };separator="\n"%
+        return true;
+    default:
+        return false;
+    }
 >>
 
 leafReference(s) ::= <<
