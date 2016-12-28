@@ -5,18 +5,31 @@
 #include "Test.h"
 #include "Nonterminals.h"
 
+enum TestType { Normal, CanProduce, CannotProduce };
+
 struct Testcase
 {
     std::string name;
     Nonterminal valueType;
     std::string expectedValue;
     Node*       root;
+    TestType    testType;
 
     Testcase(std::string name, Nonterminal type, std::string expected):
         name(name)
         , valueType(type)
         , expectedValue(expected)
         , root(NULL)
+        , testType(TestType::Normal)
+    {
+    }
+
+    Testcase(std::string name, Nonterminal type, TestType testType):
+        name(name)
+        , valueType(type)
+        , expectedValue()
+        , root(NULL)
+        , testType(testType)
     {
     }
 };

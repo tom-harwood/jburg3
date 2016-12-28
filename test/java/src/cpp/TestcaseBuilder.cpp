@@ -65,13 +65,22 @@ std::vector<Testcase> buildTestcases(std::string fileName)
             }
 
             Attributes attrs = getAttributes(line);
-            Nonterminal nt = NonterminalLookupByName(attrs[type]);
-            result.emplace_back(Testcase(attrs[name], nt, attrs[expected]));
+            std::string canProduce = attrs["canProduce"];
 
-            if (verbose) {
-                std::cout << "\t" << "name=" << attrs[name] << " type=" << (int) nt;
-                std::cout << " expected=" << attrs[expected] << std::endl;
+            if (canProduce.empty()) {
+                Nonterminal nt = NonterminalLookupByName(attrs[type]);
+                result.emplace_back(Testcase(attrs[name], nt, attrs[expected]));
+
+                if (verbose) {
+                    std::cout << "\t" << "name=" << attrs[name] << " type=" << (int) nt;
+                    std::cout << " expected=" << attrs[expected] << std::endl;
+                }
+
+            } else {
+                Nonterminal nt = NonterminalLookupByName(canProduce);
+                result.emplace_back(Testcase(attrs[name], nt, TestType::CanProduce));
             }
+
         }
         
         if (isEndTag(line, "Testcase")) {

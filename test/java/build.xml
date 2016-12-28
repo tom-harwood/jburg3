@@ -120,6 +120,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/CppErrorTolerant.xml"/>
             <param name="testcase.xml" value="testcases/CppErrorTolerant.xml"/>
         </antcall>
+        <antcall target="cppGenerateAndCompile">
+            <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>
+            <param name="testcase.xml" value="testcases/CppCanProduce.xml"/>
+        </antcall>
     </target>
 
     <target name="calculator" depends="init">

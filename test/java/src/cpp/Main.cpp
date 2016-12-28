@@ -31,23 +31,46 @@ bool checkResult(std::string expected, std::string actual, const std::string& te
 	}
 }
 
+bool checkResult(bool expected, bool actual, const std::string& testname)
+{
+	if (expected == actual) {
+		printf("Succeeded: %s\n", testname.c_str());
+        return true;
+	} else {
+		printf("FAILED: %s, expected %s != actual %s\n", testname.c_str(), expected? "true":"false", actual? "true":"false");
+		failureCount++;
+        return false;
+	}
+}
+
 void runTest(Testcase& testcase)
 {
     try {
         CppTestReducer  reducer;
         Calculator      calculator;
         reducer.label(calculator, testcase.root);
-        Object result = reducer.reduce(calculator, testcase.root, testcase.valueType);
 
-        if (testcase.valueType == Nonterminal::String) {
-            if (!checkResult(testcase.expectedValue, result.stringValue, testcase.name)) {
+        if (testcase.testType == TestType::Normal) {
+            Object result = reducer.reduce(calculator, testcase.root, testcase.valueType);
+
+            if (testcase.valueType == Nonterminal::String) {
+                if (!checkResult(testcase.expectedValue, result.stringValue, testcase.name)) {
+                printf("%s\n", toXML(testcase.root).c_str());
+                }
+
+            } else {
+                if (!checkResult(atoi(testcase.expectedValue.c_str()), result.intValue, testcase.name)) {
+                    printf("%s\n", toXML(testcase.root).c_str());
+                }
+            }
+        } else if (testcase.testType == TestType::CanProduce) {
+            
+            if (!checkResult(true, reducer.canProduce(testcase.root, testcase.valueType), testcase.name)) {
                 printf("%s\n", toXML(testcase.root).c_str());
             }
 
         } else {
-            if (!checkResult(atoi(testcase.expectedValue.c_str()), result.intValue, testcase.name)) {
-                printf("%s\n", toXML(testcase.root).c_str());
-            }
+            throw std::logic_error("unknown testcase type");
         }
 
     } catch (std::logic_error& exception) {
