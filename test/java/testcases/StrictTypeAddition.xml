@@ -1,0 +1,24 @@
+<Test>
+
+    <Testcase name="1+2" canProduce="Int">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="1s+2s" canProduce="Short">
+        <Node op="Add">
+            <Node op="ShortLiteral" content="1"/>
+            <Node op="ShortLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+    <Testcase name="1s+2s" cannotProduce="Int">
+        <Node op="Add">
+            <Node op="ShortLiteral" content="1"/>
+            <Node op="ShortLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+</Test>

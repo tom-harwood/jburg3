@@ -1,0 +1,26 @@
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="Short" class="java.lang.Short"/>
+    </Semantics>
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Short" nodeType="ShortLiteral">
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+
+    <Pattern nonterminal="Short" nodeType="Add">
+        <child nonterminal="Short"/>
+        <child nonterminal="Short"/>
+    </Pattern>
+
+</Grammar>
