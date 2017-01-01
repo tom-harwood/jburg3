@@ -40,6 +40,11 @@ classDef(table, uniqueStates) ::= <<
 
 public class %className()%
 {
+    private static int getStateNumber(%nodeClass()% node)
+    {
+        return node != null? node.getStateNumber():jburg.ProductionTable.NULL_STATE_NUM;
+    }
+
     public void label(%visitorClass()% visitor, %nodeClass()% node)
     {
         if (node != null) {
@@ -60,7 +65,9 @@ public class %className()%
     @SuppressWarnings("unchecked")
     public Object reduce(%visitorClass()% visitor, %nodeClass()% node, %nonterminalClass()% goalState)
     {
-        if (node.getTransitionTableLeaf() != null) {
+        if (node == null) {
+            return nullHandler.reduce(visitor, node, goalState);
+        } else if (node.getTransitionTableLeaf() != null) {
             TransitionEntry ti = (TransitionEntry)(node.getTransitionTableLeaf());
             return ti.reduce(this, visitor, node, goalState);
         } else {
@@ -90,6 +97,7 @@ public class %className()%
     %uniqueStates:leafDefinition();separator="\n"%
 
     %errorState(table.errorState)%
+    %nullState(table.nullPointerState)%
 }
 >>
 
@@ -120,6 +128,35 @@ static class ErrorHandler
 }
 
 static final ErrorHandler errorHandler = new ErrorHandler();
+>>
+
+nullState(s) ::= <<
+// %s%
+static class NullHandler
+{
+    public Object reduce(%visitorClass()% visitor, %nodeClass()% node, %nonterminalClass()% goalState)
+    {
+        Object result = null;
+        switch(goalState) {
+            %s.nonterminals:nullReduction();separator="\n"%
+            default:
+                throw new NullPointerException();
+        }
+    }
+}
+static final NullHandler nullHandler = new NullHandler();
+>>
+
+nullReduction(nt) ::= <<
+case %nt%:
+%if(s.patterns.(nt))%
+    %s.patterns.(nt): { production | result = visitor.%production.postCallback.name%(node, goalState); }%
+%elseif (s.closures.(nt))%
+    %s.closurePreProductions.(nt): { production | %production.preCallback% };separator="\n * "%
+    %s.patterns.(s.closurePatternPrecursor.(nt)): { production | result = visitor.%production.postCallback.name%(node, goalState); }%
+    %s.closurePostProductions.(nt): { production | result = visitor.%production;format="postCallback"% };separator="\n"%
+%endif%
+    return result;
 >>
 
 labelRoutine(op) ::= <<
@@ -171,7 +208,7 @@ static TransitionEntry %s:leafStateName()% = new TransitionEntry()
 
 canProduceNt(nt) ::= <<
 case %nt%:
-    switch (node.getStateNumber()) {
+    switch (getStateNumber(node)) {
     %s.statesProducingNonterminal.(nt): { stateNumber |case %stateNumber%: };separator="\n"%
         return true;
     default:
@@ -260,11 +297,11 @@ result=visitor.%pattern.postCallback;format="postCallback"%;
 
 transitionTable(t) ::= <<
 %if(t.nextDimension.empty)%
-switch(node.getSubtree(%t.dimension%).getStateNumber()) {
+switch(getStateNumber(node.getSubtree(%t.dimension%))) {
 %t.normalizedFinalDimension:transitionTableLeaf();separator="\n"%
 }
 %else%
-switch(node.getSubtree(%t.dimension%).getStateNumber()) {
+switch(getStateNumber(node.getSubtree(%t.dimension%))) {
 %t.nextDimIndexMap:{ s | case %s%:
     %transitionTable(t.nextDimensionByIndex.(s))%};separator="break;\n"%
 }

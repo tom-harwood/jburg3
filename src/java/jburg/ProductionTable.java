@@ -112,6 +112,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * The predetermined state number of the error state.
      */
     public static final int ERROR_STATE_NUM = 0;
+    public static final int NULL_STATE_NUM = 1;
 
     /** Emit diagnostic information when this is set. */
     boolean verbose = false;
@@ -396,7 +397,7 @@ public class ProductionTable<Nonterminal, NodeType>
             closure(nullState);
             nullState.finishCompilation();
             State<Nonterminal, NodeType> canonicalNullState = addState(nullState);
-            assert canonicalNullState == nullState;
+            assert canonicalNullState == nullState && nullState.number == NULL_STATE_NUM;
         }
 
         return nullState;

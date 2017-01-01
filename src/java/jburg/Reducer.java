@@ -106,13 +106,8 @@ public class Reducer<Nonterminal, NodeType>
             state = productionTable.getNullPointerState();
         }
 
-        // If this is an error case, the only thing to do
-        // is to run the error handler, if present.
-        if (state instanceof ErrorState) {
-            return handleError(node, goal, pendingProductions);
-        }
-
-        // Run pre-callbacks on any closures to get to the pattern matcher.
+        // Run pre-callbacks on any closures to get to
+        // the pattern matcher or abnormal node handler.
         Production<Nonterminal> current = state.getProduction(goal);
 
         while(current instanceof Closure) {
@@ -130,7 +125,13 @@ public class Reducer<Nonterminal, NodeType>
         Object result = null;
 
         // Reduce children and collect results
-        if (current.postCallback != null) {
+        if (state instanceof ErrorState) {
+            result = handleError(node, goal, pendingProductions);
+        } else if (current instanceof NullPointerProduction) {
+            if (current.postCallback != null) {
+                result = current.postCallback.invoke(visitor, node, goal);
+            }
+        } else if (current.postCallback != null) {
 
             assert current instanceof PatternMatcher: String.format("Expected PatternMatcher, got %s\n", current);
             @SuppressWarnings("unchecked")

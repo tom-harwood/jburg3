@@ -1,0 +1,33 @@
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="NullNode" class="java.lang.String"/>
+        <Nonterminal nonterminal="String" class="java.lang.String"/>
+    </Semantics>
+
+    <NullNode nonterminal="NullNode">
+        <nullHandler name="onNull"/>
+    </NullNode>
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+
+    <Pattern nonterminal="String" nodeType="Concat">
+        <child nonterminal="String"/>
+        <child nonterminal="String"/>
+        <postCallback name="concatFixed"/>
+    </Pattern>
+
+    <Closure nonterminal="String" sourceNonterminal="NullNode"/>
+    <Closure nonterminal="String" sourceNonterminal="Int">
+        <postCallback name="convertToString"/>
+    </Closure>
+</Grammar>

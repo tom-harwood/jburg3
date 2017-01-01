@@ -1,0 +1,13 @@
+<Test>
+
+    <Testcase name="(1+2) | null" type="String" expected="3Null:goal=String">
+        <Node op="Concat">
+            <Node op="Add">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="IntLiteral" content="2"/>
+            </Node>
+            <Node null="true"/>
+        </Node>
+    </Testcase>
+
+</Test>

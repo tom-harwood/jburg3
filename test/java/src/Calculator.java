@@ -180,4 +180,9 @@ public class Calculator
     {
         return String.format("Error handled: %s",n);
     }
+
+    public String onNull(Node n, Nonterminal goalState)
+    {
+        return String.format("Null:goal=%s",goalState);
+    }
 }

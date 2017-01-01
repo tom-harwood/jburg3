@@ -93,6 +93,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/StrictTypeAddition.xml"/>
             <param name="testcase.xml" value="testcases/StrictTypeAddition.xml"/>
         </antcall>
+        <antcall target="calculator">
+            <param name="grammar.xml" value="grammars/NullTolerant.xml"/>
+            <param name="testcase.xml" value="testcases/NullTolerant.xml"/>
+        </antcall>
         <antcall target="dumpLoad">
             <param name="testcase.xml" value="testcases/FirstTest.xml"/>
         </antcall>
@@ -119,6 +123,10 @@ allTests - run java tests
         <antcall target="javaGen">
             <param name="grammar.xml" value="grammars/StrictTypeAddition.xml"/>
             <param name="testcase.xml" value="testcases/StrictTypeAddition.xml"/>
+        </antcall>
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/NullTolerant.xml"/>
+            <param name="testcase.xml" value="testcases/NullTolerant.xml"/>
         </antcall>
         <antcall target="cppGenerateAndCompile">
             <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>

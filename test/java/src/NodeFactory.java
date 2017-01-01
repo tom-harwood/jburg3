@@ -75,14 +75,19 @@ class NodeFactory extends DefaultHandler
             NodeType    nodeType = null;
             String      nodeTypeName = atts.getValue("op");
             String      content = atts.getValue("content");
+            boolean     isNull = atts.getValue("null") != null && Boolean.parseBoolean(atts.getValue("null"));
 
             if (nodeTypeName != null) {
                 nodeType = NodeType.valueOf(nodeTypeName);
+            } else if (isNull) {
+                // Let it go.
             } else {
                 throw new IllegalArgumentException("Nodes require an op specifier");
             }
 
-            if (content != null) {
+            if (isNull) {
+                node = null;
+            } else if (content != null) {
                 node = new Node(nodeType, content);
             } else {
                 node = new Node(nodeType);
