@@ -33,10 +33,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
+import jburg.BurgInput;
 import jburg.ProductionTable;
+import jburg.Reducer;
 import jburg.frontend.XMLGrammar;
 import jburg.semantics.DebuggerSemantics;
-import jburg.util.PrintState;
 
 public class Debugger implements Console.AbstractExecutive
 {
@@ -44,9 +45,8 @@ public class Debugger implements Console.AbstractExecutive
     final static String             debuggerConsoleName = "Debugger";
     final Properties                properties;
     final static String             propertiesFileName = "jburgDebugger.properties";
-    String                          burmDumpFileName;
-    Document                        burmDump;
-    String                          grammarFileName;
+    File                            grammarFileName;
+    long                            grammarModTime = 0;
     ProductionTable<Object,String>  productionTable = null;
 
     public static void main(String[] args)
@@ -72,10 +72,10 @@ public class Debugger implements Console.AbstractExecutive
         for (int i = 0; i < args.length; i++) {
 
             if (args[i].equalsIgnoreCase("-burm") && i+1 < args.length) {
-                burmDumpFileName = args[++i];
+                ++i;
 
             } else if (args[i].equalsIgnoreCase("-grammar") && i+1 < args.length) {
-                grammarFileName = args[++i];
+                grammarFileName = new File(args[++i]);
 
             } else if ((args[i].equalsIgnoreCase("-command") || args[i].equalsIgnoreCase("-cmd") || args[i].equals("-c")) && i+1 < args.length) {
                 aPrioriCommand = new StringBuilder();
@@ -91,12 +91,6 @@ public class Debugger implements Console.AbstractExecutive
         }
 
         try {
-            loadBurmDump();
-        } catch (Exception loadError) {
-            console.getAbstractConsole().exception(String.format("loading %s", burmDumpFileName), loadError);
-        }
-
-        try {
             loadGrammar();
         } catch (Exception loadError) {
             console.getAbstractConsole().exception(String.format("loading %s", grammarFileName), loadError);
@@ -109,21 +103,13 @@ public class Debugger implements Console.AbstractExecutive
         }
     }
 
-    private void loadBurmDump()
-    throws Exception
-    {
-        if (burmDumpFileName != null) {
-            this.burmDump = parseXML(new FileInputStream(burmDumpFileName));
-            cachedStateInfo.clear();
-        }
-    }
-
     private void loadGrammar()
     throws Exception
     {
-        if (this.grammarFileName != null) {
+        if (this.grammarFileName != null && grammarModTime < this.grammarFileName.lastModified()) {
             XMLGrammar<Object,String> grammarBuilder = new XMLGrammar<Object,String>("Object", "String", new DebuggerSemantics());
-            this.productionTable = grammarBuilder.build(convertToFileURL(grammarFileName));
+            this.productionTable = grammarBuilder.build(convertToFileURL(grammarFileName.getCanonicalPath()));
+            this.grammarModTime = this.grammarFileName.lastModified();
         }
     }
 
@@ -192,9 +178,6 @@ public class Debugger implements Console.AbstractExecutive
                             break;
 
                         case Exit: {
-                                if (burmDumpFileName != null) {
-                                    properties.setProperty("lastDumpFile", burmDumpFileName);
-                                }
                                 console.saveHistory(properties);
 
                                 try {
@@ -234,15 +217,15 @@ public class Debugger implements Console.AbstractExecutive
                                 FileNameExtensionFilter filter = new FileNameExtensionFilter("XML files", "xml");
                                 chooser.setFileFilter(filter);
 
-                                if (properties.getProperty("lastDumpfile") != null) {
-                                    chooser.setCurrentDirectory(new File(properties.getProperty("lastDumpfile")).getParentFile());
+                                if (properties.getProperty("lastGrammarFile") != null) {
+                                    chooser.setCurrentDirectory(new File(properties.getProperty("lastGrammarFile")).getParentFile());
                                 }
 
                                 int returnVal = chooser.showOpenDialog(new JFrame());
 
                                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                                    burmDumpFileName = chooser.getSelectedFile().getCanonicalPath();
-                                    loadBurmDump();
+                                    grammarFileName = chooser.getSelectedFile();
+                                    loadGrammar();
                                 }
 
                             }
@@ -259,15 +242,7 @@ public class Debugger implements Console.AbstractExecutive
                             }
                             break;
 
-                        case PrintState: {
-                                for (PrintState.Finding finding: PrintState.analyzeState(burmDump, tokens[1])) {
-                                    printf("%s", finding.toString());
-                                }
-                            }
-                            break;
-
                         case Reload:
-                            loadBurmDump();
                             loadGrammar();
                             break;
 
@@ -331,6 +306,27 @@ public class Debugger implements Console.AbstractExecutive
         new DumpAnalyzer(this, title, parsedXML.getFirstChild());
     }
 
+    boolean label(BurgInput<Object,String> root)
+    {
+        try {
+            // Ensure we have the most up-to-date grammar.
+            loadGrammar();
+
+            if (this.productionTable != null) {
+                Reducer<Object,String> reducer = new Reducer<Object,String>(null, this.productionTable);
+                reducer.label(root);
+                return true;
+
+            } else {
+                exception(new IllegalStateException("No grammar loaded"), "Problem labeling");
+            }
+        } catch (Exception cannotLabel) {
+            exception(cannotLabel, "Problem labeling");
+        }
+
+        return false;
+    }
+
     private void execute(String execCommand)
     throws Exception
     {
@@ -362,30 +358,6 @@ public class Debugger implements Console.AbstractExecutive
             result.append(line);
 
         return result.toString();
-    }
-
-    Map<String,String> cachedStateInfo = new HashMap<String,String>();
-
-    String getStateInformation(String stateNumber)
-    throws Exception
-    {
-        if (!cachedStateInfo.containsKey(stateNumber)) {
-            StringBuilder result = new StringBuilder();
-
-            boolean isFirstTime = true;
-            for (PrintState.Finding finding: PrintState.analyzeState(burmDump, stateNumber)) {
-
-                if (isFirstTime) {
-                    isFirstTime = false;
-                } else {
-                    result.append("\n");
-                }
-                result.append(finding.toString());
-            }
-            cachedStateInfo.put(stateNumber, result.toString());
-        }
-
-        return cachedStateInfo.get(stateNumber);
     }
 
     private void status(String format, Object... args)

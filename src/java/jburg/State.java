@@ -446,6 +446,40 @@ public class State<Nonterminal, NodeType>
         return buffer.toString();
     }
 
+    public String getDescription()
+    {
+        StringBuilder buffer = new StringBuilder();
+
+        if (nonClosureProductions.size() > 0) {
+            for (Nonterminal nt: nonClosureProductions.keySet()) {
+                Production<Nonterminal> p = nonClosureProductions.get(nt);
+
+                if (buffer.length() > 0) {
+                    buffer.append("\n");
+                }
+
+                // TODO: Better formatting, callbacks especially.
+                buffer.append(String.format("%s=%s", nt, p));
+
+                // Append closures chained from this nonterminal.
+                appendClosures(nt, 4, buffer);
+            }
+        }
+
+        return buffer.toString();
+    }
+
+    private void appendClosures(Nonterminal nt, int padding, StringBuilder buffer)
+    {
+        for (Closure<Nonterminal> closure: closures.values()) {
+
+            if (closure.getSource().equals(nt)) {
+                buffer.append(String.format("\n%" + String.valueOf(padding) + "s%s => %s", "", nt, closure.getNonterminal()));
+                appendClosures(closure.getNonterminal(), padding+4, buffer);
+            }
+        }
+    }
+
     public int getStateNumber()
     {
         return this.number;

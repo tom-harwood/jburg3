@@ -212,7 +212,7 @@ public class Console extends JPanel
         menu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menu);
 
-        JMenuItem loadItem = new JMenuItem("Open BURM dump...", KeyEvent.VK_O);
+        JMenuItem loadItem = new JMenuItem("Open BURS grammar...", KeyEvent.VK_O);
         menu.add(loadItem);
         loadItem.addActionListener(
             new ActionListener() {

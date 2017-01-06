@@ -12,7 +12,6 @@ enum CommandType
     History("Display command history"),
     Load("Load a new BURS table"),
     PrintStackTrace("Print stack trace of most recent exception"),
-    PrintState("PrintState <state number> -- display information about a state"),
     Reload("Reload the BURS tables"),
     Set("Set a property")
     ;

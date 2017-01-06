@@ -72,7 +72,7 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     @Override
     public String toString()
     {
-        return String.format("%s%s:%s)", nodeType, childTypes, ownCost);
+        return String.format("%s%s :%s", nodeType, childTypes, ownCost);
     }
 
     /**

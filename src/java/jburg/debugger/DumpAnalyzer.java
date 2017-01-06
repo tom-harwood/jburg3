@@ -12,7 +12,7 @@ import javax.swing.tree.*;
 import javax.swing.event.*;
 
 import jburg.BurgInput;
-import jburg.Reducer;
+import jburg.State;
 
 class DumpAnalyzer extends JPanel
 {
@@ -161,20 +161,9 @@ class DumpAnalyzer extends JPanel
 
     private void relabel()
     {
-        if (debugger.productionTable != null) {
-            Reducer<Object,String> reducer = new Reducer<Object,String>(null, debugger.productionTable);
-
-            try {
-                reducer.label(root);
-            } catch (Exception cannotLabel) {
-                debugger.exception(cannotLabel, "Problem labeling");
-            }
-
+        if (debugger.label(root)) {
             expandNonViable();
             frame.repaint();
-
-        } else {
-            debugger.exception(new IllegalStateException("No production table loaded"), "Problem labeling");
         }
     }
 
@@ -403,18 +392,18 @@ class DumpAnalyzer extends JPanel
     class PrintStateThread extends Thread
     {
         final JTextArea area = new JTextArea();
-        final JFrame popupFrame;
+        final JFrame    popupFrame = new JFrame();
 
         Runnable runner;
 
         PrintStateThread(final AdapterNode node)
         {
-            final String stateNumber = String.valueOf(node.stateNumber);
-            this.popupFrame = new JFrame("State " + stateNumber);
+            this.popupFrame.setTitle(String.format("State %d", node.stateNumber));
+            final jburg.State<?,?> state = (jburg.State<?,?>)node.getTransitionTableLeaf();
 
             this.runner = new Runnable() {
-                public void run() {
-                    debugger.console.prepareFrame(popupFrame);
+                public void run()
+                {
                     area.setEditable(false);
                     area.setBorder(
                         BorderFactory.createCompoundBorder(
@@ -422,18 +411,17 @@ class DumpAnalyzer extends JPanel
                             BorderFactory.createEmptyBorder(0,2,0,4)
                         )
                     );
-                    area.setText("working...");
+
+                    if (state != null) {
+                        area.setText(state.getDescription());
+                    } else {
+                        area.setText(String.format("No state description for state %d", node.stateNumber));
+                    }
+
                     popupFrame.add(area);
                     popupFrame.pack();
+                    debugger.console.prepareFrame(popupFrame);
                     popupFrame.setVisible(true);
-
-                    String stateInfo;
-
-                    try {
-                        SwingUtilities.invokeLater(new AreaUpdater(debugger.getStateInformation(stateNumber)));
-                    } catch (Exception ex) {
-                        SwingUtilities.invokeLater(new AreaUpdater(String.format("Problem generating state description: %s", ex)));
-                    }
                 }
             };
         }
@@ -441,22 +429,6 @@ class DumpAnalyzer extends JPanel
         public void run()
         {
             runner.run();
-        }
-
-        class AreaUpdater implements Runnable
-        {
-            final String text;
-
-            AreaUpdater(final String text)
-            {
-                this.text = text;
-            }
-
-            public void run()
-            {
-                area.setText(text);
-                popupFrame.pack();
-            }
         }
     }
 }
