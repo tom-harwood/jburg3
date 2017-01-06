@@ -17,7 +17,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.GroupLayout.*;
 
-public class Console extends JPanel
+public class Console extends JPanel implements AbstractConsole
 {
     /** An editable command line. */
     final JTextField commandLine = new JTextField();
@@ -50,14 +50,14 @@ public class Console extends JPanel
      */
     boolean applicationShutdownCommanded = false;
 
-    final AbstractExecutive         executive;
+    final Debugger debugger;
 
     static final String downArrow = "downArrow";
     static final String upArrow = "upArrow";
 
-    Console(AbstractExecutive executive)
+    Console(Debugger debugger)
     {
-        this.executive = executive;
+        this.debugger = debugger;
 
         commandLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, commandLine.getPreferredSize().height));
         commandLine.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), downArrow);
@@ -78,7 +78,7 @@ public class Console extends JPanel
 
         this.outputList = new JList<ConsoleHistoryElement>(output);
         outputList.setCellRenderer(new ConsoleHistoryRenderer());
-        this.normalFont = outputList.getFont();
+        this.normalFont = outputList.getFont().deriveFont(Font.PLAIN);
         this.italicFont = normalFont.deriveFont(Font.ITALIC);
         this.boldFont = normalFont.deriveFont(Font.BOLD);
 
@@ -166,35 +166,23 @@ public class Console extends JPanel
         }
     }
 
-    AbstractConsole getAbstractConsole()
+    @Override
+    public void println(String s)
     {
-        return new GuiConsole();
+        addOutput(s, normalFont);
     }
 
-    class GuiConsole extends AbstractConsole
-    {
-        @Override
-        public void println(String s)
-        {
-            addOutput(s, normalFont);
-        }
+    @Override
+    public void exception(String operation, Exception ex) {
 
-        @Override
-        public void exception(String operation, Exception ex) {
-
-            String diagnostic = ex.getMessage() != null?  ex.getMessage(): ex.toString();
-            addOutput(diagnostic, italicFont);
-        }
-
-        @Override
-        public void status(String format, Object... args) {
-            addOutput(String.format(format, args), italicFont);
-        }
+        String diagnostic = ex.getMessage() != null?  ex.getMessage(): ex.toString();
+        addOutput(diagnostic, italicFont);
     }
 
-    public interface AbstractExecutive
+    @Override
+    public void status(String format, Object... args)
     {
-        public boolean executeCommand(String command);
+        addOutput(String.format(format, args), italicFont);
     }
 
     public void display(String title)
@@ -217,7 +205,7 @@ public class Console extends JPanel
         loadItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    executive.executeCommand("Load");
+                    debugger.executeCommand("Load");
                 }
             }
         );
@@ -227,7 +215,7 @@ public class Console extends JPanel
         reloadItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    executive.executeCommand("Reload");
+                    debugger.executeCommand("Reload");
                 }
             }
         );
@@ -240,7 +228,7 @@ public class Console extends JPanel
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     applicationShutdownCommanded = true;
-                    executive.executeCommand("Exit");
+                    debugger.executeCommand("Exit");
                 }
             }
         );
@@ -255,7 +243,7 @@ public class Console extends JPanel
 
                 if (!applicationShutdownCommanded) {
                     applicationShutdownCommanded = true;
-                    executive.executeCommand("Exit");
+                    debugger.executeCommand("Exit");
                 }
             }
         });
@@ -348,7 +336,7 @@ public class Console extends JPanel
         {
             super(new Runnable() {
                 public void run() {
-                    executive.executeCommand(command);
+                    debugger.executeCommand(command);
                 }
             });
         }

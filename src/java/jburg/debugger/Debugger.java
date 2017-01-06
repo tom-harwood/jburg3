@@ -39,7 +39,7 @@ import jburg.Reducer;
 import jburg.frontend.XMLGrammar;
 import jburg.semantics.DebuggerSemantics;
 
-public class Debugger implements Console.AbstractExecutive
+public class Debugger
 {
     final Console                   console;
     final static String             debuggerConsoleName = "Debugger";
@@ -62,7 +62,7 @@ public class Debugger implements Console.AbstractExecutive
         try {
             properties.load(new FileInputStream(propertiesFileName));
         } catch (Exception cannotLoad) {
-            console.getAbstractConsole().exception("loading properties ", cannotLoad);
+            console.exception("loading properties ", cannotLoad);
         }
 
         console.extractHistory(properties);
@@ -93,7 +93,7 @@ public class Debugger implements Console.AbstractExecutive
         try {
             loadGrammar();
         } catch (Exception loadError) {
-            console.getAbstractConsole().exception(String.format("loading %s", grammarFileName), loadError);
+            console.exception(String.format("loading %s", grammarFileName), loadError);
         }
 
         console.display(debuggerConsoleName);
@@ -198,9 +198,9 @@ public class Debugger implements Console.AbstractExecutive
                         case Help:
 
                             if (tokens.length == 2) {
-                                CommandType.help(console.getAbstractConsole(), tokens[1]);
+                                CommandType.help(console, tokens[1]);
                             } else {
-                                CommandType.help(console.getAbstractConsole(), null);
+                                CommandType.help(console, null);
                             }
                             break;
 
@@ -362,12 +362,12 @@ public class Debugger implements Console.AbstractExecutive
 
     private void status(String format, Object... args)
     {
-        console.getAbstractConsole().status(String.format(format,args));
+        console.status(String.format(format,args));
     }
 
     void printf(String format, Object... args)
     {
-        console.getAbstractConsole().println(String.format(format,args));
+        console.println(String.format(format,args));
     }
 
     void exception(Exception exception, String formatString, Object... args)
@@ -378,7 +378,7 @@ public class Debugger implements Console.AbstractExecutive
         } catch (Exception cannotFormat) {
             diagnostic = "Funky diagnostic: " + formatString + String.format(" %s",args);
         }
-        console.getAbstractConsole().exception(diagnostic, exception);
+        console.exception(diagnostic, exception);
         mostRecentException = exception;
     }
 
