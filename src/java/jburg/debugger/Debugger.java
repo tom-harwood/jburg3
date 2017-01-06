@@ -242,10 +242,6 @@ public class Debugger
                             }
                             break;
 
-                        case Reload:
-                            loadGrammar();
-                            break;
-
                         case Set: {
                                 String propertyName = tokens[1];
                                 set(propertyName, allTextAfter(command, propertyName));

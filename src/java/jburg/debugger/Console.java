@@ -196,12 +196,12 @@ public class Console extends JPanel implements AbstractConsole
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
 
-        JMenu menu = new JMenu("File");
-        menu.setMnemonic(KeyEvent.VK_F);
-        menuBar.add(menu);
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        menuBar.add(fileMenu);
 
         JMenuItem loadItem = new JMenuItem("Open BURS grammar...", KeyEvent.VK_O);
-        menu.add(loadItem);
+        fileMenu.add(loadItem);
         loadItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -210,20 +210,10 @@ public class Console extends JPanel implements AbstractConsole
             }
         );
 
-        JMenuItem reloadItem = new JMenuItem("Reload", KeyEvent.VK_O);
-        menu.add(reloadItem);
-        reloadItem.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    debugger.executeCommand("Reload");
-                }
-            }
-        );
-
-        menu.addSeparator();
+        fileMenu.addSeparator();
 
         JMenuItem closeItem = new JMenuItem("Exit", KeyEvent.VK_X);
-        menu.add(closeItem);
+        fileMenu.add(closeItem);
         closeItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -232,6 +222,22 @@ public class Console extends JPanel implements AbstractConsole
                 }
             }
         );
+
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(editMenu);
+
+        JMenuItem clearItem = new JMenuItem("Clear console output", KeyEvent.VK_O);
+        editMenu.add(clearItem);
+        clearItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    output.clear();
+                }
+            }
+        );
+
+
 
         // Exit the application if the console window closes.
         // Only do this if the shutdown sequence is not already
