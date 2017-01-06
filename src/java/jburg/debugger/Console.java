@@ -222,6 +222,18 @@ public class Console extends JPanel
             }
         );
 
+        JMenuItem reloadItem = new JMenuItem("Reload", KeyEvent.VK_O);
+        menu.add(reloadItem);
+        reloadItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    executive.executeCommand("Reload");
+                }
+            }
+        );
+
+        menu.addSeparator();
+
         JMenuItem closeItem = new JMenuItem("Exit", KeyEvent.VK_X);
         menu.add(closeItem);
         closeItem.addActionListener(

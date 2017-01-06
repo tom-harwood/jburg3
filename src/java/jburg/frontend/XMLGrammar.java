@@ -43,8 +43,14 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
     public XMLGrammar(String nonterminalClass, String nodeTypeClass)
     {
+        this(nonterminalClass, nodeTypeClass, null);
+    }
+
+    public XMLGrammar(String nonterminalClass, String nodeTypeClass, BURMSemantics<Nonterminal,NodeType> semantics)
+    {
         this.nonterminalClass = nonterminalClass;
         this.nodeTypeClass = nodeTypeClass;
+        this.semantics = semantics;
     }
 
     public void setRandomized(boolean randomize)
@@ -215,17 +221,18 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     @SuppressWarnings("unchecked")
     private void startSemantics(String localName, Attributes atts)
     {
-        assert this.semantics == null;
+        if (this.semantics == null) {
 
-        try {
-            if ("java".equals(this.language)) {
-                this.semantics = new JavaSemantics<Nonterminal,NodeType>(reducerClassName, nodeClassName, nodeTypeClass, nonterminalClass);
+            try {
+                if ("java".equals(this.language)) {
+                    this.semantics = new JavaSemantics<Nonterminal,NodeType>(reducerClassName, nodeClassName, nodeTypeClass, nonterminalClass);
 
-            } else if ("cpp".equals(this.language) || "C++".equalsIgnoreCase(this.language)) {
-                this.semantics = new CppSemantics<Nonterminal,NodeType>(nodeClassName, reducerClassName);
+                } else if ("cpp".equals(this.language) || "C++".equalsIgnoreCase(this.language)) {
+                    this.semantics = new CppSemantics<Nonterminal,NodeType>(nodeClassName, reducerClassName);
+                }
+            } catch (Exception nogood) {
+                throw new IllegalArgumentException(nogood);
             }
-        } catch (Exception nogood) {
-            throw new IllegalArgumentException(nogood);
         }
     }
 

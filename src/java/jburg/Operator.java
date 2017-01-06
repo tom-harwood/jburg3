@@ -76,6 +76,7 @@ public class Operator<Nonterminal, NodeType>
      */
     Operator(NodeType nodeType, int arity, ProductionTable<Nonterminal, NodeType> productionTable)
     {
+        assert nodeType != null : "Node type cannot be null";
         this.nodeType = nodeType;
         this.productionTable = productionTable;
         this.arity = arity;
@@ -119,7 +120,7 @@ public class Operator<Nonterminal, NodeType>
             this.leafState.finishCompilation();
 
         } else {
-            throw new IllegalStateException(String.format("Operator %s is not a leaf or non-leaf -- probably because there is a child nonterminal with no productions.", this));
+            throw new IllegalStateException(String.format("%s is not a leaf or non-leaf -- probably because there is a child nonterminal with no productions.", this));
         }
 
         builder = null;

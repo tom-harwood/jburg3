@@ -6,7 +6,6 @@ enum CommandType
     Clear("Clear the console log"),
     Echo("Echo a property"),
     Error,
-    Execute("Execute dump-generating program"),
     Exit("Exit the debugger"),
     Help("Display help -- help <command name> for details"),
     HGrep("Grep command history"),

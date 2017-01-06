@@ -7,7 +7,6 @@ import javax.swing.JFrame;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import java.awt.Frame;
@@ -34,16 +33,21 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
+import jburg.ProductionTable;
+import jburg.frontend.XMLGrammar;
+import jburg.semantics.DebuggerSemantics;
 import jburg.util.PrintState;
 
 public class Debugger implements Console.AbstractExecutive
 {
-    final Console       console;
-    final Properties    properties;
-    String              burmDumpFilename;
-    Document            burmDump;
-    final static String propertiesFileName = "jburgDebugger.properties";
-    final static String debuggerConsoleName = "Debugger";
+    final Console                   console;
+    final static String             debuggerConsoleName = "Debugger";
+    final Properties                properties;
+    final static String             propertiesFileName = "jburgDebugger.properties";
+    String                          burmDumpFileName;
+    Document                        burmDump;
+    String                          grammarFileName;
+    ProductionTable<Object,String>  productionTable = null;
 
     public static void main(String[] args)
     {
@@ -68,7 +72,11 @@ public class Debugger implements Console.AbstractExecutive
         for (int i = 0; i < args.length; i++) {
 
             if (args[i].equalsIgnoreCase("-burm") && i+1 < args.length) {
-                burmDumpFilename = args[++i];
+                burmDumpFileName = args[++i];
+
+            } else if (args[i].equalsIgnoreCase("-grammar") && i+1 < args.length) {
+                grammarFileName = args[++i];
+
             } else if ((args[i].equalsIgnoreCase("-command") || args[i].equalsIgnoreCase("-cmd") || args[i].equals("-c")) && i+1 < args.length) {
                 aPrioriCommand = new StringBuilder();
 
@@ -78,17 +86,20 @@ public class Debugger implements Console.AbstractExecutive
                 }
 
             } else {
-                println("Unrecognized command " + args[i]);
+                printf("Unrecognized command %s", args[i]);
             }
         }
 
-        if (burmDumpFilename != null) {
+        try {
+            loadBurmDump();
+        } catch (Exception loadError) {
+            console.getAbstractConsole().exception(String.format("loading %s", burmDumpFileName), loadError);
+        }
 
-            try {
-                load();
-            } catch (Exception loadError) {
-                console.getAbstractConsole().exception(String.format("loading %s", burmDumpFilename), loadError);
-            }
+        try {
+            loadGrammar();
+        } catch (Exception loadError) {
+            console.getAbstractConsole().exception(String.format("loading %s", grammarFileName), loadError);
         }
 
         console.display(debuggerConsoleName);
@@ -98,11 +109,35 @@ public class Debugger implements Console.AbstractExecutive
         }
     }
 
-    private void load()
+    private void loadBurmDump()
     throws Exception
     {
-        this.burmDump = parseXML(new FileInputStream(burmDumpFilename));
-        cachedStateInfo.clear();
+        if (burmDumpFileName != null) {
+            this.burmDump = parseXML(new FileInputStream(burmDumpFileName));
+            cachedStateInfo.clear();
+        }
+    }
+
+    private void loadGrammar()
+    throws Exception
+    {
+        if (this.grammarFileName != null) {
+            XMLGrammar<Object,String> grammarBuilder = new XMLGrammar<Object,String>("Object", "String", new DebuggerSemantics());
+            this.productionTable = grammarBuilder.build(convertToFileURL(grammarFileName));
+        }
+    }
+
+    public static String convertToFileURL(String filename)
+    {
+        String path = new File(filename).getAbsolutePath();
+        if (File.separatorChar != '/') {
+            path = path.replace(File.separatorChar, '/');
+        }
+
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        return "file:" + path;
     }
 
     private Document parseXML(InputStream is)
@@ -152,13 +187,13 @@ public class Debugger implements Console.AbstractExecutive
                         case Echo: {
                                 String propertyName = tokens[1];
                                 String propertyValue = properties.getProperty(propertyName);
-                                println("%s = %s", propertyName, propertyValue);
+                                printf("%s = %s", propertyName, propertyValue);
                             }
                             break;
 
                         case Exit: {
-                                if (burmDumpFilename != null) {
-                                    properties.setProperty("lastDumpFile", burmDumpFilename);
+                                if (burmDumpFileName != null) {
+                                    properties.setProperty("lastDumpFile", burmDumpFileName);
                                 }
                                 console.saveHistory(properties);
 
@@ -175,10 +210,6 @@ public class Debugger implements Console.AbstractExecutive
 
                                 notifyAll();
                             }
-                            break;
-
-                        case Execute:
-                            execute(command.substring(tokens[0].length()));
                             break;
 
                         case Help:
@@ -210,8 +241,8 @@ public class Debugger implements Console.AbstractExecutive
                                 int returnVal = chooser.showOpenDialog(new JFrame());
 
                                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                                    burmDumpFilename = chooser.getSelectedFile().getCanonicalPath();
-                                    load();
+                                    burmDumpFileName = chooser.getSelectedFile().getCanonicalPath();
+                                    loadBurmDump();
                                 }
 
                             }
@@ -220,9 +251,9 @@ public class Debugger implements Console.AbstractExecutive
                         case PrintStackTrace: {
 
                                 if (mostRecentException != null) {
-                                    println(mostRecentException.toString());
+                                    printf("%s", mostRecentException.toString());
                                     for (StackTraceElement element: mostRecentException.getStackTrace()) {
-                                        println(element.toString());
+                                        printf("%s", element.toString());
                                     }
                                 }
                             }
@@ -230,14 +261,16 @@ public class Debugger implements Console.AbstractExecutive
 
                         case PrintState: {
                                 for (PrintState.Finding finding: PrintState.analyzeState(burmDump, tokens[1])) {
-                                    println(finding.toString());
+                                    printf("%s", finding.toString());
                                 }
                             }
                             break;
 
                         case Reload:
-                            load();
+                            loadBurmDump();
+                            loadGrammar();
                             break;
+
                         case Set: {
                                 String propertyName = tokens[1];
                                 set(propertyName, allTextAfter(command, propertyName));
@@ -278,7 +311,7 @@ public class Debugger implements Console.AbstractExecutive
         return command.substring(command.indexOf(lastTokenUsed) + lastTokenUsed.length()).trim();
     }
 
-    private Exception mostRecentException = null;
+    private Throwable mostRecentException = null;
 
     private void analyze(String xml)
     throws Exception
@@ -312,10 +345,10 @@ public class Debugger implements Console.AbstractExecutive
             analyze(execCommand, stdout);
         } else if (errorOutput.length() > 0) {
             for (String line: errorOutput.split("\\n")) {
-                println(line);
+                printf("%s", line);
             }
         } else {
-            println("Command %s produced no output.", execCommand);
+            printf("Command %s produced no output.", execCommand);
         }
     }
 
@@ -360,7 +393,7 @@ public class Debugger implements Console.AbstractExecutive
         console.getAbstractConsole().status(String.format(format,args));
     }
 
-    private void println(String format, Object... args)
+    void printf(String format, Object... args)
     {
         console.getAbstractConsole().println(String.format(format,args));
     }

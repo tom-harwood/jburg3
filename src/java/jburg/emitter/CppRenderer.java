@@ -80,13 +80,7 @@ public class CppRenderer implements AttributeRenderer
 
         } else if ("postCallback.variadicOffset".equals(formatString)) {
             PatternMatcher patternMatcher = (PatternMatcher)o;
-
-            if (patternMatcher.getPostCallback() != null) {
-                return String.valueOf(patternMatcher.getPostCallback().getVariadicOffset());
-            } else {
-                return "0";
-            }
-
+            return String.valueOf(patternMatcher.getVariadicOffset());
         } else if ("timestamp".equals(formatString)) {
             return new java.util.Date().toString();
 

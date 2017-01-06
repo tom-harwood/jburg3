@@ -75,19 +75,20 @@ public class ProductionTable<Nonterminal, NodeType>
     Map<NodeType, List<Operator<Nonterminal,NodeType>>> operators =
         new HashMap<NodeType, List<Operator<Nonterminal,NodeType>>>();
 
+    /**
+     * @return the operators in this production table.
+     */
     public Collection<List<Operator<Nonterminal,NodeType>>> getOperators()
     {
         return operators.values();
     }
 
+    /**
+     * @return the node type to operator mappings in this production table.
+     */
     public Map<NodeType, List<Operator<Nonterminal,NodeType>>> getOperatorsByNodeType()
     {
         return operators;
-    }
-
-    public List<Operator<Nonterminal,NodeType>> getOperators(Nonterminal nt)
-    {
-        return operators.get(nt);
     }
 
     /**

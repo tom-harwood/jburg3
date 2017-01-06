@@ -11,6 +11,9 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 
+import jburg.BurgInput;
+import jburg.Reducer;
+
 class DumpAnalyzer extends JPanel
 {
     final AdapterNode   root;
@@ -20,6 +23,8 @@ class DumpAnalyzer extends JPanel
 
     static final String closeCommand = "Close";
     static final String expandAllCommand = "Expand fully";
+    static final String relabelCommand = "Rebuild BURS annotations";
+    static final String setTitleCommand = "Set title...";
 
     DumpAnalyzer(Debugger debugger, String title, Node root)
     {
@@ -39,12 +44,12 @@ class DumpAnalyzer extends JPanel
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
 
-        JMenu menu = new JMenu("Tree");
-        menu.setMnemonic(KeyEvent.VK_T);
-        menuBar.add(menu);
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        menuBar.add(fileMenu);
 
         JMenuItem closeItem = new JMenuItem(closeCommand, KeyEvent.VK_C);
-        menu.add(closeItem);
+        fileMenu.add(closeItem);
         closeItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -54,13 +59,40 @@ class DumpAnalyzer extends JPanel
             }
         );
 
+        JMenu treeMenu = new JMenu("Tree");
+        treeMenu.setMnemonic(KeyEvent.VK_T);
+        menuBar.add(treeMenu);
+
         JMenuItem expandItem = new JMenuItem(expandAllCommand, KeyEvent.VK_E);
-        menu.add(expandItem);
+        treeMenu.add(expandItem);
         expandItem.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     expandAll();
                     frame.pack();
+                }
+            }
+        );
+
+        JMenuItem relabelItem = new JMenuItem(relabelCommand, KeyEvent.VK_L);
+        treeMenu.add(relabelItem);
+        relabelItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    relabel();
+                }
+            }
+        );
+
+        JMenuItem setTitleItem = new JMenuItem(setTitleCommand, KeyEvent.VK_T);
+        treeMenu.add(setTitleItem);
+        setTitleItem.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    String title = JOptionPane.showInputDialog("Title:");
+                    if (title != null) {
+                        frame.setTitle(title);
+                    }
                 }
             }
         );
@@ -127,17 +159,45 @@ class DumpAnalyzer extends JPanel
         }
     }
 
-    class AdapterNode
+    private void relabel()
+    {
+        if (debugger.productionTable != null) {
+            Reducer<Object,String> reducer = new Reducer<Object,String>(null, debugger.productionTable);
+
+            try {
+                reducer.label(root);
+            } catch (Exception cannotLabel) {
+                debugger.exception(cannotLabel, "Problem labeling");
+            }
+
+            expandNonViable();
+            frame.repaint();
+
+        } else {
+            debugger.exception(new IllegalStateException("No production table loaded"), "Problem labeling");
+        }
+    }
+
+    /**
+     * AdapterNode wraps a DOM node, which allows it
+     * to be displayed in a JTree and also to be re-labled
+     * with new versions of the BURS tables.
+     */
+    class AdapterNode implements BurgInput<Object,String>
     {
         private final Node              domNode;
-        private final String            text;
-        private final Integer           stateNumber;
+        private final StringBuilder     attributeText = new StringBuilder();
         private final java.util.List<AdapterNode> childNodes;
+        private Integer                 stateNumber;
+        private Object                  transitionTableLeaf = null;
+
 
         AdapterNode(Node domNode)
         {
             if (domNode == null) {
                 throw new IllegalStateException("null domNode?");
+            } else if (domNode.getNodeName() == null) {
+                throw new IllegalStateException("null node name?");
             }
 
             this.domNode = domNode;
@@ -156,21 +216,20 @@ class DumpAnalyzer extends JPanel
                     }
             }
 
-            // Populate the display string.
-            StringBuilder builder = new StringBuilder();
-
-            if (domNode.getNodeName() != null) {
-                builder.append(domNode.getNodeName());
-            }
+            // Populate the attribute display string.
             NamedNodeMap attrs = domNode.getAttributes();
 
             for (int i = 0; attrs != null && i < attrs.getLength(); i++) {
                 Attr attr = (Attr)attrs.item(i);
-                builder.append(" ");
-                builder.append(attr.getName());
-                builder.append("=\"");
-                builder.append(attr.getValue());
-                builder.append("\"");
+
+                if (attr.getName().equals("state")) {
+                    continue;
+                }
+                attributeText.append(" ");
+                attributeText.append(attr.getName());
+                attributeText.append("=\"");
+                attributeText.append(attr.getValue());
+                attributeText.append("\"");
             }
 
             if (attrs != null && attrs.getNamedItem("state") != null) {
@@ -178,8 +237,6 @@ class DumpAnalyzer extends JPanel
             } else {
                 this.stateNumber = 0;
             }
-
-            this.text = builder.toString();
         }
 
         public int getChildCount()
@@ -199,7 +256,42 @@ class DumpAnalyzer extends JPanel
 
         public String toString()
         {
-            return text;
+            return String.format("%s state=%s %s", domNode.getNodeName(), stateNumber, attributeText);
+        }
+
+        public String getNodeType()
+        {
+            return domNode.getNodeName() != null? domNode.getNodeName(): "null";
+        }
+
+        public int getSubtreeCount()
+        {
+            return getChildCount();
+        }
+
+        public BurgInput<Object, String>  getSubtree(int idx)
+        {
+            return getChild(idx);
+        }
+
+        public void setStateNumber(int stateNumber)
+        {
+            this.stateNumber = stateNumber;
+        }
+
+        public int getStateNumber()
+        {
+            return this.stateNumber;
+        }
+
+        public Object getTransitionTableLeaf()
+        {
+            return this.transitionTableLeaf;
+        }
+
+        public void setTransitionTableLeaf(Object ttleaf)
+        {
+            this.transitionTableLeaf = ttleaf;
         }
     }
 
@@ -257,7 +349,7 @@ class DumpAnalyzer extends JPanel
 
             AdapterNode node = (AdapterNode)value;
 
-            if (node.stateNumber == 0 && !"#text".equals(node.text)) {
+            if (node.stateNumber == 0 && !"#text".equals(node.attributeText.toString())) {
                 setForeground(Color.red.darker());
             }
 

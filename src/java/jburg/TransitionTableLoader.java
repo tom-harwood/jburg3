@@ -1,6 +1,7 @@
 package jburg;
 
 import jburg.semantics.HostRoutine;
+import jburg.semantics.BURMSemantics;
 import jburg.semantics.JavaSemantics;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -11,13 +12,24 @@ import org.xml.sax.helpers.*;
 
 /**
  * TransitionTableLoader deserializes a JBurg transition table
- * from its XML format into a usable ProductionTable. It's largely
- * obsolescent with the advent of host-language serialized forms,
- * but it's still somewhat useful as a regression test.
+ * from its XML format into a usable ProductionTable.
  */
 public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 {
-    private final JavaSemantics semantics = new JavaSemantics();
+    private final BURMSemantics<Nonterminal,NodeType> semantics;
+    private final boolean isJavaSemantics;
+
+    public TransitionTableLoader()
+    {
+        this.semantics = new JavaSemantics<Nonterminal,NodeType>();
+        this.isJavaSemantics = true;
+    }
+
+    public TransitionTableLoader(BURMSemantics<Nonterminal,NodeType> semantics)
+    {
+        this.semantics = semantics;
+        this.isJavaSemantics = false;
+    }
 
     public ProductionTable<Nonterminal, NodeType> load(String uri, Class<?> nonterminalClass, Class<?> nodeTypeClass)
     throws Exception
@@ -30,10 +42,14 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         xmlReader.setContentHandler(this);
         xmlReader.parse(uri);
 
-
         // Parse the Node tree into a production table.
         DumpParser dumpParser = new DumpParser(this.rootNode, nonterminalClass, nodeTypeClass);
         return dumpParser.getProductionTable();
+    }
+
+    public String getXMLString()
+    {
+        return rootNode.toXMLString();
     }
 
     enum DumpType
@@ -168,33 +184,36 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             this.transitionTableLeaf = transitionTableLeaf;
         }
 
-        @SuppressWarnings("unused")
-		void dump(java.io.PrintStream out)
-        {
-            dump(out,0);
-        }
-
-        @SuppressWarnings("unchecked")
-        void dump(java.io.PrintStream out, int indent)
-        {
-            for (int i = 0; i < indent * 2;i++) out.print(" ");
-            out.print(this.nodeType);
-            if (this.transitionTableLeaf != null) {
-                out.printf(" %d %s\n", this.stateNumber, ((State<Nonterminal,NodeType>)this.transitionTableLeaf).getNonterminals());
-            } else {
-                out.println(" --");
-            }
-            for (Node child:children) {
-                child.dump(out, indent+1);
-            }
-        }
-
         @Override
         public String toString()
         {
             return String.format("%s%s", this.nodeType, this.attributes);
         }
+
+        public String toXMLString()
+        {
+            StringBuilder builder = new StringBuilder(String.format("<%s state=\"%d\"", nodeType, stateNumber));
+
+            for (String attrName: attributes.keySet()) {
+                builder.append(String.format(" %s=\"%s\"", attrName, get(attrName)));
+            }
+
+            if (this.children.isEmpty()) {
+                builder.append("/>");
+            } else {
+                builder.append(">");
+                for (Node child: children) {
+                    builder.append(child.toXMLString());
+                }
+                builder.append("</");
+                builder.append(nodeType);
+                builder.append(">");
+            }
+
+            return builder.toString();
+        }
     }
+
 
     Node rootNode = null;
     Stack<Node> nodeStack = new Stack<Node>();
@@ -317,6 +336,10 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
+                builder.getPostCallback("parsePatternMatcherLeafNoCallback")
+            );
+            productions.addPatternMatch(
+                Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherPost", Object.class, HostRoutine.class),
                 Load.ChildTypes, Load.PostCallback
             );
@@ -324,6 +347,11 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherPre", Object.class, HostRoutine.class),
                 Load.ChildTypes, Load.PreCallback
+            );
+            productions.addPatternMatch(
+                Load.Pattern, DumpType.pattern,
+                builder.getPostCallback("parsePatternMatcherNoCallback", Object.class),
+                Load.ChildTypes
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
@@ -430,7 +458,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
             // Predicated state
             productions.addVarArgsPatternMatch(
-                Load.TransitionTableLeaf, DumpType.predicatedState, 
+                Load.TransitionTableLeaf, DumpType.predicatedState,
                 builder.getPostCallback("parseTransitionTableLeaf", getArrayArgs(State.class)),
                 Load.State
             );
@@ -467,8 +495,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 reducer.reduce(root, Load.ProductionTable);
                 this.result = builder.getProductionTable();
             } else {
-                System.err.printf("Load failed:\n");
-                root.dump(System.err);
                 throw new IllegalStateException("Unable to load production table.");
             }
         }
@@ -550,7 +576,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         throws Exception
         {
             Class<?> receiverClass = Class.forName(node.getStringAttr("class"));
-            return semantics.getHostRoutine(receiverClass.getDeclaredMethod(node.getStringAttr("name"),parameterTypes));
+            return isJavaSemantics? ((JavaSemantics)semantics).getHostRoutine(receiverClass.getDeclaredMethod(node.getStringAttr("name"),parameterTypes)): null;
         }
 
         public Closure<Nonterminal> parseClosureWithPre(Node node, HostRoutine preCallback)
@@ -594,7 +620,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 null,
                 preCallback,
                 postCallback,
-                node.getBooleanAttr("variadic"), 
+                node.getBooleanAttr("variadic"),
                 Arrays.asList((Nonterminal[])childTypes)
             );
         }
@@ -607,6 +633,11 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         public PatternMatcher<Nonterminal,NodeType> parsePatternMatcherPre(Node node, Object childTypes, HostRoutine preCallback)
         {
             return parsePatternMatcher(node, childTypes, null, preCallback);
+        }
+
+        public PatternMatcher<Nonterminal,NodeType> parsePatternMatcherNoCallback(Node node, Object childTypes)
+        {
+            return parsePatternMatcher(node, childTypes, null, null);
         }
 
         public PatternMatcher<Nonterminal,NodeType> parsePatternMatcherLeafPreAndPost(Node node, HostRoutine preCallback, HostRoutine postCallback)
@@ -624,6 +655,11 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             return parsePatternMatcher(node, emptyNonterminals, preCallback, null);
         }
 
+        public PatternMatcher<Nonterminal,NodeType> parsePatternMatcherLeafNoCallback(Node node)
+        {
+            return parsePatternMatcher(node, emptyNonterminals, null, null);
+        }
+
         @SuppressWarnings("unchecked")
         public Object buildStateTable(Node node, State<Nonterminal, NodeType>... states)
         {
@@ -635,7 +671,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
             return states;
         }
-        
+
         @SafeVarargs
         public final Object buildProductionTable(Node node, Operator<Nonterminal, NodeType>... operatorTable)
         {
@@ -656,7 +692,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         {
             State<Nonterminal, NodeType> result = new State<Nonterminal, NodeType>();
             result.number = Integer.parseInt(node.get("number"));
-            
+
             // Create a scratch "cost table" to rebuild the State's cost data.
             Map<Nonterminal,Long> costMap = new HashMap<Nonterminal,Long>();
 
@@ -817,7 +853,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             }
 
             try {
-                return semantics.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formalsWithNode));
+                return isJavaSemantics? ((JavaSemantics)semantics).getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formalsWithNode)): null;
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new IllegalStateException(ex);
@@ -829,7 +865,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             Class<?>[] formals = { Node.class, Object.class };
 
             try {
-                return semantics.getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formals));
+                return isJavaSemantics? ((JavaSemantics)semantics).getHostRoutine(TTBuilder.class.getDeclaredMethod(methodName, formals)): null;
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new IllegalStateException(ex);

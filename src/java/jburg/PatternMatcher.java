@@ -108,7 +108,12 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
 
     public Nonterminal getVariadicNonterminal()
     {
+        return childTypes.get(getVariadicOffset());
+    }
+
+    public int getVariadicOffset()
+    {
         assert isVarArgs;
-        return childTypes.get(childTypes.size()-1);
+        return childTypes.size()-1;
     }
 }
