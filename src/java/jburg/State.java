@@ -451,6 +451,9 @@ public class State<Nonterminal, NodeType>
         StringBuilder buffer = new StringBuilder();
 
         if (nonClosureProductions.size() > 0) {
+
+            int nDone = 0;
+
             for (Nonterminal nt: nonClosureProductions.keySet()) {
                 Production<Nonterminal> p = nonClosureProductions.get(nt);
 
@@ -458,24 +461,27 @@ public class State<Nonterminal, NodeType>
                     buffer.append("\n");
                 }
 
-                // TODO: Better formatting, callbacks especially.
-                buffer.append(String.format("%s=%s", nt, p));
+                buffer.append(String.format("%s=%s", nt, p.getDescription()));
 
                 // Append closures chained from this nonterminal.
-                appendClosures(nt, 4, buffer);
+                appendClosures(nt, 4, buffer, false);
             }
         }
 
         return buffer.toString();
     }
 
-    private void appendClosures(Nonterminal nt, int padding, StringBuilder buffer)
+    private void appendClosures(Nonterminal nt, int padding, StringBuilder buffer, boolean wroteSeparator)
     {
         for (Closure<Nonterminal> closure: closures.values()) {
 
             if (closure.getSource().equals(nt)) {
+                if (!wroteSeparator) {
+                    buffer.append("\n    ---- closures ----");
+                    wroteSeparator = true;
+                }
                 buffer.append(String.format("\n%" + String.valueOf(padding) + "s%s => %s", "", nt, closure.getNonterminal()));
-                appendClosures(closure.getNonterminal(), padding+4, buffer);
+                appendClosures(closure.getNonterminal(), padding+4, buffer, wroteSeparator);
             }
         }
     }

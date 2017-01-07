@@ -218,5 +218,23 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
         {
             return CppSemantics.this;
         }
+
+        public String toString()
+        {
+            StringBuilder buffer = new StringBuilder();
+            buffer.append(methodName);
+            buffer.append("(");
+
+            for (int i = 0; i < nonterminals.length; i++) {
+                if (i > 0) {
+                    buffer.append(", ");
+                }
+                buffer.append(getNonterminalMapping(nonterminals[i]).toString());
+            }
+
+            buffer.append(")");
+
+            return buffer.toString();
+        }
     }
 }

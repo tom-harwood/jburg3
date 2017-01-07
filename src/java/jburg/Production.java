@@ -115,4 +115,9 @@ public abstract class Production<Nonterminal>
             return "";
         }
     }
+
+    public String getDescription()
+    {
+        return toString();
+    }
 }

@@ -75,6 +75,38 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
         return String.format("%s%s :%s", nodeType, childTypes, ownCost);
     }
 
+    @Override
+    public String getDescription()
+    {
+        StringBuilder buffer = new StringBuilder(nodeType.toString());
+
+        if (!childTypes.isEmpty()) {
+            buffer.append("(");
+
+            for (int i = 0; i < childTypes.size(); i++) {
+
+                if (i > 0) {
+                    buffer.append(", ");
+                }
+                buffer.append(childTypes.get(i));
+            }
+
+            buffer.append(")");
+        }
+
+        if (preCallback != null) {
+            buffer.append("\n    preCallback ");
+            buffer.append(preCallback);
+        }
+
+        if (postCallback != null) {
+            buffer.append("\n    postCallback ");
+            buffer.append(postCallback);
+        }
+
+        return buffer.toString();
+    }
+
     /**
      * A PatternChildDescriptor is a (position,Nonterminal) pair
      * used by the host language emitters to build method signatures.
