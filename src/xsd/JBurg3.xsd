@@ -60,6 +60,7 @@
          <xs:element name = "preCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
          <xs:element name = "postCallback" type = "Callback" minOccurs='0' maxOccurs='1'/>
          <xs:element name = "child" type = "Child" minOccurs='0' maxOccurs='unbounded'/>
+         <xs:element name = "Pattern" type = "Pattern" minOccurs='0' maxOccurs='unbounded'/>
       </xs:choice>
       <xs:attribute name = 'nonterminal' type = 'xs:string'/>
       <xs:attribute name = 'nodeType' type = 'xs:string'/>

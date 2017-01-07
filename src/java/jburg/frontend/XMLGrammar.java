@@ -30,7 +30,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
     String verboseTrigger = null;
 
-    ProductionDesc currentProduction = null;
+    Stack<ProductionDesc> activeProductions = new Stack<ProductionDesc>();
 
     BURMSemantics<Nonterminal,NodeType> semantics = null;
 
@@ -253,51 +253,65 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
     {
         // This belongs in the constructor, but Java won't let it be there.
         boolean isVarArgs = atts.getValue("variadic") != null ? Boolean.parseBoolean(atts.getValue("variadic")): false;
-        currentProduction = new PatternMatcherDesc(atts, isVarArgs);
+        activeProductions.push(new PatternMatcherDesc(atts, isVarArgs));
     }
 
     private void startClosure(String localName, Attributes atts)
     {
-        currentProduction = new ClosureDesc(atts);
+        activeProductions.push(new ClosureDesc(atts));
     }
 
     private void startErrorHandler(String localName, Attributes atts)
     {
-        currentProduction = new ErrorHandlerDesc(atts);
+        activeProductions.push(new ErrorHandlerDesc(atts));
     }
 
     private void startNullHandler(String localName, Attributes atts)
     {
-        currentProduction = new NullHandlerDesc(atts);
+        activeProductions.push(new NullHandlerDesc(atts));
     }
 
     private void addChild(String localName, Attributes atts)
     {
-        currentProduction.addChild(atts);
+        getCurrentProduction().addChild(atts);
     }
 
     private void addPostCallback(String localName, Attributes atts)
     throws Exception
     {
-        currentProduction.addPostCallback(atts);
+        getCurrentProduction().addPostCallback(atts);
     }
 
     private void addPreCallback(String localName, Attributes atts)
     throws Exception
     {
-        currentProduction.addPreCallback(atts);
+        getCurrentProduction().addPreCallback(atts);
     }
 
     private void addPredicate(String localName, Attributes atts)
     throws Exception
     {
-        currentProduction.addPredicate(atts);
+        getCurrentProduction().addPredicate(atts);
     }
 
     private void finishProduction()
     {
-        productions.add(currentProduction);
-        currentProduction = null;
+        ProductionDesc newProduction = getCurrentProduction();
+        productions.add(newProduction);
+        activeProductions.pop();
+
+        if (!activeProductions.isEmpty()) {
+            getCurrentProduction().children.add(newProduction.nonterminal);
+        }
+    }
+
+    ProductionDesc getCurrentProduction()
+    {
+        if (activeProductions.isEmpty()) {
+            throw new IllegalStateException("No active production.");
+        } else {
+            return activeProductions.peek();
+        }
     }
 
 

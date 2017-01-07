@@ -153,7 +153,7 @@ public class TestRunner
                         String result = null;
 
                         if (bespokeReducer == null) {
-                            result = defaultReducer.reduce(tc.root, tc.type).toString();;
+                            result = defaultReducer.reduce(tc.root, tc.type).toString();
                         } else {
                             Object reduced = reduceMethod.invoke(bespokeReducer, visitor, tc.root, tc.type);
 

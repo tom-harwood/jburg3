@@ -63,4 +63,4 @@ do
     esac
 done
 
-java -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS
+java -ea -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS
