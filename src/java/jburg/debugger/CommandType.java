@@ -38,7 +38,7 @@ enum CommandType
         return Error;
     }
 
-    static void help(AbstractConsole console, String helpTopic)
+    static void help(Console console, String helpTopic)
     {
         if (helpTopic != null) {
             CommandType ctype = getCommandType(helpTopic);

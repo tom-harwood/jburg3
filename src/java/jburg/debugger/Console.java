@@ -17,7 +17,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.GroupLayout.*;
 
-public class Console extends JPanel implements AbstractConsole
+public class Console extends JPanel
 {
     /** An editable command line. */
     final JTextField commandLine = new JTextField();
@@ -166,20 +166,17 @@ public class Console extends JPanel implements AbstractConsole
         }
     }
 
-    @Override
     public void println(String s)
     {
         addOutput(s, normalFont);
     }
 
-    @Override
     public void exception(String operation, Exception ex) {
 
         String diagnostic = ex.getMessage() != null?  ex.getMessage(): ex.toString();
         addOutput(diagnostic, italicFont);
     }
 
-    @Override
     public void status(String format, Object... args)
     {
         addOutput(String.format(format, args), italicFont);
