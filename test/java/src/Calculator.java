@@ -166,7 +166,7 @@ public class Calculator
     /*
      * Pre-reduction methods
      */
-    public void biasPreCallback(Node n, Nonterminal goalState)
+    public void biasPreCallback(Node n, Object goalState)
     {
         additionBias += 1;
     }
@@ -176,12 +176,18 @@ public class Calculator
     /*
      * Error handling methods
      */
-    public String onError(Node n, Nonterminal goalState)
+    public String onError(Node n, Object goalState)
     {
         return String.format("Error handled: %s",n);
     }
 
-    public String onNull(Node n, Nonterminal goalState)
+    public Integer dumpError(Node n, Object goalState)
+    {
+        System.out.printf("    analyze %s\n", n.toXML());
+        throw new IllegalStateException(String.format("!!%s: %s", goalState, n));
+    }
+
+    public String onNull(Node n, Object goalState)
     {
         return String.format("Null:goal=%s",goalState);
     }

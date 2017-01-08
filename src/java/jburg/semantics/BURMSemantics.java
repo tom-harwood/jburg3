@@ -70,7 +70,7 @@ public interface BURMSemantics<Nonterminal, NodeType>
      * @param   ntName  the "name" of the nonterminal.
      * @return  the canonical nonterminal object corresponding to the name.
      */
-    public Nonterminal getNonterminal(Object ntName);
+    public Object getNonterminal(Object ntName);
 
     /**
      * Get a node type given its "name," i.e., a nominal description.
@@ -78,4 +78,11 @@ public interface BURMSemantics<Nonterminal, NodeType>
      * @return  the canonical node type object corresponding to the name.
      */
     public NodeType getNodeType(Object typeName);
+
+    /**
+     * Get the host class a nonterminal maps to.
+     * @param ntName the name of the nonterminal.
+     * @return the mapped host class for that nonterminal.
+     */
+    public Object getNonterminalMapping(Object ntName);
 }

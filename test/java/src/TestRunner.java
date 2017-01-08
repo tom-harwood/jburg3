@@ -22,6 +22,7 @@ public class TestRunner
         String dumpClassName = null;
         String visitorClassName = "Calculator";
         String reducerClassName = null;
+        String verboseTrigger = null;
 
         List<String>    failedTestcases = new ArrayList<String>();
 
@@ -41,6 +42,8 @@ public class TestRunner
                 grammarFile = args[++i];
             } else if (args[i].equals("-quiet")) {
                 verbose = false;
+            } else if (args[i].equals("-verbose-trigger")) {
+                verboseTrigger = args[++i];
             } else if (args[i].equals("-randomize")) {
                 randomize = true;
             } else if (args[i].equals("-reducer")) {
@@ -49,7 +52,7 @@ public class TestRunner
                 visitorClassName = args[++i];
             } else if (args[i].equals("-templates")) {
                 dumpTemplates = args[++i];
-            } else if (testcaseFile == null) {
+            } else if (testcaseFile == null && !args[i].startsWith("-")) {
                 testcaseFile = args[i];
             } else {
                 throw new IllegalArgumentException("unrecognized argument " + args[i]);
@@ -77,6 +80,10 @@ public class TestRunner
 
         if (productions == null && reducerClassName ==  null) {
             throw new IllegalArgumentException("You must specify a grammar, e.g. -grammar burmGrammar.xml, or load a production table, e.g. -load productionTable.xml.\n");
+        }
+
+        if (verboseTrigger != null) {
+            productions.setVerboseTrigger(verboseTrigger);
         }
 
         if (dumpFile != null) {

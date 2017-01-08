@@ -31,6 +31,8 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
      */
     public void setNonterminalClass(Object nt, Object hostType)
     {
+        nt = nt.toString();
+
         if (!nonterminalMappings.containsKey(nt)) {
             nonterminalMappings.put(nt,hostType.toString());
         } else if (!nonterminalMappings.get(nt).equals(hostType)) {
@@ -40,6 +42,8 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
 
     public void setDefaultNonterminalClass(Object defaultHostType)
     {
+        defaultHostType = defaultHostType.toString();
+
         if (defaultMapping == null) {
             defaultMapping = defaultHostType.toString();
         } else if (!defaultMapping.equals(defaultHostType)) {
@@ -108,13 +112,9 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
      * @return  the canonical nonterminal object corresponding to the name.
      */
     @SuppressWarnings("unchecked")
-    public Nonterminal getNonterminal(Object ntName)
+    public Object getNonterminal(Object ntName)
     {
-        if (this.nonterminalMappings.containsKey(ntName.toString())) {
-            return (Nonterminal)ntName;
-        } else {
-            throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping", ntName));
-        }
+        return ntName.toString();
     }
 
     /**
@@ -122,13 +122,14 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
      * @param ntName the name of the nonterminal.
      * @return the mapped host class for that nonterminal.
      */
-    @SuppressWarnings("unchecked")
-    private Object getNonterminalMapping(Object ntName)
+    public Object getNonterminalMapping(Object ntName)
     {
-        if (this.nonterminalMappings.containsKey(ntName.toString())) {
-            return (Nonterminal)this.nonterminalMappings.get(ntName.toString());
+        ntName = ntName.toString();
+
+        if (this.nonterminalMappings.containsKey(ntName)) {
+            return this.nonterminalMappings.get(ntName);
         } else if (this.defaultMapping != null) {
-            return (Nonterminal)this.defaultMapping;
+            return this.defaultMapping;
         } else {
             throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping",ntName));
         }

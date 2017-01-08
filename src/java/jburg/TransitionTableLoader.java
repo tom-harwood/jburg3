@@ -240,10 +240,10 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
     public class CostEntry
     {
-        final Nonterminal   nt;
+        final Object   nt;
         final int           cost;
 
-        CostEntry(Nonterminal nt, int cost)
+        CostEntry(Object nt, int cost)
         {
             this.nt = nt;
             this.cost = cost;
@@ -263,7 +263,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             HostRoutine passthrough      = builder.getPostCallback("passthrough", Object.class);
             HostRoutine packageVarArgs   = builder.getPostCallback("packageVarArgs", getArrayArgs(Object.class));
             HostRoutine parseClass       = builder.getPostCallback("parseClass");
-            HostRoutine noop             = null;
+            HostRoutine noCallback       = null;
 
             ProductionTable<Load,DumpType> productions = new ProductionTable<Load,DumpType>();
 
@@ -271,41 +271,41 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             productions.addVarArgsPatternMatch(
                 Load.ProductionTable, DumpType.burmDump,
                 builder.getPostCallback("buildProductionTable", getArrayArgs(Operator.class)),
-                Load.Operator
+                Arrays.asList(Load.Operator)
             );
 
             // Trivial error handler
-            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noop);
+            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noCallback);
 
             // Error handler with no callback but with closures
-            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noop, Load.Closures);
+            productions.addPatternMatch(Load.Operator, DumpType.errorHandler, noCallback, Arrays.asList(Load.Closures));
 
             // Error handler with callback, no closures
             productions.addPatternMatch(
                 Load.Operator, DumpType.errorHandler,
                 builder.getPostCallback("parseErrorHandler", HostRoutine.class),
-                Load.Method
+                Arrays.asList(Load.Method)
             );
 
             // Error handler with callback and closures
             productions.addPatternMatch(
                 Load.Operator, DumpType.errorHandler,
                 builder.getPostCallback("parseErrorHandler", HostRoutine.class, getArrayArgs(Closure.class)),
-                Load.Method, Load.Closures
+                Arrays.asList(Load.Method, Load.Closures)
             );
 
             // Non-leaf operator
             productions.addPatternMatch(
                 Load.Operator, DumpType.operator,
                 builder.getPostCallback("parseNonLeafOperator", TransitionPlane.class),
-                Load.TransitionTable
+                Arrays.asList(Load.TransitionTable)
             );
 
             // Leaf operator
             productions.addPatternMatch(
                 Load.Operator, DumpType.operator,
                 builder.getPostCallback("parseLeafOperator", TransitionTableLeaf.class),
-                Load.LeafState
+                Arrays.asList(Load.LeafState)
             );
 
             // Leaf transition table is a single predicated state
@@ -313,26 +313,26 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
                 Load.LeafState,
                 DumpType.leafState,
                 passthrough,
-                Load.TransitionTableLeaf
+                Arrays.asList(Load.TransitionTableLeaf)
             );
 
             // Patterns
-            productions.addVarArgsPatternMatch(Load.Patterns, DumpType.patterns, packageVarArgs, Load.Pattern);
+            productions.addVarArgsPatternMatch(Load.Patterns, DumpType.patterns, packageVarArgs, Arrays.asList(Load.Pattern));
 
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherLeafPost", HostRoutine.class),
-                Load.PostCallback
+                Arrays.asList(Load.PostCallback)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherLeafPre", HostRoutine.class),
-                Load.PreCallback
+                Arrays.asList(Load.PreCallback)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherLeafPreAndPost", HostRoutine.class, HostRoutine.class),
-                Load.PreCallback, Load.PostCallback
+                Arrays.asList(Load.PreCallback, Load.PostCallback)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
@@ -341,63 +341,63 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherPost", Object.class, HostRoutine.class),
-                Load.ChildTypes, Load.PostCallback
+                Arrays.asList(Load.ChildTypes, Load.PostCallback)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherPre", Object.class, HostRoutine.class),
-                Load.ChildTypes, Load.PreCallback
+                Arrays.asList(Load.ChildTypes, Load.PreCallback)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcherNoCallback", Object.class),
-                Load.ChildTypes
+                Arrays.asList(Load.ChildTypes)
             );
             productions.addPatternMatch(
                 Load.Pattern, DumpType.pattern,
                 builder.getPostCallback("parsePatternMatcher", Object.class, HostRoutine.class, HostRoutine.class),
-                Load.ChildTypes, Load.PreCallback, Load.PostCallback
+                Arrays.asList(Load.ChildTypes, Load.PreCallback, Load.PostCallback)
             );
 
             // State definition with no closures
             productions.addPatternMatch(
                 Load.State, DumpType.state,
                 builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(HostRoutine.class)),
-                Load.Patterns, Load.CostMap, Load.Predicates
+                Arrays.asList(Load.Patterns, Load.CostMap, Load.Predicates)
             );
 
             // State definition with closures
             productions.addPatternMatch(
                 Load.State, DumpType.state,
                 builder.getPostCallback("parseState", getArrayArgs(PatternMatcher.class), getArrayArgs(CostEntry.class), getArrayArgs(Closure.class), getArrayArgs(HostRoutine.class)),
-                Load.Patterns, Load.CostMap, Load.Closures, Load.Predicates
+                Arrays.asList(Load.Patterns, Load.CostMap, Load.Closures, Load.Predicates)
             );
 
-            productions.addVarArgsPatternMatch(Load.ChildTypes, DumpType.childTypes, packageVarArgs, Load.ChildType);
+            productions.addVarArgsPatternMatch(Load.ChildTypes, DumpType.childTypes, packageVarArgs, Arrays.asList(Load.ChildType));
             productions.addPatternMatch(Load.ChildType, DumpType.childType, builder.getPostCallback("parseNonterminal"));
 
             // Cost map
-            productions.addVarArgsPatternMatch(Load.CostMap, DumpType.costMap, packageVarArgs, Load.Cost);
+            productions.addVarArgsPatternMatch(Load.CostMap, DumpType.costMap, packageVarArgs, Arrays.asList(Load.Cost));
             productions.addPatternMatch(Load.Cost, DumpType.cost, builder.getPostCallback("parseCost"));
 
             // Closures
-            productions.addVarArgsPatternMatch(Load.Closures, DumpType.closures, packageVarArgs, Load.Closure);
+            productions.addVarArgsPatternMatch(Load.Closures, DumpType.closures, packageVarArgs, Arrays.asList(Load.Closure));
             productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithNoCallback"));
-            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPost", HostRoutine.class), Load.PostCallback);
-            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPre", HostRoutine.class), Load.PreCallback);
-            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPreAndPost", HostRoutine.class, HostRoutine.class), Load.PreCallback, Load.PostCallback);
+            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPost", HostRoutine.class), Arrays.asList(Load.PostCallback));
+            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPre", HostRoutine.class), Arrays.asList(Load.PreCallback));
+            productions.addPatternMatch(Load.Closure, DumpType.closure, builder.getPostCallback("parseClosureWithPreAndPost", HostRoutine.class, HostRoutine.class), Arrays.asList(Load.PreCallback, Load.PostCallback));
 
             // Callbacks
-            productions.addPatternMatch(Load.PreCallback, DumpType.preCallback, passthrough, Load.Method);
-            productions.addPatternMatch(Load.PostCallback, DumpType.postCallback, passthrough, Load.Method);
+            productions.addPatternMatch(Load.PreCallback, DumpType.preCallback, passthrough, Arrays.asList(Load.Method));
+            productions.addPatternMatch(Load.PostCallback, DumpType.postCallback, passthrough, Arrays.asList(Load.Method));
 
             // Method
-            productions.addPatternMatch(Load.Method, DumpType.method, builder.getPostCallback("parseMethod", getArrayArgs(Class.class)), Load.ParameterTypes);
-            productions.addVarArgsPatternMatch(Load.ParameterTypes, DumpType.parameterTypes, packageVarArgs, Load.Parameter);
+            productions.addPatternMatch(Load.Method, DumpType.method, builder.getPostCallback("parseMethod", getArrayArgs(Class.class)), Arrays.asList(Load.ParameterTypes));
+            productions.addVarArgsPatternMatch(Load.ParameterTypes, DumpType.parameterTypes, packageVarArgs, Arrays.asList(Load.Parameter));
             productions.addPatternMatch(Load.Parameter, DumpType.parameter, parseClass);
 
             // Predicates are possibly empty collections of methods
-            productions.addVarArgsPatternMatch(Load.Predicates, DumpType.predicates, packageVarArgs, Load.Method);
+            productions.addVarArgsPatternMatch(Load.Predicates, DumpType.predicates, packageVarArgs, Arrays.asList(Load.Method));
             productions.addPatternMatch(Load.Predicates, DumpType.predicates, builder.getPostCallback("parseEmptyPredicates"));
 
             /*
@@ -408,47 +408,47 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             productions.addPatternMatch(
                 Load.TransitionTable, DumpType.transitionTable,
                 passthrough,
-                Load.FinalDimension
+                Arrays.asList(Load.FinalDimension)
             );
 
             // Multi-dimensional transition table
             productions.addVarArgsPatternMatch(
                 Load.TransitionTable, DumpType.transitionTable,
                 passthrough,
-                Load.NextDimension
+                Arrays.asList(Load.NextDimension)
             );
 
             // Final dimension
             productions.addVarArgsPatternMatch(
                 Load.FinalDimension, DumpType.hyperPlane,
                 builder.getPostCallback("createFinalDimension", Map.class, getArrayArgs(TransitionTableLeaf.class)),
-                Load.FinalDimIndexMap, Load.TransitionTableLeaf
+                Arrays.asList(Load.FinalDimIndexMap, Load.TransitionTableLeaf)
             );
 
             // Next dimension
             productions.addVarArgsPatternMatch(
                 Load.NextDimension, DumpType.hyperPlane,
                 builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(TransitionPlane.class)),
-                Load.NextDimIndexMap, Load.NextDimension
+                Arrays.asList(Load.NextDimIndexMap, Load.NextDimension)
             );
 
             productions.addVarArgsPatternMatch(
                 Load.NextDimension, DumpType.hyperPlane,
                 builder.getPostCallback("createNextDimension", Map.class, getArrayArgs(TransitionPlane.class)),
-                Load.NextDimIndexMap, Load.FinalDimension
+                Arrays.asList(Load.NextDimIndexMap, Load.FinalDimension)
             );
 
             // Index Maps are collections of state->index entries.
             productions.addVarArgsPatternMatch(
                 Load.FinalDimIndexMap, DumpType.finalDimIndexMap,
                 builder.getPostCallback("createIndexMap", getArrayArgs(IndexEntry.class)),
-                Load.Index
+                Arrays.asList(Load.Index)
             );
 
             productions.addVarArgsPatternMatch(
                 Load.NextDimIndexMap, DumpType.nextDimIndexMap,
                 builder.getPostCallback("createIndexMap", getArrayArgs(IndexEntry.class)),
-                Load.Index
+                Arrays.asList(Load.Index)
             );
 
             productions.addPatternMatch(
@@ -460,7 +460,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             productions.addVarArgsPatternMatch(
                 Load.TransitionTableLeaf, DumpType.predicatedState,
                 builder.getPostCallback("parseTransitionTableLeaf", getArrayArgs(State.class)),
-                Load.State
+                Arrays.asList(Load.State)
             );
 
             productions.generateStates();
@@ -521,7 +521,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
     // TODO: Encapsulate in an interface.
     public class TTBuilder
     {
-        final Nonterminal[] emptyNonterminals;
+        final Object[] emptyNonterminals;
         List<State<Nonterminal, NodeType>> stateTable = null;
 
         @SuppressWarnings("unchecked")
@@ -529,7 +529,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         {
             this.nonterminalClass = nonterminalClass;
             this.nodeTypeClass = nodeTypeClass;
-            this.emptyNonterminals = (Nonterminal[])Array.newInstance(nonterminalClass, 0);
+            this.emptyNonterminals = (Object[])Array.newInstance(nonterminalClass, 0);
         }
 
         ProductionTable<Nonterminal,NodeType> productionTable = new ProductionTable<Nonterminal, NodeType>();
@@ -597,31 +597,31 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         public Closure<Nonterminal> parseClosureWithPreAndPost(Node node, HostRoutine preCallback, HostRoutine postCallback)
         {
             return new Closure<Nonterminal>(
-                getNonterminal(node.getStringAttr("nonterminal")),
-                getNonterminal(node.getStringAttr("source")),
+                semantics.getNonterminal(node.getStringAttr("nonterminal")),
+                semantics.getNonterminal(node.getStringAttr("source")),
                 node.getIntegerAttr("cost"),
                 preCallback,
                 postCallback
             );
         }
 
-        public Nonterminal parseNonterminal(Node node)
+        public Object parseNonterminal(Node node)
         {
-            return getNonterminal(node.getStringAttr("nonterminal"));
+            return semantics.getNonterminal(node.getStringAttr("nonterminal"));
         }
 
         @SuppressWarnings("unchecked")
         public PatternMatcher<Nonterminal,NodeType> parsePatternMatcher(Node node, Object childTypes, HostRoutine preCallback, HostRoutine postCallback)
         {
             return new PatternMatcher<Nonterminal,NodeType>(
-                getNonterminal(node.getStringAttr("nonterminal")),
+                semantics.getNonterminal(node.getStringAttr("nonterminal")),
                 null,
                 Integer.parseInt(node.getStringAttr("cost")),
                 null,
                 preCallback,
                 postCallback,
                 node.getBooleanAttr("variadic"),
-                Arrays.asList((Nonterminal[])childTypes)
+                Arrays.asList((Object[])childTypes)
             );
         }
 
@@ -694,12 +694,12 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
             result.number = Integer.parseInt(node.get("number"));
 
             // Create a scratch "cost table" to rebuild the State's cost data.
-            Map<Nonterminal,Long> costMap = new HashMap<Nonterminal,Long>();
+            Map<Object,Long> costMap = new HashMap<Object,Long>();
 
             if (costs != null) {
 
                 for (CostEntry ce: costs) {
-                    costMap.put((Nonterminal)ce.nt, (long)ce.cost);
+                    costMap.put(ce.nt, (long)ce.cost);
                 }
             }
 
@@ -769,7 +769,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
         public CostEntry parseCost(Node node)
         {
-            return new CostEntry(getNonterminal(node.get("nonterminal")), Integer.parseInt(node.get("cost")));
+            return new CostEntry(semantics.getNonterminal(node.get("nonterminal")), Integer.parseInt(node.get("cost")));
         }
 
         public Object parseEmptyPredicates(Node node)
@@ -804,18 +804,6 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
         }
 
         @SuppressWarnings("unchecked")
-        public Nonterminal getNonterminal(String ntName)
-        {
-            for (Object nt: nonterminalClass.getEnumConstants()) {
-                if (nt.toString().equals(ntName)) {
-                    return (Nonterminal)nt;
-                }
-            }
-
-            throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
-        }
-
-        @SuppressWarnings("unchecked")
         public NodeType getNodeType(String ntName)
         {
             for (Object nt: nodeTypeClass.getEnumConstants()) {
@@ -835,7 +823,7 @@ public class TransitionTableLoader<Nonterminal, NodeType> extends DefaultHandler
 
         public Object parseErrorHandler(Node node, HostRoutine callback, Closure<Nonterminal>[] closures)
         {
-            Nonterminal errorNonterminal = getNonterminal(node.getStringAttr("nonterminal"));
+            Object errorNonterminal = semantics.getNonterminal(node.getStringAttr("nonterminal"));
             productionTable.addErrorHandler(errorNonterminal, callback);
 
             for (Closure<Nonterminal> c: closures) {

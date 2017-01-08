@@ -1,5 +1,6 @@
 package tql;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import jburg.Reducer;
 import jburg.ProductionTable;
@@ -33,20 +34,20 @@ class TreeParser
 
     static
     {
-        productions.addVarArgsPatternMatch(SemanticLabel.SQL, TQLNodeType.SQL, noCallback, SemanticLabel.Statement);
+        productions.addVarArgsPatternMatch(SemanticLabel.SQL, TQLNodeType.SQL, noCallback, Arrays.asList(SemanticLabel.Statement));
 
         productions.addPatternMatch(
             SemanticLabel.Statement, TQLNodeType.Select, noCallback,
-            SemanticLabel.SelectionList, SemanticLabel.TableExpression
+            Arrays.asList(SemanticLabel.SelectionList, SemanticLabel.TableExpression)
         );
 
         productions.addPatternMatch(
             SemanticLabel.Statement, TQLNodeType.Select, noCallback,
-            SemanticLabel.SelectionList, SemanticLabel.TableExpression, SemanticLabel.Where
+            Arrays.asList(SemanticLabel.SelectionList, SemanticLabel.TableExpression, SemanticLabel.Where)
         );
 
-        productions.addVarArgsPatternMatch(
-            SemanticLabel.SelectionList, TQLNodeType.SelectionList, noCallback, SemanticLabel.SelectionItem
+        productions.addVarArgsPatternMatch(SemanticLabel.SelectionList, TQLNodeType.SelectionList, noCallback,
+            Arrays.asList(SemanticLabel.SelectionItem)
         );
 
         productions.addClosure(SemanticLabel.SelectionItem, SemanticLabel.Expression);
@@ -57,38 +58,37 @@ class TreeParser
         productions.addPatternMatch(SemanticLabel.Literal, TQLNodeType.StringLiteral, noCallback);
         productions.addPatternMatch(SemanticLabel.Literal, TQLNodeType.UnsignedLiteral, noCallback);
 
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.And, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Or, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Not, noCallback, SemanticLabel.Expression);
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.And, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Or, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Not, noCallback, Arrays.asList(SemanticLabel.Expression));
 
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Plus, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Plus, noCallback, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Minus, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Minus, noCallback, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Star, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Slash, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Equal, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.NotEqual, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Less, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.LessEqual, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Greater, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.GreaterEqual, noCallback, SemanticLabel.Expression, SemanticLabel.Expression);
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Plus, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Plus, noCallback, Arrays.asList(SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Minus, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Minus, noCallback, Arrays.asList(SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Star, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Slash, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Equal, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.NotEqual, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Less, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.LessEqual, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.Greater, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Expression, TQLNodeType.GreaterEqual, noCallback, Arrays.asList(SemanticLabel.Expression, SemanticLabel.Expression));
 
-        productions.addVarArgsPatternMatch(SemanticLabel.TableExpression, TQLNodeType.TableExpression, noCallback, SemanticLabel.TableName);
+        productions.addVarArgsPatternMatch(SemanticLabel.TableExpression, TQLNodeType.TableExpression, noCallback, Arrays.asList(SemanticLabel.TableName));
 
-        productions.addPatternMatch(SemanticLabel.TableName, TQLNodeType.TableName, noCallback, SemanticLabel.Identifier);
+        productions.addPatternMatch(SemanticLabel.TableName, TQLNodeType.TableName, noCallback, Arrays.asList(SemanticLabel.Identifier));
 
         productions.addPatternMatch(SemanticLabel.Identifier, TQLNodeType.Identifier, noCallback);
 
         productions.addPatternMatch(SemanticLabel.SelectionItem, TQLNodeType.Star, noCallback);
 
-        productions.addPatternMatch(SemanticLabel.Where, TQLNodeType.Where, noCallback, SemanticLabel.Expression);
+        productions.addPatternMatch(SemanticLabel.Where, TQLNodeType.Where, noCallback, Arrays.asList(SemanticLabel.Expression));
 
-        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.VariableDeclaration, noCallback, SemanticLabel.Identifier, SemanticLabel.Expression);
-        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.VariableDeclaration, noCallback, SemanticLabel.Identifier);
-        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.AssignmentStatement, noCallback, SemanticLabel.Identifier, SemanticLabel.Expression);
+        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.VariableDeclaration, noCallback, Arrays.asList(SemanticLabel.Identifier, SemanticLabel.Expression));
+        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.VariableDeclaration, noCallback, Arrays.asList(SemanticLabel.Identifier));
+        productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.AssignmentStatement, noCallback, Arrays.asList(SemanticLabel.Identifier, SemanticLabel.Expression));
 
-        //productions.setVerboseTrigger(".*");
         productions.generateStates();
         productions.dump("/tmp/tqlTable.xml", "xml.stg", new HashMap<String,String>(), new HashMap<String,Object>());
     }

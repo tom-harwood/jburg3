@@ -8,7 +8,7 @@ import jburg.semantics.HostRoutine;
  */
 public class ErrorHandlerProduction<Nonterminal> extends Production<Nonterminal>
 {
-    public ErrorHandlerProduction(Nonterminal target, HostRoutine errorHandler)
+    public ErrorHandlerProduction(Object target, HostRoutine errorHandler)
     {
         super(target, 1, false, null, errorHandler, null);
     }

@@ -1,0 +1,28 @@
+<!-- Test nested patterns -->
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="Error" class="java.lang.Integer"/>
+    </Semantics>
+
+    <Closure nonterminal="Int" sourceNonterminal="Error"/>
+
+    <Error nonterminal="Error">
+        <errorHandler name="dumpError"/>
+    </Error>
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <Pattern nonterminal="Int" nodeType="Add">
+            <child nonterminal="Int"/>
+            <child nonterminal="Int"/>
+            <postCallback name="add"/>
+        </Pattern>
+        <postCallback name="add"/>
+    </Pattern>
+</Grammar>

@@ -301,7 +301,11 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         activeProductions.pop();
 
         if (!activeProductions.isEmpty()) {
-            getCurrentProduction().children.add(newProduction.nonterminal);
+            // Create a synthetic nonterminal so this nested production only matches in its specific position.
+            ProductionDesc parentProduction = getCurrentProduction();
+            newProduction.nonterminal = String.format("%s_%x_%d", newProduction.nonterminal, System.identityHashCode(parentProduction), parentProduction.children.size());
+            semantics.setNonterminalClass(newProduction.nonterminal, semantics.getNonterminalMapping(parentProduction.nonterminal));
+            parentProduction.children.add(newProduction.nonterminal);
         }
     }
 
@@ -320,7 +324,7 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
      */
     private abstract class ProductionDesc
     {
-        final String        nonterminal;
+        String              nonterminal;
         final List<String>  children = new ArrayList<String>();
         final int           cost;
         final boolean       isVarArgs;
@@ -441,9 +445,9 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         boolean isErrorHandler()    { return false; }
         boolean isNullHandler()     { return false; }
 
-        List<Nonterminal> getNonterminals()
+        List<Object> getNonterminals()
         {
-            List<Nonterminal> result = new ArrayList<Nonterminal>();
+            List<Object> result = new ArrayList<Object>();
             for (int i = 0; i < this.children.size(); i++) {
                 result.add(semantics.getNonterminal(this.children.get(i)));
             }

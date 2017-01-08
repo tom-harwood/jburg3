@@ -8,7 +8,7 @@ import jburg.semantics.HostRoutine;
  */
 public class NullPointerProduction<Nonterminal> extends Production<Nonterminal>
 {
-    public NullPointerProduction(Nonterminal target, int cost, HostRoutine postCallback)
+    public NullPointerProduction(Object target, int cost, HostRoutine postCallback)
     {
         super(target, cost, false, null, null, postCallback);
     }

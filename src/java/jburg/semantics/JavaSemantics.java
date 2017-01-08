@@ -39,7 +39,7 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
     /**
      * Nonterminals whose classes are known.
      */
-    private final Map<Nonterminal,Class<?>> nonterminalClasses = new HashMap<Nonterminal,Class<?>>();
+    private final Map<Object,Class<?>> nonterminalClasses = new HashMap<Object,Class<?>>();
 
     /**
      * Default class to be assigned to nonterminals with no explicit class.
@@ -82,7 +82,7 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
      */
     public void setNonterminalClass(Object ntName, Object clazz)
     {
-        Nonterminal nt = getNonterminal(ntName);
+        Object nt = getNonterminal(ntName);
 
         if (nonterminalClasses.containsKey(nt)) {
             throw new IllegalArgumentException(String.format("Nonterminal %s already mapped to %s", nt, clazz));
@@ -107,7 +107,7 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
         try {
             return Class.forName(className.toString());
         } catch (Exception noSuchClass) {
-            throw new IllegalArgumentException(className.toString());
+            throw new IllegalArgumentException(String.format("Unable to locate class \"%s\" due to %s", className, noSuchClass));
         }
     }
 
@@ -181,6 +181,11 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
     throws Exception
     {
         return getPostCallback(methodName, true, producesNt, nonterminals);
+    }
+
+    public Object getNonterminal(Object ntName)
+    {
+        return ntName.toString();
     }
 
     /**
@@ -274,7 +279,7 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
      */
     private Class<?> getClassFor(Object ntName, boolean isVarArgs)
     {
-        Nonterminal nt = getNonterminal(ntName);
+        Object nt = getNonterminal(ntName);
 
         // First find the class mapped to the nonterminal.
         Class<?> baseClass;
@@ -321,16 +326,20 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
         throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nodeTypeClass, typeName));
     }
 
-    @SuppressWarnings("unchecked")
-    public Nonterminal getNonterminal(Object ntName)
+    /**
+     * Get the host class a nonterminal maps to.
+     * @param ntName the name of the nonterminal.
+     * @return the mapped host class for that nonterminal.
+     */
+    public Object getNonterminalMapping(Object ntName)
     {
-        for (Object nt: nonterminalClass.getEnumConstants()) {
-            if (nt.toString().equals(ntName.toString())) {
-                return (Nonterminal)nt;
-            }
+        if (this.nonterminalClasses.containsKey(ntName.toString())) {
+            return this.nonterminalClasses.get(ntName.toString()).getName();
+        } else if (this.defaultClass != null) {
+            return this.defaultClass.getName();
+        } else {
+            throw new IllegalArgumentException(String.format("Nonterminal %s has no type mapping",ntName));
         }
-
-        throw new IllegalArgumentException(String.format("enumeration %s does not contain %s", nonterminalClass, ntName));
     }
 
     public HostRoutine getHostRoutine(Method m)

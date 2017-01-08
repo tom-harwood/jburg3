@@ -146,33 +146,33 @@ public class CodeGenerator
             System.exit(1);
         }
 
-        productions.addPatternMatch(MainProgram,    Scope,  1, getPreCallback("namedScope"),    getPostCallback("exitScope", String.class, Object.class), Statements, Name);
-        productions.addPatternMatch(MainProgram,    Scope,  1, getPreCallback("unnamedScope"),  getPostCallback("exitScope", String.class, Object.class), Statements, NullPtr);
-        productions.addPatternMatch(Statement,      Scope,  1, getPreCallback("namedScope"),    getPostCallback("exitScope", String.class, Object.class), Statements, Name);
-        productions.addPatternMatch(Statement,      Scope,  1, getPreCallback("unnamedScope"),  getPostCallback("exitScope", String.class, Object.class), Statements, NullPtr);
+        productions.addPatternMatch(MainProgram,    Scope,  getPreCallback("namedScope"),    getPostCallback("exitScope", String.class, Object.class), Arrays.asList(Statements, Name));
+        productions.addPatternMatch(MainProgram,    Scope,  getPreCallback("unnamedScope"),  getPostCallback("exitScope", String.class, Object.class), Arrays.asList(Statements, NullPtr));
+        productions.addPatternMatch(Statement,      Scope,  getPreCallback("namedScope"),    getPostCallback("exitScope", String.class, Object.class), Arrays.asList(Statements, Name));
+        productions.addPatternMatch(Statement,      Scope,  getPreCallback("unnamedScope"),  getPostCallback("exitScope", String.class, Object.class), Arrays.asList(Statements, NullPtr));
 
-        productions.addVarArgsPatternMatch(Statements, ScopeContents, 1, noPreCallback,  statementList, Statement);
+        productions.addVarArgsPatternMatch(Statements, ScopeContents, noPreCallback,  statementList, Arrays.asList(Statement));
 
-        productions.addPatternMatch(Statement,  AliasDef,       1, noPreCallback, getPostCallback("aliasDefinition", String.class, String.class), Name, Expression);
-        productions.addPatternMatch(Statement,  VarDef,         1, noPreCallback, getPostCallback("varDefNoInitializer", String.class), Name);
-        productions.addPatternMatch(Statement,  VarDef,         1, noPreCallback, getPostCallback("varDefWithInitializer", String.class, String.class), Name, Expression);
-        productions.addPatternMatch(Statement,  Assignment,     1, noPreCallback, getPostCallback("assignmentStmt", String.class, String.class), LValue, Expression);
-        productions.addPatternMatch(Statement,  Print,          1, noPreCallback, getPostCallback("printStmt", String.class), Expression);
-        productions.addPatternMatch(Statement,  Verify,         1, noPreCallback, getPostCallback("verify", String.class, String.class), Expression, Expression);
+        productions.addPatternMatch(Statement,  AliasDef,       noPreCallback, getPostCallback("aliasDefinition", String.class, String.class), Arrays.asList(Name, Expression));
+        productions.addPatternMatch(Statement,  VarDef,         noPreCallback, getPostCallback("varDefNoInitializer", String.class), Arrays.asList(Name));
+        productions.addPatternMatch(Statement,  VarDef,         noPreCallback, getPostCallback("varDefWithInitializer", String.class, String.class), Arrays.asList(Name, Expression));
+        productions.addPatternMatch(Statement,  Assignment,     noPreCallback, getPostCallback("assignmentStmt", String.class, String.class), Arrays.asList(LValue, Expression));
+        productions.addPatternMatch(Statement,  Print,          noPreCallback, getPostCallback("printStmt", String.class), Arrays.asList(Expression));
+        productions.addPatternMatch(Statement,  Verify,         noPreCallback, getPostCallback("verify", String.class, String.class), Arrays.asList(Expression, Expression));
 
         // Identifiers
-        productions.addPatternMatch(LValue,     Identifier,     1, noPreCallback, getPostCallback("identifier", String.class), Name);
-        productions.addPatternMatch(Expression, Identifier,     1, getPredicate("isAlias"), noPreCallback, getPostCallback("aliasedIdentifier", String.class), false, Name);
-        productions.addPatternMatch(LValue,     Identifier,     1, noPreCallback, getPostCallback("identifier", String.class, String.class), Name, Name);
-        productions.addPatternMatch(Name,       IdentifierPart, 1, noPreCallback, getPostCallback("nameRef"));
+        productions.addPatternMatch(LValue,     Identifier,     noPreCallback, getPostCallback("identifier", String.class), Arrays.asList(Name));
+        productions.addPatternMatch(Expression, Identifier,     getPredicate("isAlias"), noPreCallback, getPostCallback("aliasedIdentifier", String.class), Arrays.asList(Name));
+        productions.addPatternMatch(LValue,     Identifier,     noPreCallback, getPostCallback("identifier", String.class, String.class), Arrays.asList(Name, Name));
+        productions.addPatternMatch(Name,       IdentifierPart, noPreCallback, getPostCallback("nameRef"));
 
         // Binary operators
-        productions.addPatternMatch(Expression, Equal,          1, noPreCallback, getPostCallback("equality", String.class, String.class), Expression, Expression);
-        productions.addPatternMatch(Expression, Add,            1, noPreCallback, getPostCallback("addition", String.class, String.class), Expression, Expression);
+        productions.addPatternMatch(Expression, Equal,          noPreCallback, getPostCallback("equality", String.class, String.class), Arrays.asList(Expression, Expression));
+        productions.addPatternMatch(Expression, Add,            noPreCallback, getPostCallback("addition", String.class, String.class), Arrays.asList(Expression, Expression));
 
         // Leaf expressions
-        productions.addPatternMatch(Expression, IntegerLiteral, getPostCallback("integerLiteral"));
-        productions.addPatternMatch(Expression, StringLiteral,  getPostCallback("stringLiteral"));
+        productions.addPatternMatch(Expression, IntegerLiteral, noPreCallback, getPostCallback("integerLiteral"));
+        productions.addPatternMatch(Expression, StringLiteral,  noPreCallback, getPostCallback("stringLiteral"));
         productions.addClosure(Expression, LValue, 2);
 
         productions.addNullPointerProduction(NullPtr, 1, null);
@@ -201,7 +201,7 @@ public class CodeGenerator
     static HostRoutine getPreCallback(String methodName)
     {
         try {
-            return dummySemantics.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Nonterminal.class));
+            return dummySemantics.getHostRoutine(CodeGenerator.class.getDeclaredMethod(methodName, Node.class, Object.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
@@ -334,12 +334,12 @@ public class CodeGenerator
         return String.format("System.out.println(%s);", exp);
     }
 
-    public void namedScope(Node scope, Nonterminal goal)
+    public void namedScope(Node scope, Object goal)
     {
         namespaces.push(new ScopeNamespace(scope.getSubtree(1).content));
     }
 
-    public void unnamedScope(Node scope, Nonterminal goal)
+    public void unnamedScope(Node scope, Object goal)
     {
         namespaces.push(new ScopeNamespace(null));
     }

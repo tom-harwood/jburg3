@@ -26,7 +26,7 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
      * @throws IllegalArgumentException if this state
      * has no production for the specified nonterminal.
      */
-    Production<Nonterminal> getProduction(Nonterminal goal)
+    Production<Nonterminal> getProduction(Object goal)
     {
         try {
             return super.getProduction(goal);
@@ -38,10 +38,10 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
     /**
      * @return the nonterminal state the error handler's production produces.
      */
-    public Nonterminal getNonterminal()
+    public Object getNonterminal()
     {
         assert nonClosureProductions.size() <= 1: String.format("expected zero or one production(s), found %d", nonClosureProductions.size());
-        for (Nonterminal nt: nonClosureProductions.keySet()) {
+        for (Object nt: nonClosureProductions.keySet()) {
             return nt;
         }
 

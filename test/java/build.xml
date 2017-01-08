@@ -97,6 +97,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/NullTolerant.xml"/>
             <param name="testcase.xml" value="testcases/NullTolerant.xml"/>
         </antcall>
+        <antcall target="calculator">
+            <param name="grammar.xml" value="grammars/NestedAddition.xml"/>
+            <param name="testcase.xml" value="testcases/NestedAddition.xml"/>
+        </antcall>
         <antcall target="dumpLoad">
             <param name="testcase.xml" value="testcases/FirstTest.xml"/>
         </antcall>
@@ -128,6 +132,13 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/NullTolerant.xml"/>
             <param name="testcase.xml" value="testcases/NullTolerant.xml"/>
         </antcall>
+        <!--
+        TODO: Convert java and c++ host language reducers to use organic nonterminal enums.
+        <antcall target="javaGen">
+            <param name="grammar.xml" value="grammars/NestedAddition.xml"/>
+            <param name="testcase.xml" value="testcases/NestedAddition.xml"/>
+        </antcall>
+        -->
         <antcall target="cppGenerateAndCompile">
             <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>
             <param name="testcase.xml" value="testcases/CppFirst.xml"/>

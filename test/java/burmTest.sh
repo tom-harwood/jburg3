@@ -56,11 +56,13 @@ do
             shift;
             shift;;
         -v)
-            VERBOSE="-verbose";
+            VERBOSE_TRIGGER="-verbose-trigger $2";
+            shift;
             shift;;
         --)
             break;;
     esac
 done
 
-java -ea -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS
+#echo java -ea -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE_TRIGGER $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS
+java -ea -cp $JBURG_HOME/lib/jburg.jar:$HOME/tools/antlr-4.5.1-complete.jar:classes $MAINCLASS -grammar $GRAMMAR $QUIET $RANDOMIZE $VERBOSE_TRIGGER $DUMPFILE $TEMPLATES $TESTCASE $DUMPCLASS

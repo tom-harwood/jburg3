@@ -8,22 +8,22 @@ import jburg.semantics.HostRoutine;
  */
 public class Closure<Nonterminal> extends Production<Nonterminal>
 {
-    final Nonterminal   source;
-    public Nonterminal getSource() { return source; }
+    final  String   source;
+    public Object   getSource() { return source; }
 
 
-    public Closure(Nonterminal target, Nonterminal source, int ownCost, HostRoutine preCallback, HostRoutine postCallback)
+    public Closure(Object target, Object source, int ownCost, HostRoutine preCallback, HostRoutine postCallback)
     {
-        super(target, ownCost, false, null, preCallback, postCallback);
-        this.source = source;
+        super(target.toString(), ownCost, false, null, preCallback, postCallback);
+        this.source = source.toString();
     }
 
-    public Closure(Nonterminal target, Nonterminal source, int ownCost, HostRoutine postCallback)
+    public Closure(Object target, Object source, int ownCost, HostRoutine postCallback)
     {
         this(target, source, ownCost, null, postCallback);
     }
 
-    public Closure(Nonterminal target, Nonterminal source, HostRoutine postCallback)
+    public Closure(Object target, Object source, HostRoutine postCallback)
     {
         this(target, source, 1, null, postCallback);
     }

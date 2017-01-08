@@ -54,7 +54,7 @@ public class Reducer<Nonterminal, NodeType>
      * @param goal  the nonterminal of interest.
      * @return true if node's state table entry can produce goalNt.
      */
-    public boolean canProduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
+    public boolean canProduce(BurgInput<Nonterminal, NodeType> node, Object goal)
     {
         State<Nonterminal,NodeType> state = node != null? productionTable.getState(node.getStateNumber()): productionTable.getNullPointerState();
         return state.getCost(goal) < Integer.MAX_VALUE;
@@ -68,7 +68,7 @@ public class Reducer<Nonterminal, NodeType>
      * @return the result of deriving the tree using the
      * productions specified by each node's state.
      */
-    public Object reduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal)
+    public Object reduce(BurgInput<Nonterminal, NodeType> node, Object goal)
     throws Exception
     {
         // TODO: Run the entire algorithm iteratively, using the stack.
@@ -89,7 +89,7 @@ public class Reducer<Nonterminal, NodeType>
      * and a few diagnostics for unlabeled trees or mismatched parameters.
      */
     @SuppressWarnings("unchecked")
-    private Object reduce(BurgInput<Nonterminal, NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
+    private Object reduce(BurgInput<Nonterminal, NodeType> node, Object goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
         State<Nonterminal,NodeType> state;
@@ -230,7 +230,7 @@ public class Reducer<Nonterminal, NodeType>
         return result;
     }
 
-    Object handleError(BurgInput<Nonterminal, NodeType> node, Nonterminal goal, Stack<Production<Nonterminal>> pendingProductions)
+    Object handleError(BurgInput<Nonterminal, NodeType> node, Object goal, Stack<Production<Nonterminal>> pendingProductions)
     throws Exception
     {
         Production<Nonterminal> current = productionTable.getErrorState().getProduction(goal);

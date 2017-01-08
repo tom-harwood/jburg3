@@ -26,13 +26,13 @@ public class State<Nonterminal, NodeType>
 
     /** "Typedef" a map of costs by nonterminal. */
     @SuppressWarnings("serial")
-	public class CostMap extends HashMap<Nonterminal,Long> {}
+	public class CostMap extends HashMap<Object,Long> {}
     /** "typedef" a map of Productions keyed by Nonterminal. */
     @SuppressWarnings("serial")
-	public class ProductionMap extends HashMap<Nonterminal, Production<Nonterminal>> {}
+	public class ProductionMap extends HashMap<Object, Production<Nonterminal>> {}
     /** "typedef" a map of Closures by Nonterminal. */
     @SuppressWarnings("serial")
-	public class ClosureMap    extends HashMap<Nonterminal, Closure<Nonterminal>> {}
+	public class ClosureMap    extends HashMap<Object, Closure<Nonterminal>> {}
 
     /**
      * This state's non-closure productions.
@@ -43,7 +43,7 @@ public class State<Nonterminal, NodeType>
     /**
      * Cost of each pattern match.
      */
-    CostMap     patternCosts = new CostMap();
+    CostMap patternCosts = new CostMap();
     public CostMap getCostMap() { return patternCosts; }
 
     /**
@@ -77,19 +77,19 @@ public class State<Nonterminal, NodeType>
      * Closure chains' pre-reduction callback actions.
      * Denormalized for the string templates' use.
      */
-    public final Map<Nonterminal,List<Production<Nonterminal>>> closurePreProductions = new HashMap<Nonterminal,List<Production<Nonterminal>>>();
+    public final Map<Object,List<Production<Nonterminal>>> closurePreProductions = new HashMap<Object,List<Production<Nonterminal>>>();
 
     /**
      * Closure chains' post-reduction callback actions.
      * Denormalized for the string templates' use.
      */
-    public final Map<Nonterminal,List<Production<Nonterminal>>> closurePostProductions = new HashMap<Nonterminal,List<Production<Nonterminal>>>();
+    public final Map<Object,List<Production<Nonterminal>>> closurePostProductions = new HashMap<Object,List<Production<Nonterminal>>>();
 
     /**
      * The nonterminals that start closure chains.
      * Denormalized for the string templates' use.
      */
-    public final Map<Nonterminal,Nonterminal> closurePatternPrecursor = new HashMap<Nonterminal,Nonterminal>();
+    public final Map<Object,Object> closurePatternPrecursor = new HashMap<Object,Object>();
     boolean isFinished;
 
     /**
@@ -153,8 +153,8 @@ public class State<Nonterminal, NodeType>
         assert cost < getCost(p.target);
         assert !(p instanceof Closure): "use addClosure to add closures";
 
-        patternCosts.put(p.target, cost);
-        nonClosureProductions.put(p.target, p);
+        patternCosts.put(p.target.toString(), cost);
+        nonClosureProductions.put(p.target.toString(), p);
 
         if (arityKind == null) {
             arityKind = p.isVarArgs? ArityKind.Variadic:ArityKind.Fixed;
@@ -171,7 +171,7 @@ public class State<Nonterminal, NodeType>
     {
         if (!this.isFinished) {
 
-            for (Nonterminal nt: getNonterminals()) {
+            for (Object nt: getNonterminals()) {
                 closurePreProductions.put(nt, getProductionsFor(nt, ClosureProductionsType.PreCallback));
                 List<Production<Nonterminal>> postProductionsForNt = getProductionsFor(nt, ClosureProductionsType.PostCallback);
                 Collections.reverse(postProductionsForNt);
@@ -221,8 +221,10 @@ public class State<Nonterminal, NodeType>
      * Costs are returned as longs (and computed as longs)
      * so that they don't overflow.
      */
-    long getCost(Nonterminal nt)
+    long getCost(Object nt)
     {
+        nt = nt.toString();
+
         if (patternCosts.containsKey(nt)) {
             return patternCosts.get(nt);
 
@@ -246,8 +248,10 @@ public class State<Nonterminal, NodeType>
      * @throws IllegalArgumentException if this state
      * has no production for the specified nonterminal.
      */
-    Production<Nonterminal> getProduction(Nonterminal goal)
+    Production<Nonterminal> getProduction(Object goal)
     {
+        goal = goal.toString();
+
         if (nonClosureProductions.containsKey(goal)) {
             return nonClosureProductions.get(goal);
         } else if (closures.containsKey(goal)) {
@@ -265,7 +269,7 @@ public class State<Nonterminal, NodeType>
      * @param nt    the nonterminal.
      * @return a list of the productions to run.
      */
-    List<Production<Nonterminal>> getProductionsFor(Nonterminal goal, ClosureProductionsType type)
+    List<Production<Nonterminal>> getProductionsFor(Object goal, ClosureProductionsType type)
     {
         List<Production<Nonterminal>> result = new ArrayList<Production<Nonterminal>>();
 
@@ -289,10 +293,10 @@ public class State<Nonterminal, NodeType>
      * this is the nonterminal that the reducer first reduces
      * via a pattern matching production.
      */
-    private void setClosurePrecursor(Nonterminal goal)
+    private void setClosurePrecursor(Object goal)
     {
         if (!nonClosureProductions.containsKey(goal)) {
-            Nonterminal precursor = goal;
+            Object precursor = goal;
 
             while (!nonClosureProductions.containsKey(precursor) && closures.containsKey(precursor)) {
                 precursor = closures.get(precursor).getSource();
@@ -392,18 +396,18 @@ public class State<Nonterminal, NodeType>
      * pattern matchers and closures.
      * @return the set of nonterminals produced.
      */
-    public Set<Nonterminal> getNonterminals()
+    public Set<Object> getNonterminals()
     {
         // We could use a cheaper data structure, e.g.,
-        // List<Nonterminal>, but returning a set makes
+        // List<Object>, but returning a set makes
         // the semantics of this operation clear.
-        Set<Nonterminal> result = new HashSet<Nonterminal>();
+        Set<Object> result = new HashSet<Object>();
 
-        for (Nonterminal patternNonterminal: nonClosureProductions.keySet()) {
+        for (Object patternNonterminal: nonClosureProductions.keySet()) {
             result.add(patternNonterminal);
         }
 
-        for (Nonterminal closureNonterminal: closures.keySet()) {
+        for (Object closureNonterminal: closures.keySet()) {
             // A closure should never occlude a pattern match.
             assert !result.contains(closureNonterminal);
             result.add(closureNonterminal);
@@ -424,7 +428,7 @@ public class State<Nonterminal, NodeType>
         if (nonClosureProductions.size() > 0) {
             buffer.append("[");
             boolean didFirst = false;
-            for (Nonterminal nt: nonClosureProductions.keySet()) {
+            for (Object nt: nonClosureProductions.keySet()) {
                 Production<Nonterminal> p = nonClosureProductions.get(nt);
 
                 if (didFirst) {
@@ -437,7 +441,7 @@ public class State<Nonterminal, NodeType>
             buffer.append("]");
 
             if (closures.size() > 0) {
-                for (Nonterminal nt: closures.keySet()) {
+                for (Object nt: closures.keySet()) {
                     buffer.append(String.format(", %s=%s", nt, closures.get(nt).source));
                 }
             }
@@ -454,7 +458,7 @@ public class State<Nonterminal, NodeType>
 
             int nDone = 0;
 
-            for (Nonterminal nt: nonClosureProductions.keySet()) {
+            for (Object nt: nonClosureProductions.keySet()) {
                 Production<Nonterminal> p = nonClosureProductions.get(nt);
 
                 if (buffer.length() > 0) {
@@ -471,7 +475,7 @@ public class State<Nonterminal, NodeType>
         return buffer.toString();
     }
 
-    private void appendClosures(Nonterminal nt, int padding, StringBuilder buffer, boolean wroteSeparator)
+    private void appendClosures(Object nt, int padding, StringBuilder buffer, boolean wroteSeparator)
     {
         for (Closure<Nonterminal> closure: closures.values()) {
 

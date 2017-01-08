@@ -38,7 +38,7 @@ class RepresenterState<Nonterminal,NodeType>
     /**
      * The cost to produce this representer state's nonterminals.
      */
-    Map<Nonterminal, Long>              costMap = new HashMap<Nonterminal, Long>();
+    Map<String, Long> costMap = new HashMap<String, Long>();
 
     /**
      * States in this equivalence class. This is denormalized data,
@@ -63,10 +63,10 @@ class RepresenterState<Nonterminal,NodeType>
      * @pre         the cost must be the best
      * cost seen so far.
      */
-    void setCost(Nonterminal nt, long cost)
+    void setCost(Object nt, long cost)
     {
         assert(cost < getCost(nt));
-        costMap.put(nt,cost);
+        costMap.put(nt.toString(),cost);
     }
 
     /**
@@ -76,9 +76,9 @@ class RepresenterState<Nonterminal,NodeType>
      * or Integer.MAX_VALUE if this representer state
      * has not cost associated with the specified nonterminal.
      */
-    long getCost(Nonterminal nt)
+    long getCost(Object nt)
     {
-        return costMap.containsKey(nt)? costMap.get(nt): Integer.MAX_VALUE;
+        return costMap.containsKey(nt.toString())? costMap.get(nt.toString()): Integer.MAX_VALUE;
     }
 
     /**
@@ -123,7 +123,7 @@ class RepresenterState<Nonterminal,NodeType>
     /**
      * @return the set of nonterminals this RepresenterState can produce.
      */
-    public Set<Nonterminal> keySet()
+    public Set<String> keySet()
     {
         return costMap.keySet();
     }

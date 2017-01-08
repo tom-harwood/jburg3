@@ -40,8 +40,8 @@ public class ProductionTable<Nonterminal, NodeType>
      * multiple references to a nonterminal, and their
      * order here is not important.
      */
-    private Set<Nonterminal>    nonterminals = new HashSet<Nonterminal>();
-    public Set<Nonterminal> getNonterminals()
+    private Set<Object>    nonterminals = new HashSet<Object>();
+    public Set<Object> getNonterminals()
     {
         return nonterminals;
     }
@@ -118,23 +118,12 @@ public class ProductionTable<Nonterminal, NodeType>
     /** Emit diagnostic information when this is set. */
     boolean verbose = false;
 
+    private final HostRoutine noPredicate = null;
+    private final HostRoutine noPreCallback = null;
+    private final HostRoutine noPostCallback = null;
+
     /** If an operator matches this pattern (when it's set), turn on verbose mode for its state transition computations. */
     String  verboseTrigger = null;
-
-    /**
-     * Add a pattern-matching production to the grammar.
-     * @param nt            the nonterminal this production produces.
-     * @param nodeType      the node type of the root of the subtree matched.
-     * @param cost          the cost of this production.
-     * @param preCallback   the callback run before deriving the subtree's child nodes.
-     * @param postCallback  the callback run after deriving child nodes.
-     * @param childTypes    the nonterminals the subtree's children must be able to produce.
-     */
-    @SafeVarargs
-    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine preCallback, HostRoutine postCallback, Nonterminal... childTypes)
-    {
-        addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, false, childTypes);
-    }
 
     /**
      * Add a pattern-matching production to the grammar, with unit cost.
@@ -143,10 +132,72 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param postCallback  the callback run after deriving the child nodes.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    @SafeVarargs
-    final public void addPatternMatch(Nonterminal nt, NodeType nodeType, HostRoutine postCallback, Nonterminal... childTypes)
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine postCallback, List<Object> childTypes)
     {
-        addPatternMatch(nt, nodeType, 1, null, null, postCallback, false, childTypes);
+        addPatternMatch(nt, nodeType, 1, noPredicate, noPreCallback, postCallback, false, childTypes);
+    }
+
+    /**
+     * Add a pattern-matching production to the grammar, with unit cost.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce.
+     */
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine preCallback, HostRoutine postCallback, List<Object> childTypes)
+    {
+        addPatternMatch(nt, nodeType, 1, noPredicate, preCallback, postCallback, false, childTypes);
+    }
+
+    /**
+     * Add a pattern-matching production to the grammar, with unit cost.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param predicate     the semantic predicate guarding this pattern match.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce.
+     */
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, List<Object> childTypes)
+    {
+        addPatternMatch(nt, nodeType, 1, predicate, preCallback, postCallback, false, childTypes);
+    }
+
+    /**
+     * Add a pattern-matching production to the grammar, with unit cost.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param postCallback  the callback run after deriving the child nodes.
+     */
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine postCallback)
+    {
+        addPatternMatch(nt, nodeType, 1, noPredicate, noPreCallback, postCallback, false, Collections.emptyList());
+    }
+
+    /**
+     * Add a pattern-matching production to the grammar, with unit cost.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     */
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine preCallback, HostRoutine postCallback)
+    {
+        addPatternMatch(nt, nodeType, 1, noPredicate, preCallback, postCallback, false, Collections.emptyList());
+    }
+
+    /**
+     * Add a pattern-matching production to the grammar, with unit cost.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param predicate     the semantic predicate guarding this pattern match.
+     * @param preCallback   the callback run before deriving the child nodes.
+     * @param postCallback  the callback run after deriving the child nodes.
+     */
+    final public void addPatternMatch(Object nt, NodeType nodeType, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback)
+    {
+        addPatternMatch(nt, nodeType, 1, predicate, preCallback, postCallback, false, Collections.emptyList());
     }
 
     /**
@@ -159,10 +210,9 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce;
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
-    @SafeVarargs
-    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine preCallback, HostRoutine postCallback, Nonterminal... childTypes)
+    final public void addVarArgsPatternMatch(Object nt, NodeType nodeType, int cost, HostRoutine preCallback, HostRoutine postCallback, List<Object> childTypes)
     {
-        addPatternMatch(nt, nodeType, cost, null, preCallback, postCallback, true, childTypes);
+        addPatternMatch(nt, nodeType, cost, noPredicate, preCallback, postCallback, true, childTypes);
     }
 
     /**
@@ -174,10 +224,37 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param childTypes    the nonterminals the subtree's children must be able to produce;
      * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
      */
-    @SafeVarargs
-    final public void addVarArgsPatternMatch(Nonterminal nt, NodeType nodeType, HostRoutine postCallback, Nonterminal... childTypes)
+    final public void addVarArgsPatternMatch(Object nt, NodeType nodeType, HostRoutine postCallback, List<Object> childTypes)
     {
-        addPatternMatch(nt, nodeType, 1, null, null, postCallback, true, childTypes);
+        addPatternMatch(nt, nodeType, 1, noPredicate, noPreCallback, postCallback, true, childTypes);
+    }
+
+    /**
+     * Add a variadic pattern-matching production to the grammar, with unit cost and no precallback.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce;
+     * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
+     */
+    final public void addVarArgsPatternMatch(Object nt, NodeType nodeType, HostRoutine preCallback, HostRoutine postCallback, List<Object> childTypes)
+    {
+        addPatternMatch(nt, nodeType, 1, noPredicate, preCallback, postCallback, true, childTypes);
+    }
+
+    /**
+     * Add a variadic pattern-matching production to the grammar, with unit cost and no precallback.
+     * @param nt            the nonterminal this production produces.
+     * @param nodeType      the node type of the root of the subtree matched.
+     * @param cost          the cost of this production.
+     * @param postCallback  the callback run after deriving the child nodes.
+     * @param childTypes    the nonterminals the subtree's children must be able to produce;
+     * the last nonterminal may be used more than once to cover the "tail" of a subtree's children.
+     */
+    final public void addVarArgsPatternMatch(Object nt, NodeType nodeType, HostRoutine postCallback)
+    {
+        addPatternMatch(nt, nodeType, 1, noPredicate, noPreCallback, postCallback, true, Collections.emptyList());
     }
 
     /**
@@ -193,26 +270,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * may be used more than once to cover the "tail" of a subtree's children.
      * @param childTypes    the nonterminals the subtree's children must be able to produce.
      */
-    @SafeVarargs
-    final public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, Nonterminal... childTypes)
-    {
-        return addPatternMatch(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, Arrays.asList(childTypes));
-    }
-
-    /**
-     * Add a pattern matcher to its operator.
-     * @param nt            the nonterminal this production produces.
-     * @param nodeType      the node type of the root of the subtree matched.
-     * @param cost          the cost of this production.
-     * @param predicate     the semantic predicate guarding this pattern match,
-     * or null if the pattern match has no predicate guard.
-     * @param preCallback   the callback run before deriving the child nodes.
-     * @param postCallback  the callback run after deriving the child nodes.
-     * @param isVariadic    if true, then the final nonterminal in childTypes
-     * may be used more than once to cover the "tail" of a subtree's children.
-     * @param childTypes    the nonterminals the subtree's children must be able to produce.
-     */
-    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Nonterminal nt, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
+    public PatternMatcher<Nonterminal, NodeType> addPatternMatch(Object nt, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Object> childTypes)
     {
         PatternMatcher<Nonterminal,NodeType> patternMatcher = new PatternMatcher<Nonterminal,NodeType>(nt, nodeType, cost, predicate, preCallback, postCallback, isVarArgs, childTypes);
         nonterminals.add(nt);
@@ -244,7 +302,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param cost          the closure's cost metric.
      * @param postCallback  the callback method run after the method that produces the source nonterminal completes.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost, HostRoutine method)
+    public Closure<Nonterminal> addClosure(Object targetNt, Object sourceNt, int cost, HostRoutine method)
     {
         Closure<Nonterminal> closure = new Closure<Nonterminal>(targetNt, sourceNt, cost, method);
         closures.add(closure);
@@ -258,9 +316,9 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param sourceNt      the nonterminal that must be produced before this closure runs.
      * @param cost          the closure's cost metric.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, int cost)
+    public Closure<Nonterminal> addClosure(Object targetNt, Object sourceNt, int cost)
     {
-        return addClosure(targetNt, sourceNt, cost, null);
+        return addClosure(targetNt, sourceNt, cost, noPostCallback);
     }
 
     /**
@@ -269,7 +327,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param sourceNt      the nonterminal that must be produced before this closure runs.
      * @param postCallback  the callback method run after the method that produces the source nonterminal completes.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt, HostRoutine method)
+    public Closure<Nonterminal> addClosure(Object targetNt, Object sourceNt, HostRoutine method)
     {
         return addClosure(targetNt, sourceNt, 1, method);
     }
@@ -277,9 +335,9 @@ public class ProductionTable<Nonterminal, NodeType>
     /**
      * Add a closure to the grammar, with unit cost and no callbacks.
      */
-    public Closure<Nonterminal> addClosure(Nonterminal targetNt, Nonterminal sourceNt)
+    public Closure<Nonterminal> addClosure(Object targetNt, Object sourceNt)
     {
-        return addClosure(targetNt, sourceNt, 1, null);
+        return addClosure(targetNt, sourceNt, 1, noPostCallback);
     }
 
     /**
@@ -287,7 +345,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param targetNt      the nonterminal this error handler produces.
      * @param errorCallback the error-handling callback method.
      */
-    public void addErrorHandler(Nonterminal targetNt, HostRoutine errorCallback)
+    public void addErrorHandler(Object targetNt, HostRoutine errorCallback)
     {
         nonterminals.add(targetNt);
         this.errorState.setNonClosureProduction(new ErrorHandlerProduction<Nonterminal>(targetNt, errorCallback), 1);
@@ -370,7 +428,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param cost          the cost of this production.
      * @param postCallback  the callback run by this production.
      */
-    public Production<Nonterminal> addNullPointerProduction(Nonterminal nt, int cost, HostRoutine postCallback)
+    public Production<Nonterminal> addNullPointerProduction(Object nt, int cost, HostRoutine postCallback)
     {
         NullPointerProduction<Nonterminal> np = new NullPointerProduction<Nonterminal>(nt, cost, postCallback);
         nullProductions.add(np);
@@ -650,7 +708,7 @@ public class ProductionTable<Nonterminal, NodeType>
         RepresenterState<Nonterminal,NodeType> candidate = new RepresenterState<Nonterminal,NodeType>(state.nodeType);
         if (verbose) System.out.printf("\tproject(%s,%d,%s)\n", op, i, state.getStateNumber());
 
-        for (Nonterminal n: nonterminals) {
+        for (Object n: nonterminals) {
 
             if (state.getCost(n) < Integer.MAX_VALUE) {
                 if (verbose) System.out.printf("\t\tChecking nonterminal %s\n", n);

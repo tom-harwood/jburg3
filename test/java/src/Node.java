@@ -93,5 +93,35 @@ public class Node implements jburg.BurgInput<Nonterminal, NodeType>
         return member != null? String.format(format, member.toString()):"";
     }
 
+    public Object toXML()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("<");
+        builder.append(nodeType);
+        builder.append(" state=\"");
+        builder.append(stateNumber);
+        builder.append("\"");
 
+        if (content != null) {
+            builder.append(" content=\"");
+            builder.append(content);
+            builder.append("\"");
+        }
+
+        if (children.size() > 0) {
+            builder.append(">");
+
+            for (Node child: children) {
+                builder.append(child.toXML());
+            }
+            builder.append("</");
+            builder.append(nodeType);
+            builder.append(">");
+
+        } else {
+            builder.append("/>");
+        }
+
+        return builder;
+    }
 }

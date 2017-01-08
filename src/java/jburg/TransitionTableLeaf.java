@@ -30,8 +30,8 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
      */
     public Map<List<HostRoutine>, State<Nonterminal, NodeType>> getStatesByMethod() { return states; }
 
-    Map<Nonterminal,List<Integer>> statesProducingNonterminal = new HashMap<Nonterminal,List<Integer>>();
-    public Map<Nonterminal,List<Integer>> getStatesProducingNonterminal() { return statesProducingNonterminal; }
+    Map<Object,List<Integer>> statesProducingNonterminal = new HashMap<Object,List<Integer>>();
+    public Map<Object,List<Integer>> getStatesProducingNonterminal() { return statesProducingNonterminal; }
 
 
     /**
@@ -221,7 +221,7 @@ public class TransitionTableLeaf<Nonterminal, NodeType>
         for (State<Nonterminal, NodeType> state: getStates()) {
             state.finishCompilation();
 
-            for (Nonterminal nt: state.getNonterminals()) {
+            for (Object nt: state.getNonterminals()) {
                 if (!statesProducingNonterminal.containsKey(nt)) {
                     statesProducingNonterminal.put(nt, new ArrayList<Integer>());
                 }

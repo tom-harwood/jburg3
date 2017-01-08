@@ -1,0 +1,20 @@
+<Test>
+
+    <Testcase name="1+2" type="Int" expected="4">
+        <Node op="Add">
+            <Node op="IntLiteral" content="2"/>
+            <Node op="Add">
+                <Node op="IntLiteral" content="1"/>
+                <Node op="IntLiteral" content="1"/>
+            </Node>
+        </Node>
+    </Testcase>
+
+    <Testcase name="1+2" cannotProduce="Int">
+        <Node op="Add">
+            <Node op="IntLiteral" content="1"/>
+            <Node op="IntLiteral" content="2"/>
+        </Node>
+    </Testcase>
+
+</Test>

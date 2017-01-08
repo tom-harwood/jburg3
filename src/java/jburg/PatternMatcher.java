@@ -21,22 +21,29 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     /**
      * The node type of the subtree root.
      */
-    public final NodeType              nodeType;
+    public final NodeType       nodeType;
 
     /**
      * The nonterminal types the root's children must produce.
      */
-    public final List<Nonterminal>     childTypes;
+    public final List<String>   childTypes;
 
-    public PatternMatcher(Nonterminal target, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Nonterminal> childTypes)
+    public PatternMatcher(Object target, NodeType nodeType, int cost, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback, boolean isVarArgs, List<Object> childTypes)
     {
         super(target, cost, isVarArgs, predicate, preCallback, postCallback);
+        this.nodeType   = nodeType;
+        this.childTypes = new ArrayList<String>();
 
-        this.nodeType       = nodeType;
-        this.childTypes     = childTypes;
+        for (Object o: childTypes) {
+            if (o != null) {
+                this.childTypes.add(o.toString());
+            } else {
+                throw new IllegalArgumentException(String.format("null child nonterminal in %s", childTypes));
+            }
+        }
     }
 
-    public Nonterminal getNonterminal(int index)
+    public Object getNonterminal(int index)
     {
         if (isVarArgs && index >= size()) {
             return childTypes.get(childTypes.size() - 1);
@@ -45,12 +52,12 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
         }
     }
 
-    public boolean usesNonterminalAt(Nonterminal n, int index)
+    public boolean usesNonterminalAt(Object n, int index)
     {
         if (isVarArgs && index >= size()) {
             return getNonterminal(size()-1).equals(n);
         } else {
-            return index < childTypes.size() && getNonterminal(index).equals(n);
+            return index < childTypes.size() && getNonterminal(index).equals(n.toString());
         }
     }
 
@@ -108,22 +115,22 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
     }
 
     /**
-     * A PatternChildDescriptor is a (position,Nonterminal) pair
+     * A PatternChildDescriptor is a (position,Object) pair
      * used by the host language emitters to build method signatures.
      */
     public class PatternChildDescriptor
     {
-        final int position;
-        final Nonterminal nonterminal;
+        final int       position;
+        final Object    nonterminal;
 
-        PatternChildDescriptor(int position, Nonterminal nonterminal)
+        PatternChildDescriptor(int position, Object nonterminal)
         {
             this.position = position;
             this.nonterminal = nonterminal;
         }
 
         public int getPosition()            { return position; }
-        public Nonterminal getNonterminal() { return nonterminal; }
+        public Object getNonterminal() { return nonterminal; }
     }
 
     public List<PatternChildDescriptor> getNonVariadicChildDescriptors()
@@ -138,7 +145,7 @@ public class PatternMatcher<Nonterminal, NodeType> extends Production<Nontermina
         return result;
     }
 
-    public Nonterminal getVariadicNonterminal()
+    public Object getVariadicNonterminal()
     {
         return childTypes.get(getVariadicOffset());
     }

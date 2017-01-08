@@ -15,8 +15,8 @@ public abstract class Production<Nonterminal>
     /**
      * The Nonterminal "goal state" this Production produces.
      */
-    final Nonterminal   target;
-    public Nonterminal  getNonterminal() { return target; }
+    final Object   target;
+    public Object  getNonterminal() { return target; }
 
 
     /**
@@ -74,7 +74,7 @@ public abstract class Production<Nonterminal>
      * @param preCallback   the pre-derivation callback, or null.
      * @param postCallback  the post-derivation callback, or null.
      */
-    Production(Nonterminal target, int ownCost, boolean isVarArgs, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback)
+    Production(Object target, int ownCost, boolean isVarArgs, HostRoutine predicate, HostRoutine preCallback, HostRoutine postCallback)
     {
         this.target         = target;
         this.ownCost        = ownCost;
