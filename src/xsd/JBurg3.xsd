@@ -62,9 +62,10 @@
          <xs:element name = "child" type = "Child" minOccurs='0' maxOccurs='unbounded'/>
          <xs:element name = "Pattern" type = "Pattern" minOccurs='0' maxOccurs='unbounded'/>
       </xs:choice>
-      <xs:attribute name = 'nonterminal' type = 'xs:string'/>
+      <xs:attribute name = 'nonterminal' type = 'xs:string' use='required'/>
       <xs:attribute name = 'nodeType' type = 'xs:string'/>
       <xs:attribute name = 'variadic' type = 'xs:string' use='optional'/>
+      <xs:attribute name = 'onlyChildNonterminal' type = 'xs:string' use='optional'/>
    </xs:complexType>
 
    <xs:complexType name = "Callback">

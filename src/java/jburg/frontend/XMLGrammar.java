@@ -300,12 +300,30 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         productions.add(newProduction);
         activeProductions.pop();
 
+        // Nested production?
         if (!activeProductions.isEmpty()) {
             // Create a synthetic nonterminal so this nested production only matches in its specific position.
-            ProductionDesc parentProduction = getCurrentProduction();
-            newProduction.nonterminal = String.format("%s_%x_%d", newProduction.nonterminal, System.identityHashCode(parentProduction), parentProduction.children.size());
-            semantics.setNonterminalClass(newProduction.nonterminal, semantics.getNonterminalMapping(parentProduction.nonterminal));
-            parentProduction.children.add(newProduction.nonterminal);
+            // The specification XSD grammar validates that the parent and child are both patterns.
+            PatternMatcherDesc parentPattern = (PatternMatcherDesc)getCurrentProduction();
+            PatternMatcherDesc childPattern = (PatternMatcherDesc)newProduction;
+            String originalNonterminal = newProduction.nonterminal;
+            Object originalMapping = semantics.getNonterminalMapping(originalNonterminal);
+
+            newProduction.nonterminal = String.format(
+                "%s_%s_%x_child_%d_%s",
+                originalNonterminal,
+                parentPattern.nodeType,
+                System.identityHashCode(parentPattern),
+                parentPattern.children.size(),
+                childPattern.nodeType
+            );
+
+            // Establish a mapping from the synthetic nonterminal
+            // to the original nonterminal's result class.
+            semantics.setNonterminalClass(newProduction.nonterminal, originalMapping);
+            // Make the synthetic nonterminal the parent pattern's nonterminal goal
+            // for the child pattern's position.
+            parentPattern.children.add(newProduction.nonterminal);
         }
     }
 
@@ -432,18 +450,38 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
 
     private class PatternMatcherDesc extends ProductionDesc
     {
-        final String  nodeType;
+        final String    nodeType;
+        final boolean   childrenFinalized;
 
         PatternMatcherDesc(Attributes atts, boolean isVarArgs)
         {
             super(atts, isVarArgs);
             this.nodeType   = atts.getValue("nodeType");
+
+            String onlyChildNonterminal = atts.getValue("onlyChildNonterminal");
+
+            if (onlyChildNonterminal != null) {
+                children.add(onlyChildNonterminal);
+                childrenFinalized = true;
+            } else {
+                childrenFinalized = false;
+            }
         }
 
         boolean isPatternMatch()    { return true; }
         boolean isClosure()         { return false; }
         boolean isErrorHandler()    { return false; }
         boolean isNullHandler()     { return false; }
+
+        @Override
+        void addChild(Attributes atts)
+        {
+            if (!childrenFinalized) {
+                super.addChild(atts);
+            } else {
+                throw new IllegalArgumentException("A Pattern with an onlyChildNonterminal attribute cannot have child nodes.");
+            }
+        }
 
         List<Object> getNonterminals()
         {
