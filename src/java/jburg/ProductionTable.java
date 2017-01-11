@@ -899,7 +899,7 @@ public class ProductionTable<Nonterminal, NodeType>
                     stg.setDefaultAttribute(defaultKey, defaultAttributes.get(defaultKey));
                 }
 
-                if ("java.stg".equals(templateGroup)) {
+                if (templateGroup.startsWith("java")) {
                     stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
 
                 } else if (templateGroup.startsWith("cpp")) {

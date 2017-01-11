@@ -1,0 +1,20 @@
+<Grammar reducerClass="Calculator" nodeClass="Node" nonterminalClass="Nonterminal">
+
+    <Semantics>
+        <Nonterminal nonterminal="Int" class="java.lang.Integer"/>
+        <Nonterminal nonterminal="String" class="java.lang.String"/>
+    </Semantics>
+
+    <Pattern nonterminal="Int" nodeType="IntLiteral">
+        <postCallback name="intLiteral"/>
+    </Pattern>
+
+    <Pattern nonterminal="Int" nodeType="Add">
+        <child nonterminal="Int"/>
+        <child nonterminal="Int"/>
+        <postCallback name="add"/>
+    </Pattern>
+
+    <!-- Force String into the production table so we can look for it. -->
+    <Pattern nonterminal="String" nodeType="StringLiteral"/>
+</Grammar>

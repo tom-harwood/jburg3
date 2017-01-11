@@ -10,7 +10,7 @@
         <property name="lib.dir" value="${jburg.home}/lib" />
         <property name="jburg.jar" value="${lib.dir}/jburg.jar"/>
         <property name="stringtemplate.jar" value="${user.home}/tools/antlr-4.5.1-complete.jar"/>
-    
+
         <property name="src.dir" value="./src" />
         <property name="gensrc.dir" value="./gensrc" />
         <property name="classes.dir" value="./classes" />
@@ -42,10 +42,10 @@
         <delete>
             <fileset dir="${basedir}" includes="**/*.*~" defaultexcludes="no"/>
         </delete>
-            
-        <delete dir="${classes.dir}" />            
-        <delete dir="${dump.dir}" />            
-        <delete dir="${gensrc.dir}" />            
+
+        <delete dir="${classes.dir}" />
+        <delete dir="${dump.dir}" />
+        <delete dir="${gensrc.dir}" />
     </target>
 
     <target name="help">
@@ -54,7 +54,7 @@ cleanBuildAndTest - clean, build, and test
 allTests - run java tests
     </echo>
     </target>
-    
+
     <target name="buildJar" depends="init">
         <ant dir="${jburg.home}" target="jar"/>
     </target>
@@ -63,8 +63,8 @@ allTests - run java tests
                         description="Build and compile source files">
 		<mkdir dir="${classes.dir}" />
 
-		<javac 
-			debug="${debug.symbols}" 
+		<javac
+			debug="${debug.symbols}"
 			destdir="${classes.dir}" includes="**/*.java"
 			>
             <classpath>
@@ -117,7 +117,7 @@ allTests - run java tests
             <param name="testcase.xml" value="testcases/ErrorTolerant.xml"/>
         </antcall>
         <antcall target="javaGen">
-            <param name="grammar.xml" value="grammars/Addition.xml"/>
+            <param name="grammar.xml" value="grammars/CanProduce.xml"/>
             <param name="testcase.xml" value="testcases/CanProduce.xml"/>
         </antcall>
         <antcall target="javaGen">
@@ -132,13 +132,10 @@ allTests - run java tests
             <param name="grammar.xml" value="grammars/NullTolerant.xml"/>
             <param name="testcase.xml" value="testcases/NullTolerant.xml"/>
         </antcall>
-        <!--
-        TODO: Convert java and c++ host language reducers to use organic nonterminal enums.
         <antcall target="javaGen">
             <param name="grammar.xml" value="grammars/NestedAddition.xml"/>
             <param name="testcase.xml" value="testcases/NestedAddition.xml"/>
         </antcall>
-        -->
         <antcall target="cppGenerateAndCompile">
             <param name="grammar.xml" value="grammars/CppOverloaded.xml"/>
             <param name="testcase.xml" value="testcases/CppFirst.xml"/>
@@ -229,7 +226,43 @@ allTests - run java tests
     </target>
 
     <target name="javaGen" depends="compile">
+        <!-- Mini cleanup -->
+        <delete file="${classes.dir}/${classname}.class"/>
+        <delete dir="${gensrc.dir}"/>
         <mkdir dir="${gensrc.dir}"/>
+
+        <echo>Generating Nonterminal.java from ${grammar.xml}</echo>
+        <java classname="TestRunner" fork="true" failonerror="true">
+            <arg value="-grammar"/>
+            <arg value="${grammar.xml}"/>
+            <arg value="-templates"/>
+            <arg value="javaNonterminals.stg"/>
+            <arg value="-classname"/>
+            <arg value="Nonterminal"/>
+            <arg value="-dump"/>
+            <arg value="${gensrc.dir}/Nonterminal.java"/>
+            <arg value="${testcase.xml}"/>
+            <classpath>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="${stringtemplate.jar}"/>
+            </classpath>
+            <jvmarg value="-ea"/>
+        </java>
+        <!-- Ensure we have the correct Nonterminal class
+        before we compile the test reducer.
+        -->
+        <delete file="${classes.dir}/Nonterminal.class"/>
+		<javac
+			debug="${debug.symbols}"
+			destdir="${classes.dir}" includes="Nonterminal.java"
+			>
+            <classpath>
+                <pathelement path="${jburg.jar}"/>
+                <pathelement path="classes"/>
+            </classpath>
+			<src path="${gensrc.dir}"/>
+		</javac>
         <echo>Generating ${classname}.java from ${grammar.xml}</echo>
         <java classname="TestRunner" fork="true" failonerror="true">
             <arg value="-grammar"/>
@@ -248,10 +281,8 @@ allTests - run java tests
             </classpath>
             <jvmarg value="-ea"/>
         </java>
-        <!-- Ensure we'll recompile -->
-        <delete file="${classes.dir}/${classname}.class"/>
-		<javac 
-			debug="${debug.symbols}" 
+		<javac
+			debug="${debug.symbols}"
 			destdir="${classes.dir}" includes="${classname}.java"
 			>
             <classpath>
