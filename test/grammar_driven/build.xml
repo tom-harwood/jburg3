@@ -418,32 +418,6 @@ allTests - run java tests
             <jvmarg value="-ea"/>
         </java>
 
-        <echo>Generating ${cppclassname}.xml from ${grammar.xml}</echo>
-        <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
-            <arg value="-grammar"/>
-            <arg value="${grammar.xml}"/>
-            <arg value="-classname"/>
-            <arg value="${cppclassname}"/>
-            <arg value="-nodeClass"/>
-            <arg value="Node"/>
-            <arg value="-nonterminalClass"/>
-            <arg value="Nonterminal"/>
-            <arg value="-nodeTypeClass"/>
-            <arg value="NodeType"/>
-            <arg value="-visitor"/>
-            <arg value="Calculator"/>
-            <arg value="-templateGroup"/>
-            <arg value="xml.stg"/>
-            <arg value="-output"/>
-            <arg value="${gensrc.dir}/${cppclassname}.xml"/>
-            <classpath>
-                <pathelement path="${classes.dir}"/>
-                <pathelement path="${jburg.jar}"/>
-                <pathelement path="${stringtemplate.jar}"/>
-            </classpath>
-            <jvmarg value="-ea"/>
-        </java>
-
         <echo>Generating ${cppclassname}.cpp from ${grammar.xml}</echo>
         <java classname="jburg.util.GenerateHostBURM" fork="true" failonerror="true">
             <arg value="-grammar"/>

@@ -43,7 +43,7 @@
     <target name="help">
     <echo>
 cleanBuildAndTest - clean, build, and test
-test - call the test/MAT directory's build.xml
+test - run all tests
     </echo>
     </target>
     
@@ -103,8 +103,8 @@ test - call the test/MAT directory's build.xml
     </target>
 
     <target name="test" depends="init">
-        <echo message="Running java tests"/>
-        <ant dir="test/java" target="cleanBuildAndTest" inheritAll="false" useNativeBasedir="true"/>
+        <echo message="Running grammar-drivent tests"/>
+        <ant dir="test/grammar_driven" target="cleanBuildAndTest" inheritAll="false" useNativeBasedir="true"/>
         <echo message="Running TL/3 tests"/>
         <ant dir="test/tl3" target="cleanBuildAndTest" inheritAll="false"/>
         <echo message="Running TQL tests"/>
