@@ -45,7 +45,7 @@ classDef(table, includes, uniqueStates) ::= <<
 
 namespace jburg {
     int getStateNumber(%nodeClass()%* node) {
-        return node? node->getStateNumber():1;
+        return node? node->getStateNumber():jburg::NullStateNumber;
     }
 }
 

@@ -40,9 +40,12 @@ classDef(table, uniqueStates) ::= <<
 
 public class %className()%
 {
+    private final static int ERROR_STATE_NUM = 0;
+    private final static int NULL_STATE_NUM = 1;
+
     private static int getStateNumber(%nodeClass()% node)
     {
-        return node != null? node.getStateNumber():jburg.ProductionTable.NULL_STATE_NUM;
+        return node != null? node.getStateNumber(): NULL_STATE_NUM;
     }
 
     public void label(%visitorClass()% visitor, %nodeClass()% node)
@@ -56,7 +59,7 @@ public class %className()%
             switch(node.getNodeType()) {
                 %productionTable(table)%
                 default:
-                    node.setStateNumber(jburg.ProductionTable.ERROR_STATE_NUM);
+                    node.setStateNumber(ERROR_STATE_NUM);
                     break;
             }
         }

@@ -60,6 +60,7 @@ private:
 
 namespace jburg {
     static const int ErrorStateNumber = 0;
+    static const int NullStateNumber = 1;
 }
 >>
 
