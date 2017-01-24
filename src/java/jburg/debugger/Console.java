@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -293,16 +294,22 @@ public class Console extends JPanel
         pattern = ".*" + pattern.trim() + ".*";
 
         String lastHistory = null;
+        List<String> foundHistory = new ArrayList<String>();
 
         for (String s: history) {
 
             if (s.matches(pattern)) {
 
                 if (!s.equals(lastHistory)) {
-                    addOutput(s, normalFont);
+                    foundHistory.add(s);
                     lastHistory = s;
                 }
             }
+        }
+
+        Collections.reverse(foundHistory);
+        for (String s: foundHistory) {
+            addOutput(s, normalFont);
         }
     }
 
