@@ -297,9 +297,13 @@ public class Debugger
     private void analyze(String title, String xml)
     throws Exception
     {
-        @SuppressWarnings("deprecation")
-        Document parsedXML = parseXML(new java.io.StringBufferInputStream(xml));
-        new DumpAnalyzer(this, title, parsedXML.getFirstChild());
+        if (xml.trim().startsWith("<")) {
+            @SuppressWarnings("deprecation")
+            Document parsedXML = parseXML(new java.io.StringBufferInputStream(xml));
+            new DumpAnalyzer(this, title, parsedXML.getFirstChild());
+        } else {
+            status(xml);
+        }
     }
 
     boolean label(BurgInput<Object,String> root)

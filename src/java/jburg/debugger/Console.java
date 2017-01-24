@@ -121,7 +121,7 @@ public class Console extends JPanel
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 output.addElement(new ConsoleHistoryElement(content, font));
-                outputList.ensureIndexIsVisible(output.getSize());
+                outputList.ensureIndexIsVisible(output.getSize()-1);
             }
         });
     }
@@ -320,6 +320,12 @@ public class Console extends JPanel
             this.content = content;
             this.font = font;
         }
+
+        @Override
+        public String toString()
+        {
+            return content;
+        }
     }
 
     class ConsoleHistoryRenderer extends JLabel implements ListCellRenderer<ConsoleHistoryElement>
@@ -329,6 +335,7 @@ public class Console extends JPanel
             setEnabled(list.isEnabled());
             setText(element.content);
             setFont(element.font);
+            setOpaque(isSelected);
             return this;
         }
     }
