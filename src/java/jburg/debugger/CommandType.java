@@ -1,5 +1,10 @@
 package jburg.debugger;
 
+/**
+ * Names of the debugger commands, with help text
+ * and a valueOf() type function that returns Error
+ * instead of throwing an exception.
+ */
 enum CommandType
 {
     Analyze("Analyze an ad-hoc tree"),

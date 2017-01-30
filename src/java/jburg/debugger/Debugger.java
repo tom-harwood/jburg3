@@ -45,6 +45,7 @@ public class Debugger
     final static String             debuggerConsoleName = "Debugger";
     final Properties                properties;
     final static String             propertiesFileName = "jburgDebugger.properties";
+    final static String             propertiesGrammarFileName = "lastGrammarFile";
     File                            grammarFileName;
     long                            grammarModTime = 0;
     ProductionTable<Object,String>  productionTable = null;
@@ -180,6 +181,10 @@ public class Debugger
                         case Exit: {
                                 console.saveHistory(properties);
 
+                                if (grammarFileName != null) {
+                                    properties.setProperty(propertiesGrammarFileName, grammarFileName.getCanonicalPath());
+                                }
+
                                 try {
                                     properties.store(new FileOutputStream(propertiesFileName), "JBurg3 debugger properties");
                                 } catch (Exception cannotStore) {
@@ -217,8 +222,8 @@ public class Debugger
                                 FileNameExtensionFilter filter = new FileNameExtensionFilter("XML files", "xml");
                                 chooser.setFileFilter(filter);
 
-                                if (properties.getProperty("lastGrammarFile") != null) {
-                                    chooser.setCurrentDirectory(new File(properties.getProperty("lastGrammarFile")).getParentFile());
+                                if (properties.getProperty(propertiesGrammarFileName) != null) {
+                                    chooser.setCurrentDirectory(new File(properties.getProperty(propertiesGrammarFileName)).getParentFile());
                                 }
 
                                 int returnVal = chooser.showOpenDialog(new JFrame());

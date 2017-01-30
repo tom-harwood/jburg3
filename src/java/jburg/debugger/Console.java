@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -129,14 +130,16 @@ public class Console extends JPanel
 
     void extractHistory(Properties properties)
     {
+        Set<String> uniqueHistoryEntries = new HashSet<String>();
+
         int i = 0;
         String key = historyKey(i++);
 
         while (properties.containsKey(key)) {
-            if (history.size() < i) {
-                history.add(properties.getProperty(key));
-            } else {
-                history.set(i, properties.getProperty(key));
+            String value = properties.getProperty(key);
+
+            if (uniqueHistoryEntries.add(value))  {
+                history.add(value);
             }
             key = historyKey(i++);
         }
@@ -149,8 +152,12 @@ public class Console extends JPanel
 
     void saveHistory(Properties properties)
     {
+        Set<String> uniqueHistoryEntries = new HashSet<String>();
+
         for (int i = 0; i < history.size(); i++) {
-            properties.setProperty(historyKey(i), history.get(i));
+            if (uniqueHistoryEntries.add(history.get(i))) {
+                properties.setProperty(historyKey(i), history.get(i));
+            }
         }
     }
 
