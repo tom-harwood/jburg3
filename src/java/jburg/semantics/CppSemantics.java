@@ -1,7 +1,9 @@
 package jburg.semantics;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * CppSemantics relies on string-based type names
@@ -144,6 +146,16 @@ public class CppSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonterm
     public NodeType getNodeType(Object typeName)
     {
         return (NodeType)typeName;
+    }
+
+    public Set<String> getUniqueMappings()
+    {
+        Set<String> result = new HashSet<String>();
+        for (String s: nonterminalMappings.values()) {
+            result.add(s);
+        }
+
+        return result;
     }
 
 

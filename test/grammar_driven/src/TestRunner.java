@@ -99,7 +99,7 @@ public class TestRunner
             }
 
             Map<String,Object> defaults = new HashMap<String, Object>();
-            productions.dump(dumpFile, dumpTemplates, attributes, defaults);
+            productions.dump(dumpFile, dumpTemplates, attributes, defaults, grammarBuilder.getSemantics());
         }
 
         if (dumpFile == null && testcaseFile != null) {

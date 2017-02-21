@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jburg.semantics.BURMSemantics;
 import jburg.semantics.HostRoutine;
 
 import org.stringtemplate.v4.AttributeRenderer;
@@ -18,13 +19,15 @@ import jburg.Production;
 public class JavaRenderer implements AttributeRenderer
 {
 
-    final Map<Object,Integer> leafStates;
-    final Map<String,String>  attributes;
+    final Map<Object,Integer>   leafStates;
+    final Map<String,String>    attributes;
+    final BURMSemantics<?,?>    semantics;
 
-    public JavaRenderer(Map<Object,Integer> leafStates, Map<String,String> attributes)
+    public JavaRenderer(Map<Object,Integer> leafStates, Map<String,String> attributes, BURMSemantics<?,?> semantics)
     {
         this.leafStates = leafStates;
         this.attributes = attributes;
+        this.semantics  = semantics;
     }
 
     @Override
@@ -113,6 +116,15 @@ public class JavaRenderer implements AttributeRenderer
             return (attributes.containsKey(formatString))?
                 " from " + attributes.get(formatString)
                 : "";
+
+        } else if ("nonterminal.mapping".equals(formatString)) {
+            return semantics.getNonterminalMapping(o).toString();
+
+        } else if ("class.simpleName".equals(formatString)) {
+            return ((Class<?>)o).getSimpleName();
+
+        } else if ("class.canonicalName".equals(formatString)) {
+            return ((Class<?>)o).getCanonicalName();
 
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);

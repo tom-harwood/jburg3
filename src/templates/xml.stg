@@ -1,6 +1,6 @@
 delimiters "%","%"
 
-start(table) ::= <<
+start(table, semantics) ::= <<
 %productionTable(table)%
 >>
 

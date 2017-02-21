@@ -1,7 +1,7 @@
 delimiters "%","%"
 
 // ** Start State **
-start(table) ::= <<
+start(table, semantics) ::= <<
 %nonterminals(table)%
 >>
 

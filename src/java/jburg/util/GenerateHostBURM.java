@@ -116,7 +116,7 @@ public class GenerateHostBURM
         }
         attributes.put("nodeClass", nodeClassName);
 
-        productions.dump(outputFileName, templateGroup, attributes, defaults);
+        productions.dump(outputFileName, templateGroup, attributes, defaults, grammarBuilder.getSemantics());
     }
 
     public static String convertToFileURL(String filename) {

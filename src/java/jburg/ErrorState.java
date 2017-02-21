@@ -1,5 +1,8 @@
 package jburg;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A ProductionTable has one ErrorState, at predefined index zero.
  * The ProductionTable assigns the ErrorState to inputs that don't
@@ -10,14 +13,16 @@ package jburg;
 public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeType>
 {
     /**
-     * Construct an ErrorState. There is normally one ErrorState per ProductionTable,
-     * which is conventionally placed at index zero in the statesInEntryOrder list.
+     * Construct an ErrorState. There is one ErrorState per ProductionTable,
+     * which is assigned state number ERROR_STATE_NUM, i.e., zero.
      */
     ErrorState()
     {
         super();
         super.number = ProductionTable.ERROR_STATE_NUM;
     }
+
+    public final Map<Object,Object> viableNonterminals = new HashMap<Object,Object>();
 
     /**
      * Get the Production for a nonterminal.
@@ -59,5 +64,20 @@ public class ErrorState<Nonterminal, NodeType> extends State<Nonterminal, NodeTy
         }
 
         return null;
+    }
+
+    void finishCompilation()
+    {
+        super.finishCompilation();
+
+        Object nt = getNonterminal();
+
+        if (nt != null) {
+            viableNonterminals.put(nt,nt);
+        }
+
+        for (Object closureNt: closures.keySet()) {
+            viableNonterminals.put(closureNt,closureNt);
+        }
     }
 }

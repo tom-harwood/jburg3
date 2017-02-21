@@ -1,7 +1,7 @@
 delimiters "%","%"
 
 // ** Start State **
-start(table, includes, uniqueStates) ::= <<
+start(table, semantics, includes, uniqueStates) ::= <<
 %interfaceDef(table, uniqueStates)%
 >>
 

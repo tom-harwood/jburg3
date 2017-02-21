@@ -2,9 +2,9 @@
 <Grammar nodeClass="Node" reducerClass="Calculator" language="c++" generatedNonterminals="gensrc/CppErrorTolerantNonterminal.h">
 
     <Semantics>
-        <Nonterminal nonterminal="String" class="ReducerResult"/>
-        <Nonterminal nonterminal="Error" class="ReducerResult"/>
-        <Nonterminal nonterminal="Null" class="ReducerResult"/>
+        <Nonterminal nonterminal="String" class="Object"/>
+        <Nonterminal nonterminal="Error" class="Object"/>
+        <Nonterminal nonterminal="Null" class="Object"/>
     </Semantics>
 
     <Error nonterminal="Error">

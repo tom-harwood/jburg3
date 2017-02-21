@@ -4,6 +4,7 @@ import jburg.semantics.HostRoutine;
 import java.util.*;
 
 import jburg.emitter.*;
+import jburg.semantics.BURMSemantics;
 
 /**
  * A ProductionTable hosts the data structures that
@@ -884,7 +885,7 @@ public class ProductionTable<Nonterminal, NodeType>
      * @param defaults      default attributes.
      * @todo  TODO: add descriptions of the attributes.
      */
-    public boolean dump(String dumpPath, String templateGroup, Map<String,String> attributes, Map<String,Object> defaultAttributes)
+    public boolean dump(String dumpPath, String templateGroup, Map<String,String> attributes, Map<String,Object> defaultAttributes, BURMSemantics<?,?> semantics)
     {
         if (dumpPath != null) {
 
@@ -900,19 +901,19 @@ public class ProductionTable<Nonterminal, NodeType>
                 }
 
                 if (templateGroup.startsWith("java")) {
-                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
+                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes, semantics));
 
                 } else if (templateGroup.startsWith("cpp")) {
-                    stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes));
+                    stg.registerRenderer(Object.class, new CppRenderer(uniqueStates, attributes, semantics));
 
                 } else if ("xml.stg".equals(templateGroup)) {
-                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes));
+                    stg.registerRenderer(Object.class, new JavaRenderer(uniqueStates, attributes, semantics));
 
                 } else {
                     throw new IllegalArgumentException(String.format("Unknown emitter \"%s\"", templateGroup));
                 }
 
-                out.println(stg.getTemplate("start", "table", this).render());
+                out.println(stg.getTemplate("start", "table", this, "semantics", semantics).render());
                 out.flush();
                 out.close();
 

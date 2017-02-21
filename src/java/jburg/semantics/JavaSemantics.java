@@ -7,8 +7,10 @@ import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * JavaSemantics is a BURMSemantics
@@ -186,6 +188,17 @@ public class JavaSemantics<Nonterminal,NodeType> implements BURMSemantics<Nonter
     public Object getNonterminal(Object ntName)
     {
         return ntName.toString();
+    }
+
+    public Set<?> getUniqueMappings()
+    {
+        Set<Class<?>> result = new HashSet<Class<?>>();
+
+        for (Class<?> c: nonterminalClasses.values()) {
+            result.add(c);
+        }
+
+        return result;
     }
 
     /**

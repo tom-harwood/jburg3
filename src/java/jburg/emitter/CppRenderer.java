@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jburg.semantics.BURMSemantics;
 import jburg.semantics.HostRoutine;
 
 import org.stringtemplate.v4.AttributeRenderer;
@@ -18,13 +19,19 @@ import jburg.Production;
 public class CppRenderer implements AttributeRenderer
 {
 
-    final Map<Object,Integer> leafStates;
-    final Map<String,String>  attributes;
+    final Map<Object,Integer>   leafStates;
+    final Map<String,String>    attributes;
+    final BURMSemantics<?, ?>   semantics;
 
-    public CppRenderer(Map<Object,Integer> leafStates, Map<String,String> attributes)
+    public CppRenderer(Map<Object,Integer> leafStates, Map<String,String> attributes, BURMSemantics semantics)
     {
+        if (semantics == null) {
+            throw new IllegalStateException("Semantics must be specified.");
+        }
+
         this.leafStates = leafStates;
         this.attributes = attributes;
+        this.semantics  = semantics;
     }
 
     @Override
@@ -135,6 +142,9 @@ public class CppRenderer implements AttributeRenderer
             return (attributes.containsKey(formatString))?
                 " from " + attributes.get(formatString)
                 : "";
+
+        } else if ("nonterminal.mapping".equals(formatString)) {
+            return semantics.getNonterminalMapping(o).toString();
 
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);

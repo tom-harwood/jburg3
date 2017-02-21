@@ -63,6 +63,11 @@ public class XMLGrammar<Nonterminal, NodeType> extends DefaultHandler
         this.verboseTrigger = trigger;
     }
 
+    public BURMSemantics<?,?> getSemantics()
+    {
+        return this.semantics;
+    }
+
     public ProductionTable<Nonterminal,NodeType> build(String filename)
     throws Exception
     {

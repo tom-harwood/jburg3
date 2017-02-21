@@ -90,6 +90,5 @@ class TreeParser
         productions.addPatternMatch(SemanticLabel.Statement, TQLNodeType.AssignmentStatement, noCallback, Arrays.asList(SemanticLabel.Identifier, SemanticLabel.Expression));
 
         productions.generateStates();
-        productions.dump("/tmp/tqlTable.xml", "xml.stg", new HashMap<String,String>(), new HashMap<String,Object>());
     }
 }
