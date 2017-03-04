@@ -126,6 +126,9 @@ public class JavaRenderer implements AttributeRenderer
         } else if ("class.canonicalName".equals(formatString)) {
             return ((Class<?>)o).getCanonicalName();
 
+        } else if ("nonterminal.mapping".equals(formatString)) {
+            return semantics.getNonterminalMapping(o).toString();
+
         } else if (attributes.containsKey(formatString)) {
             return attributes.get(formatString);
 
