@@ -43,8 +43,6 @@ public class %className()%
     private final static int ERROR_STATE_NUM = 0;
     private final static int NULL_STATE_NUM = 1;
 
-    %semantics.uniqueMappings: { mapping | //%mapping;format="class.canonicalName"% reduce_as_%mapping;format="class.simpleName"%(%visitorClass()% visitor, %nodeClass()% node); };separator="\n"%
-
     private static int getStateNumber(%nodeClass()% node)
     {
         return node != null? node.getStateNumber(): NULL_STATE_NUM;
@@ -97,6 +95,8 @@ public class %className()%
         abstract void assignState(%visitorClass()% visitor, %nodeClass()% node);
         abstract Object reduce(%className()% reducer, %visitorClass()% visitor, %nodeClass()% node, %nonterminalClass()% goalState);
         abstract boolean canProduce(%nodeClass()% node, %nonterminalClass()% goalState);
+
+        %table.nonterminals: { nt | // abstract %nt;format="nonterminal.mapping"% reduce_as_%nt%(%className()% reducer, %visitorClass()% visitor, %nodeClass()% node); };separator="\n"%
     }
 
     %uniqueStates:leafDefinition();separator="\n"%
