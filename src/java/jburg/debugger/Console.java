@@ -179,9 +179,14 @@ public class Console extends JPanel
         addOutput(s, normalFont);
     }
 
-    public void exception(String operation, Exception ex) {
-
+    public void exception(String operation, Exception ex)
+    {
         String diagnostic = ex.getMessage() != null?  ex.getMessage(): ex.toString();
+        JOptionPane.showMessageDialog(
+            this,
+            diagnostic,
+            ex.getClass().getName(),
+            JOptionPane.WARNING_MESSAGE);
         addOutput(diagnostic, italicFont);
     }
 

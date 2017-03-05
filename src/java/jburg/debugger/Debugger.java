@@ -195,8 +195,6 @@ public class Debugger
                                     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
                                     frame.dispose();
                                 }
-
-                                notifyAll();
                             }
                             break;
 
